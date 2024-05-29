@@ -1,0 +1,39 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model users {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  username  String?
+  password  String?
+  bio       String?
+  createdAt DateTime @default(now())
+  last_updated_at DateTime @default(now())
+}
+
+
+
+model languages {
+  code Language_codes @id
+  name Language_names
+  created_at DateTime @default(now())
+  last_updated_at DateTime @default(now())
+}
+
+enum Language_codes {
+  EN
+  FR
+  KR
+}
+
+enum Language_names {
+  english
+  french
+  korean
+}
