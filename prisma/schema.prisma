@@ -7,33 +7,90 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model users {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  username  String?
-  password  String?
-  bio       String?
-  createdAt DateTime @default(now())
-  last_updated_at DateTime @default(now())
+model User {
+  id            Int     @id @default(autoincrement())
+  email         String  @unique
+  username      String
+  password      String
+  fullName      String  @map("full_name")
+  birthdate     DateTime
+  avatar        String?
+  bio           String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  lastUpdatedAt DateTime @updatedAt @map("last_updated_at")
+  userProfile   UserProfile?
+  founded_projects  Project[] @relation("FounderProjects")
+  projects  Project[]
+
+  @@map("users")
 }
 
+model UserProfile {
+  id            Int     @id @default(autoincrement())
+  userId        Int     @unique @map("user_id")
+  preferedRole  String? @map("prefered_role")
+  location      String?
+  website       String?
+  interests     String[]
+  skills        String[]
+  createdAt     DateTime @default(now()) @map("created_at")
+  lastUpdatedAt DateTime @updatedAt @map("last_updated_at")
+  user          User     @relation(fields: [userId], references: [id])
 
-
-model languages {
-  code Language_codes @id
-  name Language_names
-  created_at DateTime @default(now())
-  last_updated_at DateTime @default(now())
+  @@map("user_profiles")
 }
 
-enum Language_codes {
+model Project {
+  id            Int     @id @default(autoincrement())
+  founderId     Int     @map("founder_id")
+  title         String
+  description   String?
+  labels        String[]
+  goal          Goal
+  status        Status
+  languageCode  LanguageCode 
+  milestone     DateTime?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  lastUpdatedAt DateTime  @updatedAt @map("last_updated_at")
+  founder       User      @relation(fields: [founderId], references: [id], name: "FounderProjects")
+  language      Language  @relation(fields: [languageCode], references: [code])
+  users         User[]
+
+  @@map("projects")
+}
+
+model Language {
+  code          LanguageCode @id
+  name          LanguageName
+  createdAt     DateTime @default(now()) @map("created_at")
+  lastUpdatedAt DateTime @updatedAt @map("last_updated_at")
+  projects      Project[]
+
+  @@map("languages")
+}
+
+enum Status {
+  Complete
+  InProgress
+  OnHold
+  Canceled
+}
+
+enum Goal {
+  Education
+  Profitable
+  Fun
+  OpenSource
+}
+
+enum LanguageCode {
   EN
   FR
   KR
 }
 
-enum Language_names {
-  english
-  french
-  korean
+enum LanguageName {
+  English
+  French
+  Korean
 }
