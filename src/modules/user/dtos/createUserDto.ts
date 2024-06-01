@@ -1,12 +1,17 @@
-import { IsString, IsEmail, IsOptional, MinLength } from 'class-validator';
+import { IsString, IsEmail, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class PostDTO {
-    @IsOptional()
-    name: string;
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  name: string;
 
-    @IsOptional()
-    email: string;
+  @IsOptional()
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 
-    password :string;
+  @IsString()
+  @IsNotEmpty()
+  password: string;
 }
-
