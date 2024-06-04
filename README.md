@@ -6,6 +6,9 @@ Main backend for the ThinkStorm project (API and DB relationships)
 
 ```bash
 npm install
+
+# add the pre-commit hook
+npm run prepare
 ```
 
 ## First-time running the server locally
