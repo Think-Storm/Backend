@@ -12,8 +12,9 @@ model User {
   email         String  @unique
   username      String
   password      String
-  fullName      String  @map("full_name")
-  birthdate     DateTime
+  passwordSalt  String  @map("password_salt")
+  fullName      String? @map("full_name")
+  birthdate     DateTime?
   avatar        String?
   bio           String?
   createdAt     DateTime @default(now()) @map("created_at")
