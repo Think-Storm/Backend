@@ -1,0 +1,117 @@
+2025-01-07T21:17:46.934082472Z npm WARN exec The following package was not found and will be installed: prisma@6.2.0
+2025-01-07T21:18:03.283408634Z Prisma schema loaded from prisma/schema.prisma
+2025-01-07T21:18:08.082628425Z 
+2025-01-07T21:18:08.082672128Z ✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 1.29s
+2025-01-07T21:18:08.082682129Z 
+2025-01-07T21:18:08.082690430Z Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+2025-01-07T21:18:08.082697030Z 
+2025-01-07T21:18:08.082703931Z Tip: Want real-time updates to your database without manual polling? Discover how with Pulse: https://pris.ly/tip-0-pulse
+2025-01-07T21:18:08.082711631Z 
+2025-01-07T21:18:08.082718432Z 
+2025-01-07T21:18:08.082724432Z warn Versions of prisma@6.2.0 and @prisma/client@5.22.0 don't match.
+2025-01-07T21:18:08.082732333Z This might lead to unexpected behavior.
+2025-01-07T21:18:08.082738933Z Please make sure they have the same version.
+2025-01-07T21:18:08.269324096Z npm notice 
+2025-01-07T21:18:08.270563983Z npm notice New major version of npm available! 10.2.4 -> 11.0.0
+2025-01-07T21:18:08.270664990Z npm notice Changelog: <https://github.com/npm/cli/releases/tag/v11.0.0>
+2025-01-07T21:18:08.270717393Z npm notice Run `npm install -g npm@11.0.0` to update!
+2025-01-07T21:18:08.270728994Z npm notice 
+2025-01-07T21:18:14.658524832Z npm WARN exec The following package was not found and will be installed: prisma@6.2.0
+2025-01-07T21:18:17.600800103Z Prisma schema loaded from prisma/schema.prisma
+2025-01-07T21:18:17.627115963Z Datasource "db": PostgreSQL database "coverage_test_db", schema "public" at "thinkstorm-db:5432"
+2025-01-07T21:18:17.875872340Z 
+2025-01-07T21:18:17.875916443Z 15 migrations found in prisma/migrations
+2025-01-07T21:18:17.879052489Z 
+2025-01-07T21:18:17.991755513Z Applying migration `20240602070358_v0_db_schema_complient`
+2025-01-07T21:18:18.037225673Z Applying migration `20240606053852_full_name_and_birthdate_optional`
+2025-01-07T21:18:18.052460566Z Applying migration `20240607102309_added_password_salt_to_users_table`
+2025-01-07T21:18:18.065872516Z Applying migration `20240610084219_changed_language_code_column_name_in_project_table`
+2025-01-07T21:18:18.085517154Z Applying migration `20240704014536_add_password_changed_at_column`
+2025-01-07T21:18:18.097456389Z Applying migration `20241117191141_add_another_language`
+2025-01-07T21:18:18.110028974Z Applying migration `20241117195602_add_interactions_and_labels`
+2025-01-07T21:18:18.169638341Z Applying migration `20241117200906_merging_user_profile_and_user`
+2025-01-07T21:18:18.188496017Z Applying migration `20241122125345_split_user_and_userprofile`
+2025-01-07T21:18:18.222295764Z Applying migration `20241205142031_changed_technical_label_domain_label_id_to_name`
+2025-01-07T21:18:18.273806897Z Applying migration `20241206152858_map_tables_to_postgresql_table_names`
+2025-01-07T21:18:18.386291504Z Applying migration `20241206153440_changed_like_table_name_to_likes`
+2025-01-07T21:18:18.427161404Z Applying migration `20241207030452_unified_table_name_to_plural_form`
+2025-01-07T21:18:18.510741748Z Applying migration `20241207033441_added_languages_to_user_profile`
+2025-01-07T21:18:18.536439260Z Applying migration `20241211105643_rename_columns`
+2025-01-07T21:18:18.550157134Z 
+2025-01-07T21:18:18.552327704Z The following migration(s) have been applied:
+2025-01-07T21:18:18.552360607Z 
+2025-01-07T21:18:18.552369408Z migrations/
+2025-01-07T21:18:18.552376508Z   └─ 20240602070358_v0_db_schema_complient/
+2025-01-07T21:18:18.552384509Z     └─ migration.sql
+2025-01-07T21:18:18.552391309Z   └─ 20240606053852_full_name_and_birthdate_optional/
+2025-01-07T21:18:18.552398110Z     └─ migration.sql
+2025-01-07T21:18:18.552404210Z   └─ 20240607102309_added_password_salt_to_users_table/
+2025-01-07T21:18:18.552410211Z     └─ migration.sql
+2025-01-07T21:18:18.552416111Z   └─ 20240610084219_changed_language_code_column_name_in_project_table/
+2025-01-07T21:18:18.552422212Z     └─ migration.sql
+2025-01-07T21:18:18.552428412Z   └─ 20240704014536_add_password_changed_at_column/
+2025-01-07T21:18:18.552434413Z     └─ migration.sql
+2025-01-07T21:18:18.552440713Z   └─ 20241117191141_add_another_language/
+2025-01-07T21:18:18.552446814Z     └─ migration.sql
+2025-01-07T21:18:18.552453114Z   └─ 20241117195602_add_interactions_and_labels/
+2025-01-07T21:18:18.552459315Z     └─ migration.sql
+2025-01-07T21:18:18.552465415Z   └─ 20241117200906_merging_user_profile_and_user/
+2025-01-07T21:18:18.552471716Z     └─ migration.sql
+2025-01-07T21:18:18.552477916Z   └─ 20241122125345_split_user_and_userprofile/
+2025-01-07T21:18:18.552484517Z     └─ migration.sql
+2025-01-07T21:18:18.552497318Z   └─ 20241205142031_changed_technical_label_domain_label_id_to_name/
+2025-01-07T21:18:18.552506018Z     └─ migration.sql
+2025-01-07T21:18:18.552511819Z   └─ 20241206152858_map_tables_to_postgresql_table_names/
+2025-01-07T21:18:18.552517619Z     └─ migration.sql
+2025-01-07T21:18:18.552523220Z   └─ 20241206153440_changed_like_table_name_to_likes/
+2025-01-07T21:18:18.552528820Z     └─ migration.sql
+2025-01-07T21:18:18.552534320Z   └─ 20241207030452_unified_table_name_to_plural_form/
+2025-01-07T21:18:18.552539321Z     └─ migration.sql
+2025-01-07T21:18:18.552544421Z   └─ 20241207033441_added_languages_to_user_profile/
+2025-01-07T21:18:18.552550522Z     └─ migration.sql
+2025-01-07T21:18:18.552573624Z   └─ 20241211105643_rename_columns/
+2025-01-07T21:18:18.552580924Z     └─ migration.sql
+2025-01-07T21:18:18.552587125Z       
+2025-01-07T21:18:18.552593025Z All migrations have been successfully applied.
+2025-01-07T21:18:20.105898444Z 
+2025-01-07T21:18:20.105965649Z > think-storm-backend@0.0.1 db:seed
+2025-01-07T21:18:20.105979650Z > ts-node prisma/seed.ts
+2025-01-07T21:18:20.105986251Z 
+2025-01-07T21:18:30.985294736Z 
+2025-01-07T21:18:30.985492853Z > think-storm-backend@0.0.1 test:cov
+2025-01-07T21:18:30.985518656Z > jest --runInBand --coverage
+2025-01-07T21:18:30.985526856Z 
+2025-01-07T21:18:47.622007038Z PASS test/unit/modules/auth/auth.service.spec.ts (14.753 s)
+2025-01-07T21:18:49.244690233Z PASS test/unit/modules/auth/guard/jwt.guard.spec.ts
+2025-01-07T21:18:51.513226046Z PASS test/unit/modules/project/project.service.spec.ts
+2025-01-07T21:18:52.542536149Z PASS test/unit/modules/auth/guard/local.guard.spec.ts
+2025-01-07T21:18:54.159877482Z PASS test/unit/modules/project/project.repository.spec.ts
+2025-01-07T21:18:55.574984781Z PASS test/unit/modules/user/user.repository.spec.ts
+2025-01-07T21:18:56.744859970Z PASS test/unit/modules/auth/auth.controller.spec.ts
+2025-01-07T21:18:57.420983299Z PASS test/unit/modules/project/project.controller.spec.ts
+2025-01-07T21:18:58.621038517Z PASS test/unit/modules/user/user.service.spec.ts
+2025-01-07T21:18:59.312378869Z PASS test/unit/modules/user/user.controller.spec.ts
+2025-01-07T21:19:00.105535108Z PASS test/unit/common/passwordEncryption.spec.ts
+2025-01-07T21:19:00.346911832Z PASS test/unit/prisma.service.spec.ts
+2025-01-07T21:19:01.137422091Z ------------------------------|---------|----------|---------|---------|-------------------
+2025-01-07T21:19:01.137736313Z File                          | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+2025-01-07T21:19:01.137799117Z ------------------------------|---------|----------|---------|---------|-------------------
+2025-01-07T21:19:01.139696947Z All files                     |   10.57 |      100 |   10.25 |   10.57 |                   
+2025-01-07T21:19:01.139952965Z  e2e                          |       0 |      100 |       0 |       0 |                   
+2025-01-07T21:19:01.141099644Z   auth.e2e-spec.ts            |       0 |      100 |       0 |       0 | 1-192             
+2025-01-07T21:19:01.141775190Z   project.e2e-spec.ts         |       0 |      100 |       0 |       0 | 1-106             
+2025-01-07T21:19:01.142260223Z   user.e2e-spec.ts            |       0 |      100 |       0 |       0 | 1-99              
+2025-01-07T21:19:01.142452436Z  unit/common                  |     100 |      100 |     100 |     100 |                   
+2025-01-07T21:19:01.142805561Z   passwordEncryption.utils.ts |     100 |      100 |     100 |     100 |                   
+2025-01-07T21:19:01.142825662Z  unit/modules/project         |     100 |      100 |     100 |     100 |                   
+2025-01-07T21:19:01.143231190Z   project.utils.ts            |     100 |      100 |     100 |     100 |                   
+2025-01-07T21:19:01.143625717Z  unit/modules/user            |     100 |      100 |     100 |     100 |                   
+2025-01-07T21:19:01.143645118Z   user.utils.ts               |     100 |      100 |     100 |     100 |                   
+2025-01-07T21:19:01.144598284Z ------------------------------|---------|----------|---------|---------|-------------------
+2025-01-07T21:19:01.194200891Z 
+2025-01-07T21:19:01.197568522Z Test Suites: 12 passed, 12 total
+2025-01-07T21:19:01.197641627Z Tests:       54 passed, 54 total
+2025-01-07T21:19:01.197654728Z Snapshots:   0 total
+2025-01-07T21:19:01.197662128Z Time:        28.649 s
+2025-01-07T21:19:01.197668529Z Ran all test suites.
+[Kcov exited with code 0

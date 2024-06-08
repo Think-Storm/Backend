@@ -1,0 +1,76 @@
+2025-01-07T21:17:31.046384130Z The files belonging to this database system will be owned by user "postgres".
+2025-01-07T21:17:31.046429632Z This user must also own the server process.
+2025-01-07T21:17:31.046437932Z 
+2025-01-07T21:17:31.046886850Z The database cluster will be initialized with locale "en_US.utf8".
+2025-01-07T21:17:31.047004254Z The default database encoding has accordingly been set to "UTF8".
+2025-01-07T21:17:31.047048856Z The default text search configuration will be set to "english".
+2025-01-07T21:17:31.047059657Z 
+2025-01-07T21:17:31.047071357Z Data page checksums are disabled.
+2025-01-07T21:17:31.047089458Z 
+2025-01-07T21:17:31.047321867Z fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2025-01-07T21:17:31.066618322Z creating subdirectories ... ok
+2025-01-07T21:17:31.066935135Z selecting dynamic shared memory implementation ... posix
+2025-01-07T21:17:31.136168746Z selecting default "max_connections" ... 100
+2025-01-07T21:17:31.217628836Z selecting default "shared_buffers" ... 128MB
+2025-01-07T21:17:31.243667856Z selecting default time zone ... Etc/UTC
+2025-01-07T21:17:31.245900344Z creating configuration files ... ok
+2025-01-07T21:17:31.591372173Z running bootstrap script ... ok
+2025-01-07T21:17:32.218948471Z performing post-bootstrap initialization ... ok
+2025-01-07T21:17:32.612964412Z syncing data to disk ... ok
+2025-01-07T21:17:32.613006514Z 
+2025-01-07T21:17:32.613015014Z 
+2025-01-07T21:17:32.613025915Z Success. You can now start the database server using:
+2025-01-07T21:17:32.613033915Z 
+2025-01-07T21:17:32.613039415Z     pg_ctl -D /var/lib/postgresql/data -l logfile start
+2025-01-07T21:17:32.613044216Z 
+2025-01-07T21:17:32.612993813Z initdb: warning: enabling "trust" authentication for local connections
+2025-01-07T21:17:32.613056616Z initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2025-01-07T21:17:32.689514363Z waiting for server to start....2025-01-07 21:17:32.689 UTC [48] LOG:  starting PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2025-01-07T21:17:32.692089496Z 2025-01-07 21:17:32.691 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2025-01-07T21:17:32.702108413Z 2025-01-07 21:17:32.701 UTC [51] LOG:  database system was shut down at 2025-01-07 21:17:32 UTC
+2025-01-07T21:17:32.708374737Z 2025-01-07 21:17:32.708 UTC [48] LOG:  database system is ready to accept connections
+2025-01-07T21:17:32.757959697Z  done
+2025-01-07T21:17:32.757990898Z server started
+2025-01-07T21:17:32.858242474Z 
+2025-01-07T21:17:32.858275475Z /usr/local/bin/docker-entrypoint.sh: sourcing /docker-entrypoint-initdb.d/create-multiple-database.sh
+2025-01-07T21:17:32.858480986Z Multiple database creation requested: unit_test_db, e2e_test_db, coverage_test_db
+2025-01-07T21:17:32.861310032Z   Creating database 'unit_test_db' and granting privileges to 'postgres'
+2025-01-07T21:17:32.991555956Z CREATE DATABASE
+2025-01-07T21:17:32.992793320Z GRANT
+2025-01-07T21:17:32.993774870Z   Creating database 'e2e_test_db' and granting privileges to 'postgres'
+2025-01-07T21:17:33.099165111Z CREATE DATABASE
+2025-01-07T21:17:33.100479179Z GRANT
+2025-01-07T21:17:33.101440628Z   Creating database 'coverage_test_db' and granting privileges to 'postgres'
+2025-01-07T21:17:33.245563968Z CREATE DATABASE
+2025-01-07T21:17:33.246855535Z GRANT
+2025-01-07T21:17:33.247645376Z Multiple databases created
+2025-01-07T21:17:33.247662877Z 
+2025-01-07T21:17:33.249099651Z waiting for server to shut down...2025-01-07 21:17:33.248 UTC [48] LOG:  received fast shutdown request
+2025-01-07T21:17:33.251608280Z .2025-01-07 21:17:33.251 UTC [48] LOG:  aborting any active transactions
+2025-01-07T21:17:33.254383224Z 2025-01-07 21:17:33.254 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2025-01-07T21:17:33.254628836Z 2025-01-07 21:17:33.254 UTC [49] LOG:  shutting down
+2025-01-07T21:17:33.257234971Z 2025-01-07 21:17:33.256 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2025-01-07T21:17:33.604338389Z 2025-01-07 21:17:33.604 UTC [49] LOG:  checkpoint complete: wrote 2751 buffers (16.8%); 0 WAL file(s) added, 0 removed, 1 recycled; write=0.074 s, sync=0.263 s, total=0.350 s; sync files=893, longest=0.007 s, average=0.001 s; distance=12714 kB, estimate=12714 kB; lsn=0/214F870, redo lsn=0/214F870
+2025-01-07T21:17:33.614820130Z 2025-01-07 21:17:33.614 UTC [48] LOG:  database system is shut down
+2025-01-07T21:17:33.649823737Z  done
+2025-01-07T21:17:33.649851839Z server stopped
+2025-01-07T21:17:33.651853442Z 
+2025-01-07T21:17:33.651877443Z PostgreSQL init process complete; ready for start up.
+2025-01-07T21:17:33.651885444Z 
+2025-01-07T21:17:33.681035249Z 2025-01-07 21:17:33.680 UTC [1] LOG:  starting PostgreSQL 17.0 (Debian 17.0-1.pgdg120+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+2025-01-07T21:17:33.682018999Z 2025-01-07 21:17:33.681 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2025-01-07T21:17:33.682037700Z 2025-01-07 21:17:33.681 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2025-01-07T21:17:33.687359975Z 2025-01-07 21:17:33.687 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2025-01-07T21:17:33.694487443Z 2025-01-07 21:17:33.694 UTC [71] LOG:  database system was shut down at 2025-01-07 21:17:33 UTC
+2025-01-07T21:17:33.702943980Z 2025-01-07 21:17:33.702 UTC [1] LOG:  database system is ready to accept connections
+2025-01-07T21:18:17.588977277Z 2025-01-07 21:18:17.587 UTC [107] LOG:  could not receive data from client: Connection reset by peer
+2025-01-07T21:18:17.813496656Z 2025-01-07 21:18:17.813 UTC [109] LOG:  could not receive data from client: Connection reset by peer
+2025-01-07T21:18:17.845870991Z 2025-01-07 21:18:17.845 UTC [110] LOG:  could not receive data from client: Connection reset by peer
+2025-01-07T21:19:04.394976726Z 2025-01-07 21:19:04.394 UTC [1] LOG:  received fast shutdown request
+2025-01-07T21:19:04.433634781Z 2025-01-07 21:19:04.415 UTC [1] LOG:  aborting any active transactions
+2025-01-07T21:19:04.448935932Z 2025-01-07 21:19:04.418 UTC [1] LOG:  background worker "logical replication launcher" (PID 74) exited with exit code 1
+2025-01-07T21:19:04.448971334Z 2025-01-07 21:19:04.427 UTC [69] LOG:  shutting down
+2025-01-07T21:19:04.452301163Z 2025-01-07 21:19:04.452 UTC [69] LOG:  checkpoint starting: shutdown immediate
+2025-01-07T21:19:10.080735332Z 2025-01-07 21:19:10.080 UTC [69] LOG:  checkpoint complete: wrote 612 buffers (3.7%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.058 s, sync=5.413 s, total=5.636 s; sync files=4967, longest=0.196 s, average=0.002 s; distance=7001 kB, estimate=7001 kB; lsn=0/2825D30, redo lsn=0/2825D30
+2025-01-07T21:19:10.089177250Z 2025-01-07 21:19:10.088 UTC [1] LOG:  database system is shut down
+[Kthinkstorm-db exited with code 0
