@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NODE_ENV: dev
+    image: thinkstorm-backend:dev
+    tty: true
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=dev
+      - DATABASE_URL=postgres://user:password@db:5432/thinkstorm-db
+    command: sh -c "npx prisma migrate dev && npx prisma generate && npm run db:seed"
+    depends_on:
+      - db
+    
+
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: thinkstorm-db
+    ports:
+      - "5432:5432"
