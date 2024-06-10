@@ -8,25 +8,26 @@ on:
       - test  # Change this to the branch you want to trigger deployment
 
 jobs:
-  deploy:
+  release:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Set up Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - name: Deploy to Fly.io
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: |
-          flyctl deploy
-
+      - name: Verify VERSION file
+        uses: tj-actions/verify-changed-files@v20
+        id: verify-changed-files
+        with:
+          files: VERSION
       - name: Get the version
+        if: steps.verify-changed-files.outputs.files_changed == 'true'
         id: get_version
-        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_ENV
+        run: |
+          VERSION=$(cat VERSION)
+          if [[ ! "$VERSION" =~ ^(\d+\.)?(\d+\.)?(\*|\d+)$ ]]; then
+            echo "VERSION format is invalid: $VERSION"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Create a new tag
         id: tag
@@ -48,3 +49,20 @@ jobs:
           prerelease: false
           body: |
             Deployed version ${{ env.VERSION }}
+
+  deploy:
+    
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl deploy
+
