@@ -1,22 +1,51 @@
-FROM node:21.7.3-alpine3.20
+# syntax = docker/dockerfile:1
 
-# Environment information
-ARG NODE_ENV
+# Adjust NODE_VERSION as desired
+ARG NODE_VERSION=21.6.2
+FROM node:${NODE_VERSION}-slim as base
 
-# Create and set the working directory
+LABEL fly_launch_runtime="NestJS/Prisma"
+
+# NestJS/Prisma app lives here
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
-COPY package*.json ./
+# Set production environment
+ENV NODE_ENV="production"
 
-# Install dependencies
-RUN if [ "$NODE_ENV" = "prod" ]; then npm install --production; else npm install; fi
 
-# Copy the rest of the application code to the working directory
-COPY . .
+# Throw-away build stage to reduce size of final image
+FROM base as build
 
-# Expose the port the app runs on
+# Install packages needed to build node modules
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y build-essential node-gyp openssl pkg-config python-is-python3
+
+# Install node modules
+COPY --link package-lock.json package.json ./
+RUN npm ci --include=dev
+
+# Generate Prisma Client
+COPY --link prisma .
+RUN npx prisma generate
+
+# Copy application code
+COPY --link . .
+
+# Build application
+RUN npm run build
+
+
+# Final stage for app image
+FROM base
+
+# Install packages needed for deployment
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y openssl && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Copy built application
+COPY --from=build /app /app
+
+# Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
-
-# Command to run the application
-RUN if [ "$NODE_ENV" = "prod" ]; then npm start; fi
+CMD [ "npm", "run", "start" ]
