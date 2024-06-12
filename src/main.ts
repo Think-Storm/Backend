@@ -9,6 +9,7 @@ async function bootstrap() {
       stopAtFirstError: true,
       whitelist: true,
       forbidNonWhitelisted: true,
+      transform: true,
     }),
   );
   await app.listen(3000);
