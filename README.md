@@ -19,8 +19,8 @@ You first need to create the db and seed it.
 - Finally you can run the following commands to fill your db with the schema and the seeds.
 
 ```bash
-# generate the db schema up until the latest migration
-npx prisma migrate dev
+# generate the db schema up until the latest migration and generates the prisma client
+npm run db:migrate
 
 # filling the db with the seeds
 npm run db:seed
@@ -37,23 +37,20 @@ npm run start:dev
 
 # production mode
 npm run start:prod
-
-# watch mode
-npm run start:dev
-
-# production mode
-npm run start:prod
 ```
 
 ## Test
 
 ```bash
-# unit tests
-npm run test
+# run all tests
+npm run test:full
+```
+Or you can run them separately:
 
-# e2e tests
+```bash
+# run unit tests
+npm run test:unit
+
+# run e2e tests
 npm run test:e2e
-
-# test coverage
-npm run test:cov
 ```
