@@ -1,9 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserModule } from '../../src/modules/user/user.module';
 import { defaultCreateUserDto } from '../unit/modules/user/user.utils';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { afterEach } from 'node:test';
 
 describe('/users', () => {
   let app: INestApplication;
@@ -16,8 +17,28 @@ describe('/users', () => {
     }).compile();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
+
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        stopAtFirstError: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+      }),
+    );
+
     await app.init();
+    await prismaService.$connect();
+    await prismaService.project.deleteMany();
+    await prismaService.user.deleteMany();
+  });
+
+  afterAll(async () => {
+    await prismaService.$disconnect();
+  });
+
+  afterEach(async () => {
+    await prismaService.project.deleteMany();
     await prismaService.user.deleteMany();
   });
 
