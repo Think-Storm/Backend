@@ -7,6 +7,8 @@ export class User {
   birthdate: Date;
   avatar?: string;
   bio?: string;
+  createdAt: Date;
+  updatedAt?: Date;
   //foundedProjects
   //projects
 }
