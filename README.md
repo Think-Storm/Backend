@@ -1,7 +1,6 @@
 ## Description
 
 Main backend for the ThinkStorm project (API and DB relationships)
-
 ## Installation
 
 ```bash
