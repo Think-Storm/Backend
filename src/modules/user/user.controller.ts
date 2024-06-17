@@ -5,12 +5,14 @@ import {
   Query,
   Body,
   BadRequestException,
+  Param,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { PostDTO } from './dtos/createUserDto';
 import { errorMessages } from '../../common/errorMessages';
+import { User } from './entities/user.entity';
 
-@Controller()
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -33,5 +35,10 @@ export class UserController {
     }
 
     return JSON.stringify(body);
+  }
+
+  @Get('/:id')
+  getUser(@Param('id') userId: string): User {
+    return this.UserService.getUser(userId);
   }
 }
