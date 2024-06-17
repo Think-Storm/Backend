@@ -27,9 +27,7 @@ export class UserService {
     return `goodbye ${id}!`;
   }
 
-  getUser(userId: number): User {
-    const foundUser = this.users.find((u) => u.id === userId);
-    if (!foundUser) throw new NotFoundException();
-    return foundUser;
+  async getUser(userId: number): Promise<User> {
+    return this.userRepository.getUser(userId);
   }
 }
