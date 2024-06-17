@@ -17,6 +17,7 @@ describe('UserRepository', () => {
     userRepository = module.get<UserRepository>(UserRepository);
 
     await prismaService.$connect();
+    await prismaService.project.deleteMany();
     await prismaService.user.deleteMany();
   });
 
@@ -25,6 +26,7 @@ describe('UserRepository', () => {
   });
 
   afterEach(async () => {
+    await prismaService.project.deleteMany();
     await prismaService.user.deleteMany();
   });
 
