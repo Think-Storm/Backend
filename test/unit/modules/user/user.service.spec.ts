@@ -44,7 +44,7 @@ describe('UserService', () => {
         .mockResolvedValue(defaultUser);
 
       expect(
-        userService.IsUserCreateDtoValid(defaultCreateUserDto),
+        userService.isUserCreateDtoValid(defaultCreateUserDto),
       ).rejects.toThrow(BadRequestException);
       expect(spy).toHaveBeenCalledTimes(1);
     });
@@ -56,7 +56,7 @@ describe('UserService', () => {
         .mockResolvedValue(null);
 
       expect(() =>
-        userService.IsUserCreateDtoValid(defaultCreateUserDto),
+        userService.isUserCreateDtoValid(defaultCreateUserDto),
       ).not.toThrow();
       expect(spy).toHaveBeenCalledTimes(1);
     });

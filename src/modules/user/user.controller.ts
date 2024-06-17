@@ -9,7 +9,7 @@ export class UserController {
   @HttpCode(201)
   @Post()
   async createUser(@Body() body: CreateUserDto) {
-    await this.userService.IsUserCreateDtoValid(body);
+    await this.userService.isUserCreateDtoValid(body);
     return this.userService.createUser(body);
   }
 }

@@ -30,10 +30,14 @@ describe('UserController', () => {
     userService = app.get<UserService>(UserService);
   });
 
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('createUser function', () => {
     it('should return a correct responseDto', async () => {
       // Mock call to Dto validator
-      const validatorSpy = jest.spyOn(userService, 'IsUserCreateDtoValid');
+      const validatorSpy = jest.spyOn(userService, 'isUserCreateDtoValid');
 
       // Mock call to DB
       const mainSpy = jest

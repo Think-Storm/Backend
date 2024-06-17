@@ -29,7 +29,7 @@ export class UserService {
    * @param dto - The data transfer object to validate
    * @throws BadRequestException if the email is already in use
    */
-  async IsUserCreateDtoValid(dto: CreateUserDto) {
+  async isUserCreateDtoValid(dto: CreateUserDto) {
     if (await this.doesUserWithEmailExist(dto.email)) {
       throw new BadRequestException(
         errorMessages.USER_WITH_EMAIL_ALREADY_EXISTS,
