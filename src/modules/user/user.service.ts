@@ -32,7 +32,6 @@ export class UserService {
    */
   async IsUserCreateDtoValid(dto: CreateUserDto) {
     if (await this.doesUserWithEmailExist(dto.email)) {
-      //BAD REQUEST EXCEPTION
       throw ServiceException.BadRequestException(
         errorMessages.USER_WITH_EMAIL_ALREADY_EXISTS,
       );
@@ -55,11 +54,6 @@ export class UserService {
       passwordInformation.passwordSalt,
     );
 
-    // //InternalServerErrorException
-    // if (!createdUser) {
-    //   throw new ServiceException(errorMessages.ERROR_CREATING_USER_IN_DB, 500);
-    // }
-
     return this.userMapper.userToUserResponseDTO(createdUser);
   }
 
@@ -70,7 +64,7 @@ export class UserService {
    */
   async getUser(userId: number): Promise<UserResponseDto> {
     const foundUser = await this.userRepository.getUser(userId);
-    //NOT FOUND EXCEPTION
+
     if (!foundUser)
       throw ServiceException.EntityNotFoundException(
         errorMessages.ENTITY_NOT_FOUND,
