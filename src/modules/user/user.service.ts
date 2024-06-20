@@ -1,8 +1,5 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { AppError } from './../../common/appError';
 import { CreateUserDto } from './dtos/createUser.dto';
 import { UserRepository } from './user.repository';
 import { UserResponseDto } from './dtos/userResponse.dto';
@@ -35,9 +32,8 @@ export class UserService {
    */
   async IsUserCreateDtoValid(dto: CreateUserDto) {
     if (await this.doesUserWithEmailExist(dto.email)) {
-      throw new BadRequestException(
-        errorMessages.USER_WITH_EMAIL_ALREADY_EXISTS,
-      );
+      //BAD REQUEST EXCEPTION
+      throw new AppError(errorMessages.USER_WITH_EMAIL_ALREADY_EXISTS, 400);
     }
   }
 
@@ -63,8 +59,9 @@ export class UserService {
   async getUser(userId: number): Promise<UserResponseDto> {
     console.log(typeof userId);
     const foundUser = await this.userRepository.getUser(userId);
+    //NOT FOUND EXCEPTION
     if (!foundUser)
-      throw new NotFoundException(errorMessages.GET_USER_ERROR_MESSAGE);
+      throw new AppError(errorMessages.GET_USER_ERROR_MESSAGE, 404);
     return this.userMapper.userToUserResponseDTO(foundUser);
   }
 }
