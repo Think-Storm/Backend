@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { CreateUserDto } from './dtos/createUser.dto';
+import { ServiceException } from 'src/common/exception-filter/serviceException';
+// import { errorMessages } from 'src/common/enums/errorMessages';
 
 @Injectable()
 export class UserRepository {
@@ -32,24 +34,32 @@ export class UserRepository {
     createUserDto: CreateUserDto,
     passwordSalt: string,
   ): Promise<User> {
-    return this.prisma.user.create({
-      data: {
-        username: createUserDto.username,
-        email: createUserDto.email.toLowerCase(),
-        password: createUserDto.password,
-        passwordSalt: passwordSalt,
-        fullName: createUserDto.fullName,
-        bio: createUserDto.bio,
-        birthdate: createUserDto.birthdate,
-      },
-    });
+    try {
+      return this.prisma.user.create({
+        data: {
+          username: createUserDto.username,
+          email: createUserDto.email.toLowerCase(),
+          password: createUserDto.password,
+          passwordSalt: passwordSalt,
+          fullName: createUserDto.fullName,
+          bio: createUserDto.bio,
+          birthdate: createUserDto.birthdate,
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(error);
+    }
   }
 
   async getUser(userId: number): Promise<User> {
-    return await this.prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
+    try {
+      return await this.prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(error);
+    }
   }
 }

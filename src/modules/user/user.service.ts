@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AppError } from './../../common/appError';
+import { ServiceException } from '../../common/exception-filter/serviceException';
 import { CreateUserDto } from './dtos/createUser.dto';
 import { UserRepository } from './user.repository';
 import { UserResponseDto } from './dtos/userResponse.dto';
@@ -33,7 +33,9 @@ export class UserService {
   async IsUserCreateDtoValid(dto: CreateUserDto) {
     if (await this.doesUserWithEmailExist(dto.email)) {
       //BAD REQUEST EXCEPTION
-      throw new AppError(errorMessages.USER_WITH_EMAIL_ALREADY_EXISTS, 400);
+      throw ServiceException.BadRequestException(
+        errorMessages.USER_WITH_EMAIL_ALREADY_EXISTS,
+      );
     }
   }
 
@@ -53,10 +55,10 @@ export class UserService {
       passwordInformation.passwordSalt,
     );
 
-    //InternalServerErrorException
-    if (!createdUser) {
-      throw new AppError(errorMessages.ERROR_CREATING_USER_IN_DB, 500);
-    }
+    // //InternalServerErrorException
+    // if (!createdUser) {
+    //   throw new ServiceException(errorMessages.ERROR_CREATING_USER_IN_DB, 500);
+    // }
 
     return this.userMapper.userToUserResponseDTO(createdUser);
   }
@@ -65,7 +67,9 @@ export class UserService {
     const foundUser = await this.userRepository.getUser(userId);
     //NOT FOUND EXCEPTION
     if (!foundUser)
-      throw new AppError(errorMessages.GET_USER_ERROR_MESSAGE, 404);
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND,
+      );
     return this.userMapper.userToUserResponseDTO(foundUser);
   }
 }
