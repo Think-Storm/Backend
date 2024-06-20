@@ -25,7 +25,7 @@ export class ServiceExceptionToHttpExceptionFilter implements ExceptionFilter {
       } else {
         response.status(500).json({
           status: 'Error',
-          message: 'Something went very wrong!',
+          message: 'Something went very wrong! This is not Operational Error.',
         });
       }
     };
@@ -39,12 +39,11 @@ export class ServiceExceptionToHttpExceptionFilter implements ExceptionFilter {
       } else {
         response.status(500).json({
           status: 'Error',
-          message: 'Something went very wrong!',
+          message: 'Something went very wrong! This is not Operational Error.',
         });
       }
     };
 
-    console.log(exception);
     if (process.env.NODE_ENV === 'development') {
       sendErrorDev();
     } else if (process.env.NODE_ENV === 'production') {
