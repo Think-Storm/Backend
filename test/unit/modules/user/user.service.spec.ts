@@ -8,7 +8,7 @@ import { UserController } from '../../../../src/modules/user/user.controller';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { BadRequestException } from '@nestjs/common';
 import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
-import { CreateUserResponseDto } from '../../../../src/modules/user/dtos/createUserResponse.dto';
+import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -63,7 +63,7 @@ describe('UserService', () => {
   });
 
   describe('createUser function', () => {
-    it('should create user and map the result into CreateUserResponseDto', async () => {
+    it('should create user and map the result into UserResponseDto', async () => {
       // Mock call to the password and salt creation
       const passwordSpy = jest
         .spyOn(passwordEncryption, 'createSaltAndHashedPassword')
@@ -74,7 +74,7 @@ describe('UserService', () => {
         .spyOn(userRepository, 'createUser')
         .mockResolvedValue(defaultUser);
 
-      const expectedResponseDto: CreateUserResponseDto = {
+      const expectedResponseDto: UserResponseDto = {
         id: defaultUser.id,
         email: defaultUser.email,
         username: defaultUser.username,
@@ -86,13 +86,13 @@ describe('UserService', () => {
         lastUpdatedAt: defaultUser.lastUpdatedAt,
       };
 
-      const createUserResponseDto =
+      const userResponseDto =
         await userService.createUser(defaultCreateUserDto);
 
       // Checking the mapper
-      expect(createUserResponseDto).toEqual(expectedResponseDto);
-      expect(createUserResponseDto).not.toHaveProperty('password');
-      expect(createUserResponseDto).not.toHaveProperty('passwordSalt');
+      expect(userResponseDto).toEqual(expectedResponseDto);
+      expect(userResponseDto).not.toHaveProperty('password');
+      expect(userResponseDto).not.toHaveProperty('passwordSalt');
 
       expect(passwordSpy).toHaveBeenCalledTimes(1);
 

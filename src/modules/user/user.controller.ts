@@ -1,20 +1,10 @@
 import { UserService } from './user.service';
 import { CreateUserDto } from './dtos/createUser.dto';
-import {
-  Controller,
-  Get,
-  Post,
-  Query,
-  Body,
-  BadRequestException,
-  Param,
-  HttpCode,
-} from '@nestjs/common';
-import { PostDTO } from './dtos/createUserDto';
-import { errorMessages } from '../../common/errorMessages';
-import { User } from './entities/user.entity';
+import { Controller, Get, Post, Body, Param, HttpCode } from '@nestjs/common';
+import { UserResponseDto } from './dtos/userResponse.dto';
+// import { getUserDto } from './dtos/getUser.dto';
 
-@Controller('users')
+@Controller()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -26,7 +16,9 @@ export class UserController {
   }
 
   @Get('/:id')
-  async getUser(@Param('id') userId: number): Promise<User> {
+  async getUser(@Param('id') userId: number): Promise<UserResponseDto> {
+    // console.log(typeof userId);
+    // console.log(user);
     return this.userService.getUser(userId);
   }
 }
