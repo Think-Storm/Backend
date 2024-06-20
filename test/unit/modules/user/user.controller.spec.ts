@@ -5,10 +5,7 @@ import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
-import {
-  defaultCreateUserDto,
-  defaultCreateUserResponseDto,
-} from './user.utils';
+import { defaultCreateUserDto, defaultUserResponseDto } from './user.utils';
 
 describe('UserController', () => {
   let userController: UserController;
@@ -38,7 +35,7 @@ describe('UserController', () => {
       // Mock call to DB
       const mainSpy = jest
         .spyOn(userService, 'createUser')
-        .mockResolvedValue(defaultCreateUserResponseDto);
+        .mockResolvedValue(defaultUserResponseDto);
       userService;
 
       const response = await userController.createUser(defaultCreateUserDto);
@@ -46,7 +43,7 @@ describe('UserController', () => {
       expect(validatorSpy).toHaveBeenCalledTimes(1);
       expect(mainSpy).toHaveBeenCalledTimes(1);
       expect(mainSpy).toHaveBeenCalledWith(defaultCreateUserDto);
-      expect(response).toBe(defaultCreateUserResponseDto);
+      expect(response).toBe(defaultUserResponseDto);
     });
   });
 });

@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from './dtos/createUser.dto';
 import { UserRepository } from './user.repository';
-import { CreateUserResponseDto } from './dtos/createUserResponse.dto';
+import { UserResponseDto } from './dtos/userResponse.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { User } from '@prisma/client';
 import { PasswordEncryption } from '../../common/passwordEncryption';
@@ -44,11 +44,9 @@ export class UserService {
   /**
    * Creates a new user
    * @param createUserDto - The data transfer object for creating a user
-   * @returns A promise resolving to a CreateUserResponseDto
+   * @returns A promise resolving to a UserResponseDto
    */
-  async createUser(
-    createUserDto: CreateUserDto,
-  ): Promise<CreateUserResponseDto> {
+  async createUser(createUserDto: CreateUserDto): Promise<UserResponseDto> {
     const passwordInformation =
       await this.passwordEncryption.createSaltAndHashedPassword(
         createUserDto.password,
@@ -59,10 +57,14 @@ export class UserService {
       passwordInformation.passwordSalt,
     );
 
-    return this.userMapper.userToCreateUserResponseDTO(createdUser);
+    return this.userMapper.userToUserResponseDTO(createdUser);
   }
 
-  async getUser(userId: number): Promise<User> {
-    return this.userRepository.getUser(userId);
+  async getUser(userId: number): Promise<UserResponseDto> {
+    console.log(typeof userId);
+    const foundUser = await this.userRepository.getUser(userId);
+    if (!foundUser)
+      throw new NotFoundException(errorMessages.GET_USER_ERROR_MESSAGE);
+    return this.userMapper.userToUserResponseDTO(foundUser);
   }
 }
