@@ -4,7 +4,7 @@ import { Controller, Get, Post, Body, Param, HttpCode } from '@nestjs/common';
 import { UserResponseDto } from './dtos/userResponse.dto';
 // import { getUserDto } from './dtos/getUser.dto';
 
-@Controller()
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
