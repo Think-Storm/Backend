@@ -63,6 +63,11 @@ export class UserService {
     return this.userMapper.userToUserResponseDTO(createdUser);
   }
 
+  /**
+   * get user by ID
+   * @param userId - ID for getting user
+   * @returns A promise resolving to a UserResponseDto
+   */
   async getUser(userId: number): Promise<UserResponseDto> {
     const foundUser = await this.userRepository.getUser(userId);
     //NOT FOUND EXCEPTION
