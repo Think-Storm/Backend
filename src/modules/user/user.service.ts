@@ -53,11 +53,15 @@ export class UserService {
       passwordInformation.passwordSalt,
     );
 
+    //InternalServerErrorException
+    if (!createdUser) {
+      throw new AppError(errorMessages.ERROR_CREATING_USER_IN_DB, 500);
+    }
+
     return this.userMapper.userToUserResponseDTO(createdUser);
   }
 
   async getUser(userId: number): Promise<UserResponseDto> {
-    console.log(typeof userId);
     const foundUser = await this.userRepository.getUser(userId);
     //NOT FOUND EXCEPTION
     if (!foundUser)

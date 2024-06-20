@@ -1,8 +1,7 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { CreateUserDto } from './dtos/createUser.dto';
-import { errorMessages } from '../../../src/common/enums/errorMessages';
 
 @Injectable()
 export class UserRepository {
@@ -33,31 +32,24 @@ export class UserRepository {
     createUserDto: CreateUserDto,
     passwordSalt: string,
   ): Promise<User> {
-    try {
-      return this.prisma.user.create({
-        data: {
-          username: createUserDto.username,
-          email: createUserDto.email.toLowerCase(),
-          password: createUserDto.password,
-          passwordSalt: passwordSalt,
-          fullName: createUserDto.fullName,
-          bio: createUserDto.bio,
-          birthdate: createUserDto.birthdate,
-        },
-      });
-    } catch (error) {
-      throw new InternalServerErrorException(
-        errorMessages.ERROR_CREATING_USER_IN_DB,
-      );
-    }
+    return this.prisma.user.create({
+      data: {
+        username: createUserDto.username,
+        email: createUserDto.email.toLowerCase(),
+        password: createUserDto.password,
+        passwordSalt: passwordSalt,
+        fullName: createUserDto.fullName,
+        bio: createUserDto.bio,
+        birthdate: createUserDto.birthdate,
+      },
+    });
   }
 
   async getUser(userId: number): Promise<User> {
-    const foundUser = await this.prisma.user.findUnique({
+    return await this.prisma.user.findUnique({
       where: {
         id: userId,
       },
     });
-    return foundUser;
   }
 }
