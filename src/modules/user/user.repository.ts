@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { CreateUserDto } from './dtos/createUser.dto';
@@ -62,8 +58,6 @@ export class UserRepository {
         id: userId,
       },
     });
-    if (!foundUser)
-      throw new NotFoundException(errorMessages.GET_USER_ERROR_MESSAGE);
     return foundUser;
   }
 }
