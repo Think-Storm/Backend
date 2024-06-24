@@ -54,10 +54,10 @@ describe('UserController', () => {
         .spyOn(userService, 'getUser')
         .mockResolvedValue(defaultUserResponseDto);
 
-      const response = await userController.getUser(0);
+      const response = await userController.getUser(defaultUserResponseDto.id);
 
       expect(mainSpy).toHaveBeenCalledTimes(1);
-      expect(mainSpy).toHaveBeenCalledWith(defaultCreateUserDto);
+      expect(mainSpy).toHaveBeenCalledWith(defaultUserResponseDto.id);
       expect(response).toBe(defaultUserResponseDto);
     });
   });
