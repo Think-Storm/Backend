@@ -64,4 +64,35 @@ describe('/users', () => {
         .expect(400);
     });
   });
+
+  describe('/:id GET (Get User)', () => {
+    it('should return a 200 if everything is fine', async () => {
+      // Create User in DB
+      const createdUser = await request(app.getHttpServer())
+        .post('/')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      console.log(createdUser);
+
+      return request(app.getHttpServer())
+        .get(`/`)
+        .send(defaultCreateUserDto)
+        .expect(200);
+    });
+
+    it('should return a 400 if user already exists', async () => {
+      // Create User in DB
+      await request(app.getHttpServer())
+        .post('/')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      // Duplicate User that should be refused
+      return request(app.getHttpServer())
+        .post('/')
+        .send(defaultCreateUserDto)
+        .expect(400);
+    });
+  });
 });

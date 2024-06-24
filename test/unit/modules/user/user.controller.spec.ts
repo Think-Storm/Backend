@@ -40,13 +40,27 @@ describe('UserController', () => {
       const mainSpy = jest
         .spyOn(userService, 'createUser')
         .mockResolvedValue(defaultUserResponseDto);
-      userService;
 
       const response = await userController.createUser(defaultCreateUserDto);
 
       expect(validatorSpy).toHaveBeenCalledTimes(1);
       expect(mainSpy).toHaveBeenCalledTimes(1);
       expect(mainSpy).toHaveBeenCalledWith(defaultCreateUserDto);
+      expect(response).toBe(defaultUserResponseDto);
+    });
+  });
+
+  describe('getUser function', () => {
+    it('should return a searched user responseDto', async () => {
+      // Mock call to DB
+      const mainSpy = jest
+        .spyOn(userService, 'getUser')
+        .mockResolvedValue(defaultUserResponseDto);
+
+      const response = await userController.getUser(defaultUserResponseDto.id);
+
+      expect(mainSpy).toHaveBeenCalledTimes(1);
+      expect(mainSpy).toHaveBeenCalledWith(defaultUserResponseDto.id);
       expect(response).toBe(defaultUserResponseDto);
     });
   });
