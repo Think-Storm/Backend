@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { CreateUserDto } from './dtos/createUser.dto';
-import { ServiceException } from 'src/common/exception-filter/serviceException';
+import { ServiceException } from '../../common/exception-filter/serviceException';
 // import { errorMessages } from 'src/common/enums/errorMessages';
 
 @Injectable()
