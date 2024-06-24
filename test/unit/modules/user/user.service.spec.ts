@@ -9,6 +9,8 @@ import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { BadRequestException } from '@nestjs/common';
 import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
 import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
+import { ServiceException } from 'src/common/exception-filter/serviceException';
+import { errorMessages } from 'src/common/enums/errorMessages';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -103,6 +105,46 @@ describe('UserService', () => {
         }),
         defaultSaltAndPassword.passwordSalt,
       );
+    });
+  });
+
+  describe('getUser function', () => {
+    it('should get user by userId and return a correct UserResponseDto', async () => {
+      // create User
+      await userService.createUser(defaultCreateUserDto);
+
+      // Mock call to DB
+      const successDbSpy = jest
+        .spyOn(userRepository, 'getUser')
+        .mockResolvedValue(defaultUser);
+
+      const successUserResponseDto = await userService.getUser(1);
+
+      const expectedResponseDto: UserResponseDto = {
+        id: defaultUser.id,
+        email: defaultUser.email,
+        username: defaultUser.username,
+        fullName: defaultUser.fullName,
+        birthdate: defaultUser.birthdate,
+        avatar: defaultUser.avatar,
+        bio: defaultUser.bio,
+        createdAt: defaultUser.createdAt,
+        lastUpdatedAt: defaultUser.lastUpdatedAt,
+      };
+
+      expect(successDbSpy).toHaveBeenCalledTimes(1);
+      expect(successUserResponseDto).toEqual(expectedResponseDto);
+    });
+    it('should throw 404 error if user is not found', async () => {
+      // create User
+      await userService.createUser(defaultCreateUserDto);
+
+      try {
+        await userService.getUser(999);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toEqual(errorMessages.ENTITY_NOT_FOUND);
+      }
     });
   });
 });
