@@ -3,8 +3,9 @@ import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { defaultCreateUserDto } from './user.utils';
 import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
-import { ServiceException } from 'src/common/exception-filter/serviceException';
-import { errorMessages } from 'src/common/enums/errorMessages';
+import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
+import { errorMessages } from '../../../../src/common/enums/errorMessages';
+// import { create } from 'domain';
 
 describe('UserRepository', () => {
   let prismaService: PrismaService;
@@ -85,14 +86,15 @@ describe('UserRepository', () => {
   describe('getUser function', () => {
     it('should get a searched user in DB', async () => {
       // create a user
-      await userRepository.createUser(
+      const createdUser = await userRepository.createUser(
         defaultCreateUserDto,
         defaultPasswordSalt,
       );
 
-      const user = await userRepository.getUser(1);
+      const user = await userRepository.getUser(createdUser.id);
 
-      expect(user).toHaveProperty('id');
+      expect(user).toBeDefined();
+      expect(user.id).toBe(createdUser.id);
       expect(user.createdAt).toBeDefined();
       expect(user.lastUpdatedAt).toBeDefined();
       expect(user.username).toBe(defaultCreateUserDto.username);
