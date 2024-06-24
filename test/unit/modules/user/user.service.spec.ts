@@ -6,11 +6,11 @@ import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { UserController } from '../../../../src/modules/user/user.controller';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
-import { BadRequestException } from '@nestjs/common';
+// import { BadRequestException } from '@nestjs/common';
 import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
 import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
-import { ServiceException } from 'src/common/exception-filter/serviceException';
-import { errorMessages } from 'src/common/enums/errorMessages';
+import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
+import { errorMessages } from '../../../../src/common/enums/errorMessages';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -47,7 +47,7 @@ describe('UserService', () => {
 
       expect(
         userService.IsUserCreateDtoValid(defaultCreateUserDto),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ServiceException);
       expect(spy).toHaveBeenCalledTimes(1);
     });
 
