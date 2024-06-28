@@ -52,7 +52,7 @@ describe('ProjectService', () => {
     });
 
     it('should return a project if project exists with id', async () => {
-      // Mock call to DB not to return a Project
+      // Mock call to DB to return a Project
       const spy = jest
         .spyOn(projectRepository, 'findProjectById')
         .mockResolvedValue(projectTestUtils.defaultProject);
