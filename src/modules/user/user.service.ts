@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dtos/createUser.dto';
 import { UserRepository } from './user.repository';
 import { CreateUserResponseDto } from './dtos/createUserResponse.dto';
@@ -56,5 +60,11 @@ export class UserService {
     );
 
     return this.userMapper.userToCreateUserResponseDTO(createdUser);
+  }
+
+  getUser(userId: number): User {
+    const foundUser = this.users.find((u) => u.id === userId);
+    if (!foundUser) throw new NotFoundException();
+    return foundUser;
   }
 }
