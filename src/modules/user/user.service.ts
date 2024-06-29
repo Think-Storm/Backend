@@ -57,4 +57,8 @@ export class UserService {
 
     return this.userMapper.userToCreateUserResponseDTO(createdUser);
   }
+
+  async getUser(userId: number): Promise<User> {
+    return this.userRepository.getUser(userId);
+  }
 }
