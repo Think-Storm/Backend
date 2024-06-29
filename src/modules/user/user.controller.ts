@@ -1,17 +1,7 @@
 import { UserService } from './user.service';
 import { CreateUserDto } from './dtos/createUser.dto';
-import {
-  Controller,
-  Get,
-  Post,
-  Query,
-  Body,
-  BadRequestException,
-  Param,
-  HttpCode,
-} from '@nestjs/common';
-import { PostDTO } from './dtos/createUserDto';
-import { errorMessages } from '../../common/errorMessages';
+import { Controller, Get, Post, Body, Param, HttpCode } from '@nestjs/common';
+
 import { User } from './entities/user.entity';
 
 @Controller('users')
@@ -26,7 +16,7 @@ export class UserController {
   }
 
   @Get('/:id')
-  getUser(@Param('id') userId: string): User {
+  getUser(@Param('id') userId: number): User {
     return this.userService.getUser(userId);
   }
 }
