@@ -5,7 +5,6 @@ import { defaultCreateUserDto } from './user.utils';
 import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
-// import { create } from 'domain';
 
 describe('UserRepository', () => {
   let prismaService: PrismaService;
