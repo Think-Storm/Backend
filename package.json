@@ -12,7 +12,6 @@
     "start:dev": "SET NODE_ENV=development&&nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "SET NODE_ENV=production&&node dist/main",
-    "start:production": "SET NODE_ENV=production&&nest start",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test:watch": "jest --runInBand --watch",
     "test:cov": "jest --runInBand --coverage",
@@ -67,7 +66,7 @@
   "lint-staged": {
     "{src,apps,libs,test}/**/*.ts": [
       "eslint --fix"
-    ] 
+    ]
   },
   "husky": {
     "hooks": {
