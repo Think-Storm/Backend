@@ -51,10 +51,12 @@ describe('UserController', () => {
     it('should return a searched user responseDto', async () => {
       // Mock call to DB
       const mainSpy = jest
-        .spyOn(userService, 'getUser')
+        .spyOn(userService, 'getUserById')
         .mockResolvedValue(defaultUserResponseDto);
 
-      const response = await userController.getUser(defaultUserResponseDto.id);
+      const response = await userController.getUserById(
+        defaultUserResponseDto.id,
+      );
 
       expect(mainSpy).toHaveBeenCalledTimes(1);
       expect(mainSpy).toHaveBeenCalledWith(defaultUserResponseDto.id);
