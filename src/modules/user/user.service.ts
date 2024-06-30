@@ -62,8 +62,8 @@ export class UserService {
    * @param userId - ID for getting user
    * @returns A promise resolving to a UserResponseDto
    */
-  async getUser(userId: number): Promise<UserResponseDto> {
-    const foundUser = await this.userRepository.getUser(userId);
+  async getUserById(userId: number): Promise<UserResponseDto> {
+    const foundUser = await this.userRepository.getUserById(userId);
 
     if (!foundUser)
       throw ServiceException.EntityNotFoundException(
