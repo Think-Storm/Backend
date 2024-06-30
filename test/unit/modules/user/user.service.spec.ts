@@ -114,10 +114,10 @@ describe('UserService', () => {
 
       // Mock call to DB
       const successDbSpy = jest
-        .spyOn(userRepository, 'getUser')
+        .spyOn(userRepository, 'getUserById')
         .mockResolvedValue(defaultUser);
 
-      const successUserResponseDto = await userService.getUser(1);
+      const successUserResponseDto = await userService.getUserById(1);
 
       const expectedResponseDto: UserResponseDto = {
         id: defaultUser.id,
@@ -139,7 +139,7 @@ describe('UserService', () => {
       await userService.createUser(defaultCreateUserDto);
 
       try {
-        await userService.getUser(999);
+        await userService.getUserById(999);
       } catch (e) {
         expect(e).toBeInstanceOf(ServiceException);
         expect(e.message).toEqual(errorMessages.ENTITY_NOT_FOUND);
