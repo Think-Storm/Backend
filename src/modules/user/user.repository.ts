@@ -56,7 +56,7 @@ export class UserRepository {
    * @param userId - User id for getting user object
    * @returns A promise resolving to the found User object
    */
-  async getUser(userId: number): Promise<User> {
+  async getUserById(userId: number): Promise<User> {
     try {
       return await this.prisma.user.findUnique({
         where: {

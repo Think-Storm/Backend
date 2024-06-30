@@ -92,7 +92,7 @@ describe('UserRepository', () => {
         defaultPasswordSalt,
       );
 
-      const user = await userRepository.getUser(createdUser.id);
+      const user = await userRepository.getUserById(createdUser.id);
 
       expect(user).toBeDefined();
       expect(user.id).toBe(createdUser.id);
@@ -116,7 +116,7 @@ describe('UserRepository', () => {
         defaultPasswordSalt,
       );
       try {
-        await userRepository.getUser(Number('abc'));
+        await userRepository.getUserById(Number('abc'));
       } catch (e) {
         expect(e).toBeInstanceOf(ServiceException);
         expect(e.message).toContain(errorMessages.VALIDATION_ERROR);
