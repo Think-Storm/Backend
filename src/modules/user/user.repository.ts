@@ -1,12 +1,9 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { CreateUserDto } from './dtos/createUser.dto';
-import { errorMessages } from '../../../src/common/enums/errorMessages';
+import { ServiceException } from 'src/common/exception-filter/serviceException';
+// import { errorMessages } from 'src/common/enums/errorMessages';
 
 @Injectable()
 export class UserRepository {
@@ -50,19 +47,19 @@ export class UserRepository {
         },
       });
     } catch (error) {
-      throw new InternalServerErrorException(
-        errorMessages.ERROR_CREATING_USER_IN_DB,
-      );
+      throw ServiceException.ErrorException(error.message, error);
     }
   }
 
   async getUser(userId: number): Promise<User> {
-    const foundUser = await this.prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-    });
-    if (!foundUser) throw new NotFoundException(errorMessages.ENTITY_NOT_FOUND);
-    return foundUser;
+    try {
+      return await this.prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(error.message, error);
+    }
   }
 }
