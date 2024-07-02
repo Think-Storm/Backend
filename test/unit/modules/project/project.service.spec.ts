@@ -4,8 +4,9 @@ import { ProjectRepository } from '../../../../src/modules/project/project.repos
 import { ProjectMapper } from '../../../../src/modules/project/dtos/project.mapper';
 import { ProjectController } from '../../../../src/modules/project/project.controller';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
-import { NotFoundException } from '@nestjs/common';
 import { ProjectTestUtils } from './project.utils';
+import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
+import { errorMessages } from '../../../../src/common/enums/errorMessages';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
@@ -40,11 +41,19 @@ describe('ProjectService', () => {
         .spyOn(projectRepository, 'findProjectById')
         .mockResolvedValue(null);
 
-      expect(
-        projectService.getProjectById(
+      try {
+        await projectService.getProjectById(
           projectTestUtils.defaultGetProjectResponseDto.id,
-        ),
-      ).rejects.toThrow(NotFoundException);
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toContain(
+          errorMessages.ENTITY_NOT_FOUND(
+            projectTestUtils.defaultGetProjectResponseDto.id.toString(),
+          ),
+        );
+      }
+
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(
         projectTestUtils.defaultGetProjectResponseDto.id,
