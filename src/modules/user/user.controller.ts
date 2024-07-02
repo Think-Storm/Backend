@@ -1,6 +1,8 @@
-import { Controller, Post, Body, HttpCode } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dtos/createUser.dto';
+import { Controller, Get, Post, Body, Param, HttpCode } from '@nestjs/common';
+import { UserResponseDto } from './dtos/userResponse.dto';
+// import { getUserDto } from './dtos/getUser.dto';
 
 @Controller()
 export class UserController {
@@ -11,5 +13,10 @@ export class UserController {
   async createUser(@Body() body: CreateUserDto) {
     await this.userService.isUserCreateDtoValid(body);
     return this.userService.createUser(body);
+  }
+
+  @Get('/:id')
+  async getUserById(@Param('id') userId: number): Promise<UserResponseDto> {
+    return this.userService.getUserById(userId);
   }
 }

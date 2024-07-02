@@ -1,6 +1,6 @@
 import { User } from '@prisma/client';
 import { CreateUserDto } from '../../../../src/modules/user/dtos/createUser.dto';
-import { CreateUserResponseDto } from '../../../../src/modules/user/dtos/createUserResponse.dto';
+import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
 
 export const defaultCreateUserDto: CreateUserDto = {
   username: 'username',
@@ -11,7 +11,7 @@ export const defaultCreateUserDto: CreateUserDto = {
   bio: 'bio',
 };
 
-export const defaultCreateUserResponseDto: CreateUserResponseDto = {
+export const defaultUserResponseDto: UserResponseDto = {
   id: 0,
   username: 'username',
   fullName: 'Full Name',

@@ -5,10 +5,7 @@ import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
-import {
-  defaultCreateUserDto,
-  defaultCreateUserResponseDto,
-} from './user.utils';
+import { defaultCreateUserDto, defaultUserResponseDto } from './user.utils';
 
 describe('UserController', () => {
   let userController: UserController;
@@ -42,15 +39,31 @@ describe('UserController', () => {
       // Mock call to DB
       const mainSpy = jest
         .spyOn(userService, 'createUser')
-        .mockResolvedValue(defaultCreateUserResponseDto);
-      userService;
+        .mockResolvedValue(defaultUserResponseDto);
 
       const response = await userController.createUser(defaultCreateUserDto);
 
       expect(validatorSpy).toHaveBeenCalledTimes(1);
       expect(mainSpy).toHaveBeenCalledTimes(1);
       expect(mainSpy).toHaveBeenCalledWith(defaultCreateUserDto);
-      expect(response).toBe(defaultCreateUserResponseDto);
+      expect(response).toBe(defaultUserResponseDto);
+    });
+  });
+
+  describe('getUser function', () => {
+    it('should return a searched user responseDto', async () => {
+      // Mock call to DB
+      const mainSpy = jest
+        .spyOn(userService, 'getUserById')
+        .mockResolvedValue(defaultUserResponseDto);
+
+      const response = await userController.getUserById(
+        defaultUserResponseDto.id,
+      );
+
+      expect(mainSpy).toHaveBeenCalledTimes(1);
+      expect(mainSpy).toHaveBeenCalledWith(defaultUserResponseDto.id);
+      expect(response).toBe(defaultUserResponseDto);
     });
   });
 });

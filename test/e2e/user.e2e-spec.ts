@@ -5,6 +5,7 @@ import { UserModule } from '../../src/modules/user/user.module';
 import { defaultCreateUserDto } from '../unit/modules/user/user.utils';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { afterEach } from 'node:test';
+import { ServiceException } from '../../src/common/exception-filter/serviceException';
 
 describe('/users', () => {
   let app: INestApplication;
@@ -21,9 +22,17 @@ describe('/users', () => {
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
       new ValidationPipe({
+        exceptionFactory: (errors) => {
+          const errMsg = errors
+            .map((error) => Object.values(error.constraints).join(''))
+            .join('. ');
+
+          return new ServiceException(`${errMsg}.`, 400, errors);
+        },
         stopAtFirstError: true,
         whitelist: true,
         forbidNonWhitelisted: true,
+        transform: true,
       }),
     );
 
@@ -62,6 +71,39 @@ describe('/users', () => {
         .post('/')
         .send(defaultCreateUserDto)
         .expect(400);
+    });
+  });
+
+  describe('/:id GET (Get User)', () => {
+    it('should return a 200 if it returns searched user', async () => {
+      // Create User in DB
+      const { body } = await request(app.getHttpServer())
+        .post('/')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      return request(app.getHttpServer())
+        .get(`/${body.id}`)
+        .send(defaultCreateUserDto)
+        .expect(200);
+    });
+
+    it('should return a 404 if userID does not exist', async () => {
+      // Create User in DB
+      const { body } = await request(app.getHttpServer())
+        .post('/')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      // request user that does not exist
+      return request(app.getHttpServer())
+        .get(`/${body.id + 1}`)
+        .expect(404);
+    });
+
+    it('should return a 400 if userID is not number', async () => {
+      // userid is not a numbere
+      return request(app.getHttpServer()).get(`/abc`).expect(400);
     });
   });
 });

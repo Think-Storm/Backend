@@ -1,7 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { ServiceException } from '../../common/exception-filter/serviceException';
 import { CreateUserDto } from './dtos/createUser.dto';
 import { UserRepository } from './user.repository';
-import { CreateUserResponseDto } from './dtos/createUserResponse.dto';
+import { UserResponseDto } from './dtos/userResponse.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { User } from '@prisma/client';
 import { PasswordEncryption } from '../../common/passwordEncryption';
@@ -31,7 +32,7 @@ export class UserService {
    */
   async isUserCreateDtoValid(dto: CreateUserDto) {
     if (await this.doesUserWithEmailExist(dto.email)) {
-      throw new BadRequestException(
+      throw ServiceException.BadRequestException(
         errorMessages.USER_WITH_EMAIL_ALREADY_EXISTS,
       );
     }
@@ -40,11 +41,9 @@ export class UserService {
   /**
    * Creates a new user
    * @param createUserDto - The data transfer object for creating a user
-   * @returns A promise resolving to a CreateUserResponseDto
+   * @returns A promise resolving to a UserResponseDto
    */
-  async createUser(
-    createUserDto: CreateUserDto,
-  ): Promise<CreateUserResponseDto> {
+  async createUser(createUserDto: CreateUserDto): Promise<UserResponseDto> {
     const passwordInformation =
       await this.passwordEncryption.createSaltAndHashedPassword(
         createUserDto.password,
@@ -55,6 +54,21 @@ export class UserService {
       passwordInformation.passwordSalt,
     );
 
-    return this.userMapper.userToCreateUserResponseDTO(createdUser);
+    return this.userMapper.userToUserResponseDTO(createdUser);
+  }
+
+  /**
+   * get user by ID
+   * @param userId - ID for getting user
+   * @returns A promise resolving to a UserResponseDto
+   */
+  async getUserById(userId: number): Promise<UserResponseDto> {
+    const foundUser = await this.userRepository.getUserById(userId);
+
+    if (!foundUser)
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND,
+      );
+    return this.userMapper.userToUserResponseDTO(foundUser);
   }
 }

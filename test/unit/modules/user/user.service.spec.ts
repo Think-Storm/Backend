@@ -6,9 +6,11 @@ import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { UserController } from '../../../../src/modules/user/user.controller';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
-import { BadRequestException } from '@nestjs/common';
+// import { BadRequestException } from '@nestjs/common';
 import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
-import { CreateUserResponseDto } from '../../../../src/modules/user/dtos/createUserResponse.dto';
+import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
+import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
+import { errorMessages } from '../../../../src/common/enums/errorMessages';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -45,7 +47,7 @@ describe('UserService', () => {
 
       expect(
         userService.isUserCreateDtoValid(defaultCreateUserDto),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(ServiceException);
       expect(spy).toHaveBeenCalledTimes(1);
     });
 
@@ -63,7 +65,7 @@ describe('UserService', () => {
   });
 
   describe('createUser function', () => {
-    it('should create user and map the result into CreateUserResponseDto', async () => {
+    it('should create user and map the result into UserResponseDto', async () => {
       // Mock call to the password and salt creation
       const passwordSpy = jest
         .spyOn(passwordEncryption, 'createSaltAndHashedPassword')
@@ -74,7 +76,7 @@ describe('UserService', () => {
         .spyOn(userRepository, 'createUser')
         .mockResolvedValue(defaultUser);
 
-      const expectedResponseDto: CreateUserResponseDto = {
+      const expectedResponseDto: UserResponseDto = {
         id: defaultUser.id,
         email: defaultUser.email,
         username: defaultUser.username,
@@ -86,13 +88,13 @@ describe('UserService', () => {
         lastUpdatedAt: defaultUser.lastUpdatedAt,
       };
 
-      const createUserResponseDto =
+      const userResponseDto =
         await userService.createUser(defaultCreateUserDto);
 
       // Checking the mapper
-      expect(createUserResponseDto).toEqual(expectedResponseDto);
-      expect(createUserResponseDto).not.toHaveProperty('password');
-      expect(createUserResponseDto).not.toHaveProperty('passwordSalt');
+      expect(userResponseDto).toEqual(expectedResponseDto);
+      expect(userResponseDto).not.toHaveProperty('password');
+      expect(userResponseDto).not.toHaveProperty('passwordSalt');
 
       expect(passwordSpy).toHaveBeenCalledTimes(1);
 
@@ -103,6 +105,46 @@ describe('UserService', () => {
         }),
         defaultSaltAndPassword.passwordSalt,
       );
+    });
+  });
+
+  describe('getUser function', () => {
+    it('should get user by userId and return a correct UserResponseDto', async () => {
+      // create User
+      await userService.createUser(defaultCreateUserDto);
+
+      // Mock call to DB
+      const successDbSpy = jest
+        .spyOn(userRepository, 'getUserById')
+        .mockResolvedValue(defaultUser);
+
+      const successUserResponseDto = await userService.getUserById(1);
+
+      const expectedResponseDto: UserResponseDto = {
+        id: defaultUser.id,
+        email: defaultUser.email,
+        username: defaultUser.username,
+        fullName: defaultUser.fullName,
+        birthdate: defaultUser.birthdate,
+        avatar: defaultUser.avatar,
+        bio: defaultUser.bio,
+        createdAt: defaultUser.createdAt,
+        lastUpdatedAt: defaultUser.lastUpdatedAt,
+      };
+
+      expect(successDbSpy).toHaveBeenCalledTimes(1);
+      expect(successUserResponseDto).toEqual(expectedResponseDto);
+    });
+    it('should throw 404 error if user is not found', async () => {
+      // create User
+      await userService.createUser(defaultCreateUserDto);
+
+      try {
+        await userService.getUserById(999);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toEqual(errorMessages.ENTITY_NOT_FOUND);
+      }
     });
   });
 });
