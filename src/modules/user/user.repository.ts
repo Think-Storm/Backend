@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { CreateUserDto } from './dtos/createUser.dto';
@@ -50,5 +54,15 @@ export class UserRepository {
         errorMessages.ERROR_CREATING_USER_IN_DB,
       );
     }
+  }
+
+  async getUser(userId: number): Promise<User> {
+    const foundUser = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+    if (!foundUser) throw new NotFoundException(errorMessages.ENTITY_NOT_FOUND);
+    return foundUser;
   }
 }
