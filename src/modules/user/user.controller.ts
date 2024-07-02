@@ -17,8 +17,6 @@ export class UserController {
 
   @Get('/:id')
   async getUser(@Param('id') userId: number): Promise<UserResponseDto> {
-    // console.log(typeof userId);
-    // console.log(user);
     return this.userService.getUser(userId);
   }
 }
