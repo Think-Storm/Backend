@@ -7,6 +7,7 @@ import { UserResponseDto } from '../user/dtos/userResponse.dto';
 import { UserRepository } from './../user/user.repository';
 import { errorMessages } from 'src/common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
+import { jwt } from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
@@ -17,13 +18,19 @@ export class AuthService {
     private userMapper: UserMapper,
   ) {}
 
+  signToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    });
+  };
+
   async login(loginUserDto: loginUserDto): Promise<UserResponseDto> {
     // 1) Check if email and password exist
     if (!loginUserDto.email || !loginUserDto.password) {
       throw new BadRequestException(errorMessages.BAD_REQUEST_LOGIN_ERROR);
     }
 
-    // 2) Check if user exists && password is correct
+    // 2) Check if user exists && password is correct (validate User)
     const user = await this.userRepository.getUserByEmail(loginUserDto.email);
 
     if (
@@ -37,6 +44,9 @@ export class AuthService {
         errorMessages.INCORRECT_EMAIL_OR_PASSWORD,
       );
     }
+
+    // 3) If everything is okay, send jwt token via cookie
+    this.signToken(user.id);
 
     return this.authRepository.login(loginUserDto);
   }
