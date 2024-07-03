@@ -27,9 +27,6 @@ export class AuthController {
 
     res.cookie('jwt', loginSuccessDto.token, cookieOptions);
 
-    console.log(res.cookie);
-    console.log(loginSuccessDto);
-
     return res.send({
       message: 'success',
       data: loginSuccessDto,
