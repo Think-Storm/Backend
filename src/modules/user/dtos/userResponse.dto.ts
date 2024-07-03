@@ -11,6 +11,9 @@ export class UserResponseDto {
   username: string;
 
   @Expose()
+  password: string;
+
+  @Expose()
   fullName?: string;
 
   @Expose()

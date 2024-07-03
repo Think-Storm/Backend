@@ -8,4 +8,5 @@ export const errorMessages = {
   ENTITY_NOT_FOUND: (entity: string, id: string) =>
     `${entity} with id ${id} was not found.`,
   BAD_REQUEST_LOGIN_ERROR: 'Please provide email or password.',
+  INCORRECT_EMAIL_OR_PASSWORD: 'Incorrect email or password.',
 };

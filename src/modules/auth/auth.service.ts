@@ -25,9 +25,14 @@ export class AuthService {
 
     // 2) Check if user exists && password is correct
     const user = await this.userRepository.getUserByEmail(loginUserDto.email);
-    if (!user) {
-      throw ServiceException.EntityNotFoundException(
-        errorMessages.ENTITY_NOT_FOUND(loginUserDto.email),
+    const passwordCorrect = await this.passwordEncryption.correctPassword(
+      loginUserDto.password,
+      user.password,
+    );
+
+    if (!user || !passwordCorrect) {
+      throw ServiceException.AuthException(
+        errorMessages.INCORRECT_EMAIL_OR_PASSWORD,
       );
     }
 

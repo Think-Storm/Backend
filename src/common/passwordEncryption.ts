@@ -10,4 +10,8 @@ export class PasswordEncryption {
       hashedPassword,
     };
   }
+
+  async correctPassword(candidatePassword: string, userPassword: string) {
+    return await bcrypt.compare(candidatePassword, userPassword);
+  }
 }
