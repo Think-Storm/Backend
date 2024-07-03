@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { UserRepository } from '../user/user.repository';
 import { PasswordEncryption } from '../../common/passwordEncryption';
 import { UserMapper } from '../user/dtos/user.mapper';
+import { AuthRepository } from './auth.repository';
 
 @Injectable()
-export class authService {
+export class AuthService {
   constructor(
-    private userRepository: UserRepository,
+    private authRepository: AuthRepository,
     private passwordEncryption: PasswordEncryption,
     private userMapper: UserMapper,
   ) {}
+
+  async login() {}
 }
