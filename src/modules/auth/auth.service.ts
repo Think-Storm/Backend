@@ -7,7 +7,7 @@ import { UserResponseDto } from '../user/dtos/userResponse.dto';
 import { UserRepository } from './../user/user.repository';
 import { errorMessages } from 'src/common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
-import { jwt } from 'jsonwebtoken';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -16,6 +16,7 @@ export class AuthService {
     private userRepository: UserRepository,
     private passwordEncryption: PasswordEncryption,
     private userMapper: UserMapper,
+    private readonly jwtService: JwtService,
   ) {}
 
   checkUserAndPassword = async (email, password) => {
@@ -33,10 +34,8 @@ export class AuthService {
     return user;
   };
 
-  signToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
-    });
+  signToken = (id: number) => {
+    return this.jwtService.sign({ id });
   };
 
   async login(loginUserDto: loginUserDto): Promise<UserResponseDto> {
@@ -52,8 +51,14 @@ export class AuthService {
     );
 
     // 3) If everything is okay, send jwt token via cookie
-    this.signToken(user.id);
+    const token = this.signToken(user.id);
 
-    return this.authRepository.login(loginUserDto);
+    user.password = undefined;
+    user.passwordSalt = undefined;
+
+    return {
+      token,
+      ...user,
+    };
   }
 }
