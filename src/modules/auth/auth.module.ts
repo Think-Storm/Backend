@@ -20,4 +20,4 @@ import { AuthRepository } from './auth.repository';
     UserMapper,
   ],
 })
-export class UserModule {}
+export class AuthModule {}
