@@ -6,6 +6,7 @@ import { loginUserDto } from './dtos/loginUser.dto';
 import { UserResponseDto } from '../user/dtos/userResponse.dto';
 import { UserRepository } from './../user/user.repository';
 import { errorMessages } from 'src/common/enums/errorMessages';
+import { ServiceException } from './../../common/exception-filter/serviceException';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +21,14 @@ export class AuthService {
     // 1) Check if email and password exist
     if (!loginUserDto.email || !loginUserDto.password) {
       throw new BadRequestException(errorMessages.BAD_REQUEST_LOGIN_ERROR);
+    }
+
+    // 2) Check if user exists && password is correct
+    const user = await this.userRepository.getUserByEmail(loginUserDto.email);
+    if (!user) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND(loginUserDto.email),
+      );
     }
 
     return this.authRepository.login(loginUserDto);
