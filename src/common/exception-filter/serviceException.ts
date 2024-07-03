@@ -17,12 +17,16 @@ export class ServiceException extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 
-  static EntityNotFoundException = (message: string): ServiceException => {
-    return new ServiceException(message, 404);
-  };
-
   static BadRequestException = (message: string): ServiceException => {
     return new ServiceException(message, 400);
+  };
+
+  static AuthException = (message: string): ServiceException => {
+    return new ServiceException(message, 401);
+  };
+
+  static EntityNotFoundException = (message: string): ServiceException => {
+    return new ServiceException(message, 404);
   };
 
   static ErrorException = (message: string, error: Error): ServiceException => {
