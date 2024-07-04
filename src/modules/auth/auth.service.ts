@@ -8,7 +8,6 @@ import { errorMessages } from 'src/common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { Payload } from './jwt/jwt.strategy';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +19,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  checkUserAndPassword = async (email, password) => {
+  checkUserAndPassword = async (email: string, password: string) => {
     const user = await this.userRepository.getUserByEmail(email);
 
     if (
@@ -48,18 +47,6 @@ export class AuthService {
     const token = this.signToken(user.id);
 
     return token;
-  }
-
-  async tokenValidateUser(payload: Payload): Promise<UserResponseDto> {
-    // 3) Check if user still exists
-    const user = await this.userRepository.getUserById(payload.id);
-    if (!user) {
-      throw ServiceException.AuthException(
-        errorMessages.ENTITY_NOT_FOUND(String(payload.id)),
-      );
-    }
-
-    return user;
   }
 
   protect = async (req: Request) => {
