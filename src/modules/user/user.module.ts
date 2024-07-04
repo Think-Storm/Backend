@@ -5,6 +5,9 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { UserRepository } from './user.repository';
 import { PasswordEncryption } from '../../common/passwordEncryption';
 import { UserMapper } from './dtos/user.mapper';
+import { AuthService } from '../auth/auth.service';
+import { AuthRepository } from '../auth/auth.repository';
+import { JwtService } from '@nestjs/jwt';
 
 /**
  * Module for user-related components and services
@@ -13,11 +16,14 @@ import { UserMapper } from './dtos/user.mapper';
   imports: [],
   controllers: [UserController],
   providers: [
+    AuthService,
+    AuthRepository,
     UserService,
     UserRepository,
     PrismaService,
     PasswordEncryption,
     UserMapper,
+    JwtService,
   ],
 })
 export class UserModule {}
