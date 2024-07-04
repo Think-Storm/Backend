@@ -1,16 +1,27 @@
 import { AuthService } from './auth.service';
-import { Controller, Post, Body, Res } from '@nestjs/common';
-import { loginUserDto } from './dtos/loginUser.dto';
+import {
+  Controller,
+  Post,
+  Res,
+  UseGuards,
+  Req,
+  HttpCode,
+} from '@nestjs/common';
 import { Response } from 'express';
+import { LocalAuthGuard } from './local/local.guard';
+import RequestWithUser from './local/requestwithUser.interface';
 
 @Controller()
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @HttpCode(200)
+  @UseGuards(LocalAuthGuard)
   @Post('/login')
-  async login(@Body() body: loginUserDto, @Res() res: Response): Promise<any> {
-    const loginSuccessDto = await this.authService.login(body);
-    res.setHeader('Authorization', 'Bearer ' + loginSuccessDto.token);
+  async login(@Req() req: RequestWithUser, @Res() res: Response): Promise<any> {
+    const user = req.user;
+    const token = this.authService.getToken(user);
+    res.setHeader('Authorization', 'Bearer ' + token);
 
     const cookieOptions = {
       httpOnly: true,
@@ -24,11 +35,11 @@ export class AuthController {
       cookieOptions.secure = true;
     }
 
-    res.cookie('jwt', loginSuccessDto.token, cookieOptions);
+    res.cookie('jwt', token, cookieOptions);
 
     return res.send({
       message: 'success',
-      data: loginSuccessDto,
+      data: user,
     });
   }
 }

@@ -26,9 +26,6 @@ export class UserResponseDto {
   bio?: string;
 
   @Expose()
-  token: string;
-
-  @Expose()
   createdAt: Date;
 
   @Expose()

@@ -1,14 +1,14 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PasswordEncryption } from '../../common/passwordEncryption';
 import { UserMapper } from '../user/dtos/user.mapper';
 import { AuthRepository } from './auth.repository';
-import { loginUserDto } from './dtos/loginUser.dto';
 import { UserResponseDto } from '../user/dtos/userResponse.dto';
 import { UserRepository } from './../user/user.repository';
 import { errorMessages } from 'src/common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { Payload } from './jwt/jwt.strategy';
 
 @Injectable()
 export class AuthService {
@@ -43,28 +43,23 @@ export class AuthService {
     return await this.jwtService.verify(token, { secret });
   };
 
-  async login(loginUserDto: loginUserDto): Promise<UserResponseDto> {
-    // 1) Check if email and password exist
-    if (!loginUserDto.email || !loginUserDto.password) {
-      throw new BadRequestException(errorMessages.BAD_REQUEST_LOGIN_ERROR);
-    }
-
-    // 2) Check if user exists && password is correct
-    const user = await this.checkUserAndPassword(
-      loginUserDto.email,
-      loginUserDto.password,
-    );
-
-    // 3) If everything is okay, send jwt token via cookie
+  getToken(user: UserResponseDto): string {
+    // 3) If everything is okay, send jwt token
     const token = this.signToken(user.id);
 
-    user.password = undefined;
-    user.passwordSalt = undefined;
+    return token;
+  }
 
-    return {
-      token,
-      ...user,
-    };
+  async tokenValidateUser(payload: Payload): Promise<UserResponseDto> {
+    // 3) Check if user still exists
+    const user = await this.userRepository.getUserById(payload.id);
+    if (!user) {
+      throw ServiceException.AuthException(
+        errorMessages.ENTITY_NOT_FOUND(String(payload.id)),
+      );
+    }
+
+    return user;
   }
 
   protect = async (req: Request) => {

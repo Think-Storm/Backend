@@ -9,6 +9,7 @@ import { UserRepository } from '../user/user.repository';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt/jwt.strategy';
+import { LocalStrategy } from './local/local.strategy';
 
 /**
  * Module for auth-related components and services
@@ -30,6 +31,7 @@ import { JwtStrategy } from './jwt/jwt.strategy';
     PasswordEncryption,
     UserMapper,
     JwtStrategy,
+    LocalStrategy,
   ],
 })
 export class AuthModule {}
