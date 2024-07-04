@@ -6,6 +6,7 @@ import { UserRepository } from './../user/user.repository';
 import { errorMessages } from 'src/common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
 import { JwtService } from '@nestjs/jwt';
+import { UserResponseDto } from '../user/dtos/userResponse.dto';
 
 @Injectable()
 export class AuthService {
@@ -39,4 +40,11 @@ export class AuthService {
   verifyToken = async (token, secret) => {
     return await this.jwtService.verify(token, { secret });
   };
+
+  getToken(user: UserResponseDto): string {
+    // 3) If everything is okay, send jwt token
+    const token = this.signToken(user.id);
+
+    return token;
+  }
 }
