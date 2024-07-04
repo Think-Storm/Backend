@@ -8,6 +8,7 @@ import { UserRepository } from './../user/user.repository';
 import { errorMessages } from 'src/common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
 import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -38,6 +39,10 @@ export class AuthService {
     return this.jwtService.sign({ id });
   };
 
+  verifyToken = async (token, secret) => {
+    return await this.jwtService.verify(token, { secret });
+  };
+
   async login(loginUserDto: loginUserDto): Promise<UserResponseDto> {
     // 1) Check if email and password exist
     if (!loginUserDto.email || !loginUserDto.password) {
@@ -61,4 +66,45 @@ export class AuthService {
       ...user,
     };
   }
+
+  protect = async (req: Request) => {
+    // 1) Getting token and check if it's there
+    let token;
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
+    if (!token) {
+      throw ServiceException.AuthException(errorMessages.PROTECT_ROUTES);
+    }
+    // 2) Verification token
+    let decoded;
+    try {
+      decoded = await this.verifyToken(token, process.env.JWT_SECRET);
+    } catch (err) {
+      console.log(err.name);
+      if (err.name === 'TokenExpiredError') {
+        throw ServiceException.AuthException(errorMessages.TOKEN_EXPIRED);
+      } else if (err.name === 'JsonWebTokenError') {
+        throw ServiceException.AuthException(errorMessages.INVALID_TOKEN);
+      }
+    }
+
+    // 3) Check if user still exists
+    const user = await this.userRepository.getUserById(decoded.id);
+    if (!user) {
+      throw ServiceException.AuthException(
+        errorMessages.ENTITY_NOT_FOUND(decoded.id),
+      );
+    }
+    // 4) Check if user changed password after the token was issued
+    const changedPasswordAfter =
+      await this.passwordEncryption.changedPasswordAfter(user, decoded.iat);
+    if (changedPasswordAfter) {
+      throw ServiceException.AuthException(errorMessages.USER_CHANGED_PASSWORD);
+    }
+  };
 }
