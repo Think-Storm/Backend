@@ -9,12 +9,18 @@ import {
   HttpCode,
   UseInterceptors,
   ClassSerializerInterceptor,
+  Req,
 } from '@nestjs/common';
 import { UserResponseDto } from './dtos/userResponse.dto';
+import { AuthService } from '../auth/auth.service';
+import { Request } from 'express';
 
 @Controller()
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly authService: AuthService,
+  ) {}
 
   @UseInterceptors(ClassSerializerInterceptor)
   @HttpCode(201)
@@ -26,7 +32,11 @@ export class UserController {
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Get('/:id')
-  async getUserById(@Param('id') userId: number): Promise<UserResponseDto> {
+  async getUserById(
+    @Req() req: Request,
+    @Param('id') userId: number,
+  ): Promise<UserResponseDto> {
+    await this.authService.protect(req);
     return this.userService.getUserById(userId);
   }
 }
