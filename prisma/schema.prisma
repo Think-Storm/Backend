@@ -17,7 +17,6 @@ model User {
   birthdate     DateTime?
   avatar        String?
   bio           String?
-  passwordChangedAt DateTime?
   createdAt     DateTime @default(now()) @map("created_at")
   lastUpdatedAt DateTime @updatedAt @map("last_updated_at")
   userProfile   UserProfile?
