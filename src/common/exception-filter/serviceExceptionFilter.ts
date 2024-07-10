@@ -26,6 +26,7 @@ export class ServiceExceptionToHttpExceptionFilter implements ExceptionFilter {
         response.status(500).json({
           status: 'Error',
           message: 'Something went very wrong! This is not Operational Error.',
+          error,
         });
       }
     };
@@ -40,6 +41,7 @@ export class ServiceExceptionToHttpExceptionFilter implements ExceptionFilter {
         response.status(500).json({
           status: 'Error',
           message: 'Something went very wrong! This is not Operational Error.',
+          error,
         });
       }
     };
