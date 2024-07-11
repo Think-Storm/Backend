@@ -1,6 +1,7 @@
 import { ArgumentsHost, Catch, ExceptionFilter } from '@nestjs/common';
 import { ServiceException } from './serviceException';
 import { Request, Response } from 'express';
+import { errorMessages } from '../enums/errorMessages';
 
 @Catch(ServiceException)
 export class ServiceExceptionToHttpExceptionFilter implements ExceptionFilter {
@@ -25,7 +26,7 @@ export class ServiceExceptionToHttpExceptionFilter implements ExceptionFilter {
       } else {
         response.status(500).json({
           status: 'Error',
-          message: 'Something went very wrong! This is not Operational Error.',
+          message: errorMessages.NONE_OPERATIONAL_ERROR,
           error,
         });
       }
@@ -40,7 +41,7 @@ export class ServiceExceptionToHttpExceptionFilter implements ExceptionFilter {
       } else {
         response.status(500).json({
           status: 'Error',
-          message: 'Something went very wrong! This is not Operational Error.',
+          message: errorMessages.NONE_OPERATIONAL_ERROR,
           error,
         });
       }
