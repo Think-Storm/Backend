@@ -29,6 +29,7 @@ export const defaultUser: User = {
   username: 'username',
   password: 'hashedPassword',
   passwordSalt: 'passwordsalt',
+  passwordChangedAt: null,
   fullName: 'Full Name',
   birthdate: new Date('2000-01-01'),
   avatar: 'avatar',
