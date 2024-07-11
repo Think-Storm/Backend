@@ -49,6 +49,7 @@ describe('ProjectService', () => {
         expect(e).toBeInstanceOf(ServiceException);
         expect(e.message).toContain(
           errorMessages.ENTITY_NOT_FOUND(
+            'Project',
             projectTestUtils.defaultGetProjectResponseDto.id.toString(),
           ),
         );
