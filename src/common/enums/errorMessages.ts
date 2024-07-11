@@ -5,5 +5,6 @@ export const errorMessages = {
   ERROR_CREATING_USER_IN_DB: 'An error occured while inserting User in DB.',
   SERVER_ERROR: 'An error occured in server.',
   VALIDATION_ERROR: 'The validation has failed.',
-  ENTITY_NOT_FOUND: (id: string) => `Entity with id ${id} was not found.`,
+  ENTITY_NOT_FOUND: (entity: string, id: string) =>
+    `${entity} with id ${id} was not found.`,
 };

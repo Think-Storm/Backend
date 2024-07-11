@@ -67,7 +67,7 @@ export class UserService {
 
     if (!foundUser)
       throw ServiceException.EntityNotFoundException(
-        errorMessages.ENTITY_NOT_FOUND(userId.toString()),
+        errorMessages.ENTITY_NOT_FOUND('User', userId.toString()),
       );
     return this.userMapper.userToUserResponseDTO(foundUser);
   }

@@ -21,7 +21,7 @@ export class ProjectService {
     const fetchedProject = await this.projectRepository.findProjectById(id);
     if (!fetchedProject) {
       throw ServiceException.EntityNotFoundException(
-        errorMessages.ENTITY_NOT_FOUND(id.toString()),
+        errorMessages.ENTITY_NOT_FOUND('Project', id.toString()),
       );
     }
     return this.projectMapper.projectToGetProjectResponseDto(fetchedProject);
