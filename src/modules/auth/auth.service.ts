@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { PasswordEncryption } from '../../common/passwordEncryption';
 import { UserMapper } from '../user/dtos/user.mapper';
 import { AuthRepository } from './auth.repository';
@@ -37,7 +38,7 @@ export class AuthService {
     return this.jwtService.sign({ id });
   };
 
-  verifyToken = async (token, secret) => {
+  verifyToken = async (token: string, secret: string) => {
     return await this.jwtService.verify(token, { secret });
   };
 
@@ -46,5 +47,26 @@ export class AuthService {
     const token = this.signToken(user.id);
 
     return token;
+  }
+
+  authentication(user: UserResponseDto, @Res() res: Response): UserResponseDto {
+    const token = this.getToken(user);
+    res.setHeader('Authorization', 'Bearer ' + token);
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: false,
+      expires: new Date(
+        Date.now() +
+          Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000,
+      ),
+    };
+    if (process.env.NODE_ENV === 'production') {
+      cookieOptions.secure = true;
+    }
+
+    res.cookie('jwt', token, cookieOptions);
+
+    return user;
   }
 }
