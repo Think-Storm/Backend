@@ -11,6 +11,7 @@ import { UserMapper } from './dtos/user.mapper';
  */
 @Module({
   imports: [],
+  exports: [UserService],
   controllers: [UserController],
   providers: [
     UserService,
