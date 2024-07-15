@@ -7,14 +7,19 @@ import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { ProjectTestUtils } from './project.utils';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
+import { UserService } from '../../../../src/modules/user/user.service';
+import { defaultUser } from '../user/user.utils';
+import { UserModule } from '../../../../src/modules/user/user.module';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
   let projectRepository: ProjectRepository;
   let projectTestUtils: ProjectTestUtils;
+  let userService: UserService;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [UserModule],
       controllers: [ProjectController],
       providers: [
         ProjectService,
@@ -28,6 +33,7 @@ describe('ProjectService', () => {
     projectService = module.get<ProjectService>(ProjectService);
     projectRepository = module.get<ProjectRepository>(ProjectRepository);
     projectTestUtils = module.get<ProjectTestUtils>(ProjectTestUtils);
+    userService = module.get<UserService>(UserService);
   });
 
   afterEach(() => {
@@ -43,21 +49,21 @@ describe('ProjectService', () => {
 
       try {
         await projectService.getProjectById(
-          projectTestUtils.defaultGetProjectResponseDto.id,
+          projectTestUtils.defaultProjectResponseDto.id,
         );
       } catch (e) {
         expect(e).toBeInstanceOf(ServiceException);
         expect(e.message).toContain(
           errorMessages.ENTITY_NOT_FOUND(
             'Project',
-            projectTestUtils.defaultGetProjectResponseDto.id.toString(),
+            projectTestUtils.defaultProjectResponseDto.id.toString(),
           ),
         );
       }
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(
-        projectTestUtils.defaultGetProjectResponseDto.id,
+        projectTestUtils.defaultProjectResponseDto.id,
       );
     });
 
@@ -69,7 +75,7 @@ describe('ProjectService', () => {
 
       expect(() => {
         const getProjectResponseDto = projectService.getProjectById(
-          projectTestUtils.defaultGetProjectResponseDto.id,
+          projectTestUtils.defaultProjectResponseDto.id,
         );
 
         // Checking the mapper
@@ -78,7 +84,40 @@ describe('ProjectService', () => {
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(
-        projectTestUtils.defaultGetProjectResponseDto.id,
+        projectTestUtils.defaultProjectResponseDto.id,
+      );
+    });
+  });
+
+  describe('createProject', () => {
+    it('should create user and map the result into UserResponseDto', async () => {
+      // Mock call to the password and salt creation
+      const userSpy = jest
+        .spyOn(userService, 'getUserById')
+        .mockResolvedValue(defaultUser);
+
+      // Mock call to DB
+      const dbSpy = jest
+        .spyOn(projectRepository, 'createProject')
+        .mockResolvedValue(projectTestUtils.defaultProject);
+
+      const expectedResponseDto = projectTestUtils.defaultProjectResponseDto;
+      expectedResponseDto.founder = undefined;
+      expectedResponseDto.language = undefined;
+      expectedResponseDto.users = undefined;
+
+      const projectResponseDto = await projectService.createProject(
+        projectTestUtils.defaultCreateProjectDto,
+      );
+
+      // Checking the mapper
+      expect(projectResponseDto).toEqual(expectedResponseDto);
+
+      expect(userSpy).toHaveBeenCalledTimes(1);
+
+      expect(dbSpy).toHaveBeenCalledTimes(1);
+      expect(dbSpy).toHaveBeenCalledWith(
+        projectTestUtils.defaultCreateProjectDto,
       );
     });
   });

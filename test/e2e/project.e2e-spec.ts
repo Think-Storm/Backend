@@ -6,6 +6,7 @@ import { afterEach } from 'node:test';
 import { ProjectTestUtils } from '../unit/modules/project/project.utils';
 import { ProjectModule } from '../../src/modules/project/project.module';
 import { UserRepository } from '../../src/modules/user/user.repository';
+import { ServiceException } from '../../src/common/exception-filter/serviceException';
 
 describe('/projects', () => {
   let app: INestApplication;
@@ -26,9 +27,17 @@ describe('/projects', () => {
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
       new ValidationPipe({
+        exceptionFactory: (errors) => {
+          const errMsg = errors
+            .map((error) => Object.values(error.constraints).join(''))
+            .join('. ');
+
+          return new ServiceException(`${errMsg}.`, 400, errors);
+        },
         stopAtFirstError: true,
         whitelist: true,
         forbidNonWhitelisted: true,
+        transform: true,
       }),
     );
 
@@ -45,6 +54,33 @@ describe('/projects', () => {
   afterEach(async () => {
     await prismaService.project.deleteMany();
     await prismaService.user.deleteMany();
+  });
+
+  describe('/ POST (Create Project)', () => {
+    it('should return a 201 if everything is fine', async () => {
+      // Create User and Language in DB
+      const createdProject = await projectTestUtils.createProjectInDB(
+        prismaService,
+        userRepository,
+      );
+
+      const createProjectRequest = projectTestUtils.defaultCreateProjectDto;
+      createProjectRequest.founderId = createdProject.founderId;
+      createProjectRequest.languageCode = createdProject.languageCode;
+
+      return request(app.getHttpServer())
+        .post('/')
+        .send(createProjectRequest)
+        .expect(201);
+    });
+
+    it('should return a 404 if user is not found', async () => {
+      // No previous creation of User, so the project should be refused
+      return request(app.getHttpServer())
+        .post('/')
+        .send(projectTestUtils.defaultCreateProjectDto)
+        .expect(404);
+    });
   });
 
   describe('/:id GET (Get Project By Id)', () => {
