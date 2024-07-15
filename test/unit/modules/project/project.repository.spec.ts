@@ -4,6 +4,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { ProjectTestUtils } from './project.utils';
 import { Project } from '@prisma/client';
+import { defaultCreateUserDto } from '../user/user.utils';
+import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
 
 describe('ProjectRepository', () => {
   let prismaService: PrismaService;
@@ -67,6 +69,36 @@ describe('ProjectRepository', () => {
         await projectRepository.findProjectById(insertedProject.id + 1);
 
       expect(findProjectByIdResponse).toBeNull();
+    });
+  });
+  describe('createProject function', () => {
+    it('should create a project in DB', async () => {
+      // Create a founder User
+      const user = await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+
+      // Add founderId
+      const createProjectDto = projectTestUtils.defaultCreateProjectDto;
+      createProjectDto.founderId = user.id;
+      const createdProject =
+        await projectRepository.createProject(createProjectDto);
+
+      expect(createdProject).not.toBeNull();
+      expect(createdProject).toHaveProperty('id');
+      expect(createdProject.createdAt).toBeDefined();
+      expect(createdProject.lastUpdatedAt).toBeDefined();
+      expect(createdProject.founderId).toBe(createProjectDto.founderId);
+      expect(createdProject.description).toBe(createProjectDto.description);
+      expect(createdProject.goal).toBe(createProjectDto.goal);
+      expect(createdProject.labels).toStrictEqual(createProjectDto.labels);
+      expect(createdProject.languageCode).toBe(createProjectDto.languageCode);
+      expect(createdProject.title).toBe(createProjectDto.title);
+      expect(createdProject.status).toBe(createProjectDto.status);
+      expect(createdProject.milestone).toStrictEqual(
+        createProjectDto.milestone,
+      );
     });
   });
 });

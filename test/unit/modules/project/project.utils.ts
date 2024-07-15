@@ -9,7 +9,9 @@ import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { defaultCreateUserDto } from '../user/user.utils';
 import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
-import { GetProjectResponseDto } from 'src/modules/project/dtos/getProjectResponse.dto';
+import { ProjectResponseDto } from '../../../../src/modules/project/dtos/projectResponse.dto';
+import { defaultUser } from '../user/user.utils';
+import { CreateProjectRequestDto } from 'src/modules/project/dtos/createProjectRequest.dto';
 
 export class ProjectTestUtils {
   /**
@@ -53,7 +55,7 @@ export class ProjectTestUtils {
     });
   }
 
-  defaultGetProjectResponseDto: GetProjectResponseDto = {
+  defaultProjectResponseDto: ProjectResponseDto = {
     id: 0,
     title: 'title',
     description: 'description',
@@ -70,6 +72,7 @@ export class ProjectTestUtils {
     milestone: new Date('2000-01-01'),
     createdAt: new Date('2000-01-01'),
     lastUpdatedAt: new Date('2000-01-01'),
+    founder: defaultUser,
   };
 
   defaultProject: Project = {
@@ -80,9 +83,20 @@ export class ProjectTestUtils {
     labels: ['fakelabel', 'fakelabel2'],
     goal: Goal.Education,
     status: Status.InProgress,
-    languageCode: 'EN',
+    languageCode: LanguageCode.EN,
     milestone: new Date('2000-01-01'),
     createdAt: new Date('2000-01-01'),
     lastUpdatedAt: new Date('2000-01-01'),
+  };
+
+  defaultCreateProjectDto: CreateProjectRequestDto = {
+    founderId: 0,
+    title: 'title',
+    description: 'description',
+    labels: ['fakelabel', 'fakelabel2'],
+    goal: Goal.Education,
+    status: Status.InProgress,
+    languageCode: 'EN',
+    milestone: new Date('2000-01-01'),
   };
 }

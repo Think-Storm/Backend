@@ -5,6 +5,7 @@ import { ProjectRepository } from '../../../../src/modules/project/project.repos
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { ProjectMapper } from '../../../../src/modules/project/dtos/project.mapper';
 import { ProjectTestUtils } from './project.utils';
+import { UserModule } from '../../../../src/modules/user/user.module';
 
 describe('ProjectController', () => {
   let projectController: ProjectController;
@@ -13,6 +14,7 @@ describe('ProjectController', () => {
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
+      imports: [UserModule],
       controllers: [ProjectController],
       providers: [
         ProjectService,
@@ -37,17 +39,36 @@ describe('ProjectController', () => {
       // Mock service function
       const serviceSpy = jest
         .spyOn(projectService, 'getProjectById')
-        .mockResolvedValue(projectTestUtils.defaultGetProjectResponseDto);
+        .mockResolvedValue(projectTestUtils.defaultProjectResponseDto);
 
       const response = await projectController.getProjectById({
-        id: projectTestUtils.defaultGetProjectResponseDto.id,
+        id: projectTestUtils.defaultProjectResponseDto.id,
       });
 
       expect(serviceSpy).toHaveBeenCalledTimes(1);
       expect(serviceSpy).toHaveBeenCalledWith(
-        projectTestUtils.defaultGetProjectResponseDto.id,
+        projectTestUtils.defaultProjectResponseDto.id,
       );
-      expect(response).toBe(projectTestUtils.defaultGetProjectResponseDto);
+      expect(response).toBe(projectTestUtils.defaultProjectResponseDto);
+    });
+  });
+
+  describe('createProject function', () => {
+    it('should return a correct responseDto', async () => {
+      // Mock service function
+      const serviceSpy = jest
+        .spyOn(projectService, 'createProject')
+        .mockResolvedValue(projectTestUtils.defaultProjectResponseDto);
+
+      const response = await projectController.createProject(
+        projectTestUtils.defaultCreateProjectDto,
+      );
+
+      expect(serviceSpy).toHaveBeenCalledTimes(1);
+      expect(serviceSpy).toHaveBeenCalledWith(
+        projectTestUtils.defaultCreateProjectDto,
+      );
+      expect(response).toBe(projectTestUtils.defaultProjectResponseDto);
     });
   });
 });
