@@ -4,7 +4,7 @@ import { PasswordEncryption } from '../../common/passwordEncryption';
 import { UserMapper } from '../user/dtos/user.mapper';
 import { AuthRepository } from './auth.repository';
 import { UserRepository } from './../user/user.repository';
-import { errorMessages } from 'src/common/enums/errorMessages';
+import { errorMessages } from '../../../src/common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
 import { JwtService } from '@nestjs/jwt';
 import { UserResponseDto } from '../user/dtos/userResponse.dto';
