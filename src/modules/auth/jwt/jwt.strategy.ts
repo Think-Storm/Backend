@@ -54,7 +54,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     const user = await this.userRepository.getUserById(decoded.id);
     if (!user) {
       throw ServiceException.AuthException(
-        errorMessages.ENTITY_NOT_FOUND(decoded.id),
+        errorMessages.ENTITY_NOT_FOUND('User', decoded.id),
       );
     }
 
