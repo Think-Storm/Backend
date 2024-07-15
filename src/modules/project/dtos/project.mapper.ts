@@ -1,15 +1,15 @@
 import { Project } from '@prisma/client';
-import { GetProjectResponseDto } from './getProjectResponse.dto';
+import { ProjectResponseDto } from './projectResponse.dto';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 
 export class ProjectMapper {
   /**
-   * Maps a Project entity to a GetProjectResponseDto
+   * Maps a Project entity to a ProjectResponseDto
    * @param project - The Project entity to be mapped
-   * @returns A GetProjectResponseDto with the mapped data
+   * @returns A ProjectResponseDto with the mapped data
    */
-  projectToGetProjectResponseDto(project: Project): GetProjectResponseDto {
-    return plainToInstance(GetProjectResponseDto, instanceToPlain(project), {
+  projectToProjectResponseDto(project: Project): ProjectResponseDto {
+    return plainToInstance(ProjectResponseDto, instanceToPlain(project), {
       excludeExtraneousValues: true,
     });
   }
