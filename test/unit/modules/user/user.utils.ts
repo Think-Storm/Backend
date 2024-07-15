@@ -14,6 +14,7 @@ export const defaultCreateUserDto: CreateUserDto = {
 export const defaultUserResponseDto: UserResponseDto = {
   id: 0,
   username: 'username',
+  password: 'hashedPassword',
   fullName: 'Full Name',
   email: 'email@email.com',
   birthdate: new Date('2000-01-01'),

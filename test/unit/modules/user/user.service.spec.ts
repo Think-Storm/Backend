@@ -10,6 +10,9 @@ import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
 import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
+import { AuthService } from '../../../../src/modules/auth/auth.service';
+import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
+import { JwtService } from '@nestjs/jwt';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -25,6 +28,9 @@ describe('UserService', () => {
         PasswordEncryption,
         UserMapper,
         PrismaService,
+        AuthService,
+        AuthRepository,
+        JwtService,
       ],
     }).compile();
 
@@ -79,6 +85,7 @@ describe('UserService', () => {
         id: defaultUser.id,
         email: defaultUser.email,
         username: defaultUser.username,
+        password: defaultUser.password,
         fullName: defaultUser.fullName,
         birthdate: defaultUser.birthdate,
         avatar: defaultUser.avatar,
@@ -123,6 +130,7 @@ describe('UserService', () => {
         id: defaultUser.id,
         email: defaultUser.email,
         username: defaultUser.username,
+        password: defaultUser.password,
         fullName: defaultUser.fullName,
         birthdate: defaultUser.birthdate,
         avatar: defaultUser.avatar,

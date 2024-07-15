@@ -6,6 +6,9 @@ import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { defaultCreateUserDto, defaultUserResponseDto } from './user.utils';
+import { AuthService } from '../../../../src/modules/auth/auth.service';
+import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
+import { JwtService } from '@nestjs/jwt';
 
 describe('UserController', () => {
   let userController: UserController;
@@ -17,9 +20,12 @@ describe('UserController', () => {
       providers: [
         UserService,
         UserRepository,
+        AuthService,
+        AuthRepository,
         PrismaService,
         UserMapper,
         PasswordEncryption,
+        JwtService,
       ],
     }).compile();
 
