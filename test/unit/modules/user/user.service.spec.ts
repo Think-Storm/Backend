@@ -7,12 +7,12 @@ import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { UserController } from '../../../../src/modules/user/user.controller';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
-import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { AuthService } from '../../../../src/modules/auth/auth.service';
 import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
 import { JwtService } from '@nestjs/jwt';
+import { ClassSerializerInterceptor } from '@nestjs/common';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -32,7 +32,10 @@ describe('UserService', () => {
         AuthRepository,
         JwtService,
       ],
-    }).compile();
+    })
+      .overrideInterceptor(ClassSerializerInterceptor)
+      .useClass(ClassSerializerInterceptor)
+      .compile();
 
     userService = module.get<UserService>(UserService);
     userRepository = module.get<UserRepository>(UserRepository);
@@ -81,11 +84,10 @@ describe('UserService', () => {
         .spyOn(userRepository, 'createUser')
         .mockResolvedValue(defaultUser);
 
-      const expectedResponseDto: UserResponseDto = {
+      const expectedResponseDto = {
         id: defaultUser.id,
         email: defaultUser.email,
         username: defaultUser.username,
-        password: defaultUser.password,
         fullName: defaultUser.fullName,
         birthdate: defaultUser.birthdate,
         avatar: defaultUser.avatar,
@@ -126,11 +128,10 @@ describe('UserService', () => {
 
       const successUserResponseDto = await userService.getUserById(1);
 
-      const expectedResponseDto: UserResponseDto = {
+      const expectedResponseDto = {
         id: defaultUser.id,
         email: defaultUser.email,
         username: defaultUser.username,
-        password: defaultUser.password,
         fullName: defaultUser.fullName,
         birthdate: defaultUser.birthdate,
         avatar: defaultUser.avatar,
