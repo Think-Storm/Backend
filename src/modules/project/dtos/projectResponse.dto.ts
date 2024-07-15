@@ -1,7 +1,7 @@
 import { Goal, Language, Status, User } from '@prisma/client';
 import { Expose } from 'class-transformer';
 
-export class GetProjectResponseDto {
+export class ProjectResponseDto {
   @Expose()
   id: number;
 
@@ -28,6 +28,9 @@ export class GetProjectResponseDto {
 
   @Expose()
   users: User[];
+
+  @Expose()
+  founder: User;
 
   @Expose()
   createdAt: Date;

@@ -3,6 +3,8 @@ export const errorMessages = {
     'Something went very wrong! This is not Operational Error.',
   USER_WITH_EMAIL_ALREADY_EXISTS: 'This email is already used by another user.',
   ERROR_CREATING_USER_IN_DB: 'An error occured while inserting User in DB.',
+  ERROR_CREATING_PROJECT_IN_DB:
+    'An error occured while inserting Project in DB.',
   SERVER_ERROR: 'An error occured in server.',
   VALIDATION_ERROR: 'The validation has failed.',
   ENTITY_NOT_FOUND: (entity: string, id: string) =>
