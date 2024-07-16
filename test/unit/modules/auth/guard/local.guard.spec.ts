@@ -1,7 +1,7 @@
 import { createMock } from '@golevelup/ts-jest';
 import { ExecutionContext } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { JwtModule, JwtService } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { LocalAuthGuard } from '../../../../../src/modules/auth/local/local.guard';
 import { defaultUser } from '../../user/user.utils';
@@ -16,7 +16,7 @@ import { AuthRepository } from '../../../../../src/modules/auth/auth.repository'
 import { UserMapper } from '../../../../../src/modules/user/dtos/user.mapper';
 import { UserController } from '../../../../../src/modules/user/user.controller';
 import { UserService } from '../../../../../src/modules/user/user.service';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaModule } from '../../../../../src/prisma/prisma.module';
 
@@ -34,9 +34,14 @@ describe('LocalAuthGuard', () => {
       imports: [
         PrismaModule.forTest(prismaClient),
         PassportModule.register({ defaultStrategy: 'jwt', session: false }),
-        JwtModule.register({
-          secret: process.env.JWT_SECRET,
-          signOptions: { expiresIn: process.env.JWT_EXPIRES_IN },
+        JwtModule.registerAsync({
+          imports: [ConfigModule],
+          global: true,
+          useFactory: (config: ConfigService) => ({
+            secret: config.get<string>('JWT_SECRET'),
+            signOptions: { expiresIn: config.get<string>('JWT_EXPIRES_IN') },
+          }),
+          inject: [ConfigService],
         }),
       ],
       controllers: [UserController],
@@ -49,7 +54,6 @@ describe('LocalAuthGuard', () => {
         PasswordEncryption,
         JwtStrategy,
         LocalStrategy,
-        JwtService,
         ConfigService,
       ],
     }).compile();
@@ -70,10 +74,11 @@ describe('LocalAuthGuard', () => {
   it('should return true with right email and password', async () => {
     const context = createMock<ExecutionContext>();
 
+    const password = 'hassedPassword';
     context.switchToHttp().getRequest.mockReturnValue({
       body: {
         email: defaultUser.email,
-        password: defaultUser.password,
+        password,
       },
     });
 
@@ -87,9 +92,10 @@ describe('LocalAuthGuard', () => {
   it('should return false without email field', () => {
     const context = createMock<ExecutionContext>();
 
+    const password = 'hassedPassword';
     context.switchToHttp().getRequest.mockReturnValue({
       body: {
-        password: defaultUser.password,
+        password,
       },
     });
 
@@ -119,34 +125,35 @@ describe('LocalAuthGuard', () => {
   it('should return false if user does not exist', async () => {
     const context = createMock<ExecutionContext>();
 
+    const password = 'hassedPassword';
     context.switchToHttp().getRequest.mockReturnValue({
       body: {
         email: defaultUser.email,
-        password: defaultUser.password,
+        password,
       },
     });
 
     jest.spyOn(userRepository, 'getUserByEmail').mockResolvedValue(undefined);
 
     await expect(async () => {
-      await authService.checkUserAndPassword(
-        defaultUser.email,
-        defaultUser.password,
-      );
+      await authService.checkUserAndPassword(defaultUser.email, password);
     }).rejects.toThrow(
       ServiceException.AuthException(errorMessages.INCORRECT_EMAIL_OR_PASSWORD),
     );
 
-    //expect(await guard.canActivate(context)).toBeFalsy();
+    expect(guard.canActivate(context)).rejects.toThrow(
+      ServiceException.AuthException(errorMessages.INCORRECT_EMAIL_OR_PASSWORD),
+    );
   });
 
   it('should return false with incorrect password', async () => {
     const context = createMock<ExecutionContext>();
 
+    const password = 'hassedPassword';
     context.switchToHttp().getRequest.mockReturnValue({
       body: {
         email: defaultUser.email,
-        password: defaultUser.password,
+        password,
       },
     });
 
@@ -156,16 +163,13 @@ describe('LocalAuthGuard', () => {
     jest.spyOn(passwordEncryption, 'correctPassword').mockResolvedValue(false);
 
     await expect(async () => {
-      await authService.checkUserAndPassword(
-        defaultUser.email,
-        defaultUser.password,
-      );
+      await authService.checkUserAndPassword(defaultUser.email, password);
     }).rejects.toThrow(
       ServiceException.AuthException(errorMessages.INCORRECT_EMAIL_OR_PASSWORD),
     );
 
-    // expect(guard.canActivate(context)).rejects.toThrow(
-    //   ServiceException.AuthException(errorMessages.INCORRECT_EMAIL_OR_PASSWORD),
-    // );
+    expect(guard.canActivate(context)).rejects.toThrow(
+      ServiceException.AuthException(errorMessages.INCORRECT_EMAIL_OR_PASSWORD),
+    );
   });
 });

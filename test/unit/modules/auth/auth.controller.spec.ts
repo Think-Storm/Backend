@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const httpMocks = require('node-mocks-http');
-import { JwtService } from '@nestjs/jwt';
+import { JwtModule } from '@nestjs/jwt';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
@@ -11,9 +11,10 @@ import { AuthService } from '../../../../src/modules/auth/auth.service';
 import RequestWithUser from '../../../../src/modules/auth/local/requestWithUser.interface';
 import { LocalAuthGuard } from '../../../../src/modules/auth/local/local.guard';
 import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { PrismaClient } from '@prisma/client';
+import { PassportModule } from '@nestjs/passport';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -22,7 +23,20 @@ describe('AuthController', () => {
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prismaClient)],
+      imports: [
+        PrismaModule.forTest(prismaClient),
+        ConfigModule.forRoot({ isGlobal: true }),
+        PassportModule.register({ defaultStrategy: 'jwt', session: false }),
+        JwtModule.registerAsync({
+          imports: [ConfigModule],
+          global: true,
+          useFactory: (config: ConfigService) => ({
+            secret: config.get<string>('JWT_SECRET'),
+            signOptions: { expiresIn: config.get<string>('JWT_EXPIRES_IN') },
+          }),
+          inject: [ConfigService],
+        }),
+      ],
       controllers: [AuthController],
       providers: [
         AuthService,
@@ -30,7 +44,6 @@ describe('AuthController', () => {
         UserRepository,
         UserMapper,
         PasswordEncryption,
-        JwtService,
         ConfigService,
       ],
     })
@@ -70,58 +83,5 @@ describe('AuthController', () => {
         data: defaultUserResponseDto,
       });
     });
-
-    // it('should throw 400 error without email field', async () => {
-    //   const req = {
-    //     user: null,
-    //   } as RequestWithUser;
-
-    //   const res = httpMocks.createResponse();
-
-    //   req.body = {
-    //     password: defaultUser.password,
-    //   };
-
-    //   // Mock call to DB not to return a User
-    //   const mainSpy = jest
-    //     .spyOn(authService, 'authentication')
-    //     .mockReturnValue(null);
-
-    //   await expect(async () => {
-    //     await authController.login(req, res);
-    //   }).rejects.toThrow(
-    //     ServiceException.BadRequestException(
-    //       errorMessages.BAD_REQUEST_LOGIN_ERROR,
-    //     ),
-    //   );
-
-    //   expect(mainSpy).toHaveBeenCalledTimes(0);
-    // });
-
-    // it('should throw 400 error without password field', async () => {
-    //   const req = {
-    //     user: null,
-    //   } as RequestWithUser;
-
-    //   const res = httpMocks.createResponse();
-    //   req.body = {
-    //     email: defaultUser.email,
-    //   };
-
-    //   // Mock call to DB not to return a User
-    //   const mainSpy = jest
-    //     .spyOn(authService, 'authentication')
-    //     .mockReturnValue(null);
-
-    //   await expect(async () => {
-    //     await authController.login(req, res);
-    //   }).rejects.toThrow(
-    //     ServiceException.BadRequestException(
-    //       errorMessages.BAD_REQUEST_LOGIN_ERROR,
-    //     ),
-    //   );
-
-    //   expect(mainSpy).toHaveBeenCalledTimes(0);
-    // });
   });
 });
