@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { LocalAuthGuard } from './local/local.guard';
-import RequestWithUser from './local/requestwithUser.interface';
+import RequestWithUser from './local/requestWithUser.interface';
 
 @Controller()
 export class AuthController {
