@@ -3,21 +3,25 @@ import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { ProjectTestUtils } from './project.utils';
-import { Project } from '@prisma/client';
+import { PrismaClient, Project } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
+import { PrismaModule } from '../../../../src/prisma/prisma.module';
 
 describe('ProjectRepository', () => {
   let prismaService: PrismaService;
   let projectRepository: ProjectRepository;
   let userRepository: UserRepository;
   let projectTestUtils: ProjectTestUtils;
+  const prismaClient = new PrismaClient();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [PrismaModule.forTest(prismaClient)],
       providers: [
-        PrismaService,
         ProjectRepository,
         UserRepository,
         ProjectTestUtils,
+        ConfigService,
       ],
     }).compile();
 
@@ -31,11 +35,8 @@ describe('ProjectRepository', () => {
     await prismaService.user.deleteMany();
   });
 
-  afterAll(async () => {
-    await prismaService.$disconnect();
-  });
-
   afterEach(async () => {
+    jest.clearAllMocks();
     await prismaService.project.deleteMany();
     await prismaService.user.deleteMany();
   });

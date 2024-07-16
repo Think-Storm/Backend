@@ -5,14 +5,19 @@ import { defaultCreateUserDto } from './user.utils';
 import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
+import { ConfigService } from '@nestjs/config';
+import { PrismaClient } from '@prisma/client';
+import { PrismaModule } from '../../../../src/prisma/prisma.module';
 
 describe('UserRepository', () => {
   let prismaService: PrismaService;
   let userRepository: UserRepository;
+  const prismaClient = new PrismaClient();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PrismaService, UserRepository],
+      imports: [PrismaModule.forTest(prismaClient)],
+      providers: [UserRepository, ConfigService],
     }).compile();
 
     prismaService = module.get<PrismaService>(PrismaService);
@@ -23,11 +28,8 @@ describe('UserRepository', () => {
     await prismaService.user.deleteMany();
   });
 
-  afterAll(async () => {
-    await prismaService.$disconnect();
-  });
-
   afterEach(async () => {
+    jest.clearAllMocks();
     await prismaService.project.deleteMany();
     await prismaService.user.deleteMany();
   });

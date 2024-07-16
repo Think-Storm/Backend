@@ -13,22 +13,26 @@ import { PasswordEncryption } from '../../../../../src/common/passwordEncryption
 import { JwtStrategy } from '../../../../../src/modules/auth/jwt/jwt.strategy';
 import { LocalStrategy } from '../../../../../src/modules/auth/local/local.strategy';
 import { AuthRepository } from '../../../../../src/modules/auth/auth.repository';
-import { PrismaService } from '../../../../../src/prisma/prisma.service';
 import { UserMapper } from '../../../../../src/modules/user/dtos/user.mapper';
 import { UserController } from '../../../../../src/modules/user/user.controller';
 import { UserService } from '../../../../../src/modules/user/user.service';
+import { ConfigService } from '@nestjs/config';
+import { PrismaClient } from '@prisma/client';
+import { PrismaModule } from '../../../../../src/prisma/prisma.module';
 
 describe('LocalAuthGuard', () => {
   let authService: AuthService;
   let userRepository: UserRepository;
   let passwordEncryption: PasswordEncryption;
   let guard: LocalAuthGuard;
+  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     guard = new LocalAuthGuard();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [
+        PrismaModule.forTest(prismaClient),
         PassportModule.register({ defaultStrategy: 'jwt', session: false }),
         JwtModule.register({
           secret: process.env.JWT_SECRET,
@@ -45,8 +49,8 @@ describe('LocalAuthGuard', () => {
         PasswordEncryption,
         JwtStrategy,
         LocalStrategy,
-        PrismaService,
         JwtService,
+        ConfigService,
       ],
     }).compile();
 

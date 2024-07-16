@@ -3,7 +3,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 const httpMocks = require('node-mocks-http');
 import { JwtService } from '@nestjs/jwt';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
-import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { defaultUserResponseDto } from '../user/user.utils';
@@ -12,22 +11,27 @@ import { AuthService } from '../../../../src/modules/auth/auth.service';
 import RequestWithUser from '../../../../src/modules/auth/local/requestWithUser.interface';
 import { LocalAuthGuard } from '../../../../src/modules/auth/local/local.guard';
 import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
+import { ConfigService } from '@nestjs/config';
+import { PrismaModule } from '../../../../src/prisma/prisma.module';
+import { PrismaClient } from '@prisma/client';
 
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
+  let prismaClient: PrismaClient;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
+      imports: [PrismaModule.forTest(prismaClient)],
       controllers: [AuthController],
       providers: [
         AuthService,
         AuthRepository,
         UserRepository,
-        PrismaService,
         UserMapper,
         PasswordEncryption,
         JwtService,
+        ConfigService,
       ],
     })
       .overrideGuard(LocalAuthGuard)

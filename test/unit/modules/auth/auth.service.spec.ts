@@ -5,30 +5,35 @@ import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { UserController } from '../../../../src/modules/user/user.controller';
-import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { AuthService } from '../../../../src/modules/auth/auth.service';
 import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { PrismaModule } from '../../../../src/prisma/prisma.module';
+import { PrismaClient } from '@prisma/client';
 
 describe('AuthService', () => {
   let authService: AuthService;
   let userRepository: UserRepository;
   let passwordEncryption: PasswordEncryption;
 
+  const prismaClient = new PrismaClient();
+
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [PrismaModule.forTest(prismaClient)],
       controllers: [UserController],
       providers: [
         UserService,
         UserRepository,
         PasswordEncryption,
         UserMapper,
-        PrismaService,
         AuthService,
         AuthRepository,
         JwtService,
+        ConfigService,
       ],
     }).compile();
 
