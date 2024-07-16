@@ -8,6 +8,7 @@ import { UserMapper } from './dtos/user.mapper';
 import { AuthService } from '../auth/auth.service';
 import { AuthRepository } from '../auth/auth.repository';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * Module for user-related components and services
@@ -24,6 +25,7 @@ import { JwtService } from '@nestjs/jwt';
     PasswordEncryption,
     UserMapper,
     JwtService,
+    ConfigService,
   ],
 })
 export class UserModule {}

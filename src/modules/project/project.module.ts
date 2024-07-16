@@ -4,6 +4,7 @@ import { ProjectService } from './project.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ProjectRepository } from './project.repository';
 import { ProjectMapper } from './dtos/project.mapper';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * The ProjectModule is responsible for managing the project-related components
@@ -12,6 +13,12 @@ import { ProjectMapper } from './dtos/project.mapper';
 @Module({
   imports: [],
   controllers: [ProjectController],
-  providers: [ProjectService, ProjectRepository, PrismaService, ProjectMapper],
+  providers: [
+    ProjectService,
+    ProjectRepository,
+    PrismaService,
+    ProjectMapper,
+    ConfigService,
+  ],
 })
 export class ProjectModule {}

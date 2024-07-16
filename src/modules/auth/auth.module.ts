@@ -38,6 +38,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     UserMapper,
     JwtStrategy,
     LocalStrategy,
+    ConfigService,
   ],
 })
 export class AuthModule {}
