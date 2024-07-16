@@ -9,11 +9,11 @@ import {
   HttpCode,
   UseInterceptors,
   ClassSerializerInterceptor,
-  UseGuards,
+  //UseGuards,
 } from '@nestjs/common';
 import { UserResponseDto } from './dtos/userResponse.dto';
 import { AuthService } from '../auth/auth.service';
-import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
+//import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 
 @Controller()
 export class UserController {
@@ -30,7 +30,7 @@ export class UserController {
     return this.userService.createUser(body);
   }
 
-  @UseGuards(JwtAuthGuard)
+  //@UseGuards(JwtAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
   @Get('/:id')
   async getUserById(@Param('id') userId: number): Promise<UserResponseDto> {
