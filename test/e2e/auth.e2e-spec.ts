@@ -1,20 +1,30 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import * as cookieParser from 'cookie-parser';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserModule } from '../../src/modules/user/user.module';
-import { defaultCreateUserDto } from '../unit/modules/user/user.utils';
+import {
+  defaultCreateUserDto,
+  loginUserDto,
+} from '../unit/modules/user/user.utils';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { afterEach } from 'node:test';
 import { ServiceException } from '../../src/common/exception-filter/serviceException';
+import { PrismaModule } from '../../src/prisma/prisma.module';
+import { PrismaClient } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
+import { AuthModule } from '../../src/modules/auth/auth.module';
+import { errorMessages } from '../../src/common/enums/errorMessages';
 
-describe('/users', () => {
+describe('/', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
+  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [UserModule],
-      providers: [PrismaService],
+      imports: [AuthModule, UserModule, PrismaModule.forTest(prismaClient)],
+      providers: [ConfigService],
     }).compile();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
@@ -35,11 +45,10 @@ describe('/users', () => {
         transform: true,
       }),
     );
+    app.use(cookieParser());
 
     await app.init();
     await prismaService.$connect();
-    await prismaService.project.deleteMany();
-    await prismaService.user.deleteMany();
   });
 
   afterAll(async () => {
@@ -51,59 +60,69 @@ describe('/users', () => {
     await prismaService.user.deleteMany();
   });
 
-  describe('/ POST (Create User)', () => {
-    it('should return a 201 if everything is fine', async () => {
-      return request(app.getHttpServer())
-        .post('/')
-        .send(defaultCreateUserDto)
-        .expect(201);
-    });
-
-    it('should return a 400 if user already exists', async () => {
-      // Create User in DB
+  describe('/login POST (login)', () => {
+    it('should return a 200 if everything is fine', async () => {
+      // create default user
       await request(app.getHttpServer())
         .post('/')
         .send(defaultCreateUserDto)
         .expect(201);
 
-      // Duplicate User that should be refused
-      return request(app.getHttpServer())
-        .post('/')
-        .send(defaultCreateUserDto)
-        .expect(400);
-    });
-  });
-
-  describe('/:id GET (Get User)', () => {
-    it('should return a 200 if it returns searched user', async () => {
-      // Create User in DB
-      const { body } = await request(app.getHttpServer())
-        .post('/')
-        .send(defaultCreateUserDto)
-        .expect(201);
-
-      return request(app.getHttpServer())
-        .get(`/${body.id}`)
-        .send(defaultCreateUserDto)
+      const response = await request(app.getHttpServer())
+        .post('/login')
+        .send(loginUserDto)
         .expect(200);
+
+      // contain bearer token and jwt token
+      expect(response.headers.authorization).toContain('Bearer ');
+      expect(response.headers['set-cookie'][0]).toContain('jwt=');
     });
 
-    it('should return a 404 if userID does not exist', async () => {
-      // Create User in DB
-      const { body } = await request(app.getHttpServer())
-        .post('/')
-        .send(defaultCreateUserDto)
-        .expect(201);
-
-      // request user that does not exist
-      return request(app.getHttpServer())
-        .get(`/${body.id + 1}`)
-        .expect(404);
+    it('should return a 400 if email field is missing', async () => {
+      await request(app.getHttpServer())
+        .post('/login')
+        .send({ password: loginUserDto.password })
+        .expect(400)
+        .expect({
+          statusCode: 400,
+          message: errorMessages.BAD_REQUEST_LOGIN_ERROR,
+        });
     });
 
-    it('should return a 400 if userID is not number', async () => {
-      // userid is not a numbere
-      return request(app.getHttpServer()).get(`/abc`).expect(400);
+    it('should return a 400 if password field is missing', async () => {
+      await request(app.getHttpServer())
+        .post('/login')
+        .send({ email: loginUserDto.email })
+        .expect(400)
+        .expect({
+          statusCode: 400,
+          message: errorMessages.BAD_REQUEST_LOGIN_ERROR,
+        });
+    });
+
+    it('should return a 401 if logged in user does not exist', async () => {
+      await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: 'nonexistuser@email.com',
+          password: loginUserDto.password,
+        })
+        .expect(401)
+        .expect({
+          statusCode: 401,
+          message: errorMessages.INCORRECT_EMAIL_OR_PASSWORD,
+        });
+    });
+
+    it('should return a 401 if password is incorrect', async () => {
+      await request(app.getHttpServer())
+        .post('/login')
+        .send({ email: loginUserDto.email, password: 'incorrectPassword' })
+        .expect(401)
+        .expect({
+          statusCode: 401,
+          message: errorMessages.INCORRECT_EMAIL_OR_PASSWORD,
+        });
     });
   });
 });

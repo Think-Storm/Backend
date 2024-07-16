@@ -2,6 +2,11 @@ import { User } from '@prisma/client';
 import { CreateUserDto } from '../../../../src/modules/user/dtos/createUser.dto';
 import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
 
+export const loginUserDto = {
+  email: 'email@email.com',
+  password: 'hashedPassword',
+};
+
 export const defaultCreateUserDto: CreateUserDto = {
   username: 'username',
   fullName: 'Full Name',

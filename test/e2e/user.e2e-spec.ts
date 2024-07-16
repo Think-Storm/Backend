@@ -85,7 +85,7 @@ describe('/users', () => {
         .post('/')
         .send(defaultCreateUserDto)
         .expect(201);
-      console.log(body.id);
+
       return request(app.getHttpServer())
         .get(`/${body.id}`)
         .send(defaultCreateUserDto)
