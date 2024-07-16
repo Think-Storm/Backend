@@ -43,7 +43,6 @@ export class AuthService {
   };
 
   getToken(user: UserResponseDto): string {
-    // 3) If everything is okay, send jwt token
     const token = this.signToken(user.id);
 
     return token;

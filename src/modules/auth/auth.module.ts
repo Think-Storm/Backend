@@ -40,5 +40,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     LocalStrategy,
     ConfigService,
   ],
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

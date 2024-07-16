@@ -7,14 +7,27 @@ import { PasswordEncryption } from '../../common/passwordEncryption';
 import { UserMapper } from './dtos/user.mapper';
 import { AuthService } from '../auth/auth.service';
 import { AuthRepository } from '../auth/auth.repository';
-import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PassportModule } from '@nestjs/passport';
 
 /**
  * Module for user-related components and services
  */
 @Module({
-  imports: [],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PassportModule.register({ defaultStrategy: 'jwt', session: false }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      global: true,
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: config.get<string>('JWT_EXPIRES_IN') },
+      }),
+      inject: [ConfigService],
+    }),
+  ],
   controllers: [UserController],
   providers: [
     AuthService,
@@ -24,7 +37,6 @@ import { ConfigService } from '@nestjs/config';
     PrismaService,
     PasswordEncryption,
     UserMapper,
-    JwtService,
     ConfigService,
   ],
 })
