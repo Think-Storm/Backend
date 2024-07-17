@@ -13,6 +13,7 @@ model User {
   username      String
   password      String
   passwordSalt  String  @map("password_salt")
+  passwordChangedAt DateTime?
   fullName      String? @map("full_name")
   birthdate     DateTime?
   avatar        String?
