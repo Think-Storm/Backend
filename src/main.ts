@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { ServiceExceptionToHttpExceptionFilter } from './common/exception-filter/serviceExceptionFilter';
 import { ServiceException } from './common/exception-filter/serviceException';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,6 +23,8 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new ServiceExceptionToHttpExceptionFilter());
+  app.use(cookieParser());
+
   await app.listen(3000);
 }
 bootstrap();
