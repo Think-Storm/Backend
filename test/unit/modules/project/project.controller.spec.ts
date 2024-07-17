@@ -2,26 +2,29 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProjectController } from '../../../../src/modules/project/project.controller';
 import { ProjectService } from '../../../../src/modules/project/project.service';
 import { ProjectRepository } from '../../../../src/modules/project/project.repository';
-import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { ProjectMapper } from '../../../../src/modules/project/dtos/project.mapper';
 import { ProjectTestUtils } from './project.utils';
 import { UserModule } from '../../../../src/modules/user/user.module';
+import { ConfigService } from '@nestjs/config';
+import { PrismaClient } from '@prisma/client';
+import { PrismaModule } from '../../../../src/prisma/prisma.module';
 
 describe('ProjectController', () => {
   let projectController: ProjectController;
   let projectService: ProjectService;
   let projectTestUtils: ProjectTestUtils;
+  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      imports: [UserModule],
+      imports: [PrismaModule.forTest(prismaClient), UserModule],
       controllers: [ProjectController],
       providers: [
         ProjectService,
         ProjectRepository,
-        PrismaService,
         ProjectMapper,
         ProjectTestUtils,
+        ConfigService,
       ],
     }).compile();
 

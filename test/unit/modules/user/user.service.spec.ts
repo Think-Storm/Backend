@@ -5,28 +5,41 @@ import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { UserController } from '../../../../src/modules/user/user.controller';
-import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
-import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
+import { AuthService } from '../../../../src/modules/auth/auth.service';
+import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
+import { JwtService } from '@nestjs/jwt';
+import { ClassSerializerInterceptor } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { PrismaClient } from '@prisma/client';
+import { PrismaModule } from '../../../../src/prisma/prisma.module';
 
 describe('UserService', () => {
   let userService: UserService;
   let userRepository: UserRepository;
   let passwordEncryption: PasswordEncryption;
+  const prismaClient = new PrismaClient();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [PrismaModule.forTest(prismaClient)],
       controllers: [UserController],
       providers: [
         UserService,
         UserRepository,
         PasswordEncryption,
         UserMapper,
-        PrismaService,
+        AuthService,
+        AuthRepository,
+        JwtService,
+        ConfigService,
       ],
-    }).compile();
+    })
+      .overrideInterceptor(ClassSerializerInterceptor)
+      .useClass(ClassSerializerInterceptor)
+      .compile();
 
     userService = module.get<UserService>(UserService);
     userRepository = module.get<UserRepository>(UserRepository);
@@ -75,7 +88,7 @@ describe('UserService', () => {
         .spyOn(userRepository, 'createUser')
         .mockResolvedValue(defaultUser);
 
-      const expectedResponseDto: UserResponseDto = {
+      const expectedResponseDto = {
         id: defaultUser.id,
         email: defaultUser.email,
         username: defaultUser.username,
@@ -119,7 +132,7 @@ describe('UserService', () => {
 
       const successUserResponseDto = await userService.getUserById(1);
 
-      const expectedResponseDto: UserResponseDto = {
+      const expectedResponseDto = {
         id: defaultUser.id,
         email: defaultUser.email,
         username: defaultUser.username,
