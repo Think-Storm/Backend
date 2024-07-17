@@ -1,18 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
+import { PrismaClient } from '@prisma/client';
+import { PrismaModule } from '../../src/prisma/prisma.module';
 
 describe('PrismaService', () => {
-  let service: PrismaService;
+  let prismaService: PrismaService;
+  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [PrismaService],
+      imports: [PrismaModule.forTest(prismaClient)],
+      providers: [ConfigService],
     }).compile();
 
-    service = module.get<PrismaService>(PrismaService);
+    prismaService = module.get<PrismaService>(PrismaService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(prismaService).toBeDefined();
   });
 });
