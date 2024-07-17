@@ -2,24 +2,34 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from '../../../../src/modules/user/user.controller';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
-import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { defaultCreateUserDto, defaultUserResponseDto } from './user.utils';
+import { AuthService } from '../../../../src/modules/auth/auth.service';
+import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { PrismaClient } from '@prisma/client';
+import { PrismaModule } from '../../../../src/prisma/prisma.module';
 
 describe('UserController', () => {
   let userController: UserController;
   let userService: UserService;
+  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
+      imports: [PrismaModule.forTest(prismaClient)],
       controllers: [UserController],
       providers: [
         UserService,
         UserRepository,
-        PrismaService,
+        AuthService,
+        AuthRepository,
         UserMapper,
         PasswordEncryption,
+        JwtService,
+        ConfigService,
       ],
     }).compile();
 

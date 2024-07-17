@@ -3,13 +3,15 @@ import { ProjectService } from '../../../../src/modules/project/project.service'
 import { ProjectRepository } from '../../../../src/modules/project/project.repository';
 import { ProjectMapper } from '../../../../src/modules/project/dtos/project.mapper';
 import { ProjectController } from '../../../../src/modules/project/project.controller';
-import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { ProjectTestUtils } from './project.utils';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { defaultUser } from '../user/user.utils';
 import { UserModule } from '../../../../src/modules/user/user.module';
+import { ConfigService } from '@nestjs/config';
+import { PrismaClient } from '@prisma/client';
+import { PrismaModule } from '../../../../src/prisma/prisma.module';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
@@ -17,16 +19,18 @@ describe('ProjectService', () => {
   let projectTestUtils: ProjectTestUtils;
   let userService: UserService;
 
+  const prismaClient = new PrismaClient();
+
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [UserModule],
+      imports: [PrismaModule.forTest(prismaClient), UserModule],
       controllers: [ProjectController],
       providers: [
         ProjectService,
         ProjectRepository,
         ProjectMapper,
-        PrismaService,
         ProjectTestUtils,
+        ConfigService,
       ],
     }).compile();
 
