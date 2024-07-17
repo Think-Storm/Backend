@@ -1,22 +1,22 @@
 import { Module } from '@nestjs/common';
-import { UserController } from './user.controller';
-import { UserService } from './user.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { UserRepository } from './user.repository';
 import { PasswordEncryption } from '../../common/passwordEncryption';
-import { UserMapper } from './dtos/user.mapper';
-import { AuthService } from '../auth/auth.service';
-import { AuthRepository } from '../auth/auth.repository';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { UserMapper } from '../user/dtos/user.mapper';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { AuthRepository } from './auth.repository';
+import { UserRepository } from '../user/user.repository';
 import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
+import { JwtStrategy } from './jwt/jwt.strategy';
+import { LocalStrategy } from './local/local.strategy';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 /**
- * Module for user-related components and services
+ * Module for auth-related components and services
  */
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
     PassportModule.register({ defaultStrategy: 'jwt', session: false }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -28,17 +28,18 @@ import { PassportModule } from '@nestjs/passport';
       inject: [ConfigService],
     }),
   ],
-  controllers: [UserController],
+  controllers: [AuthController],
   providers: [
     AuthService,
     AuthRepository,
-    UserService,
     UserRepository,
     PrismaService,
     PasswordEncryption,
     UserMapper,
+    JwtStrategy,
+    LocalStrategy,
     ConfigService,
   ],
-  exports: [UserService],
+  exports: [AuthService, JwtModule],
 })
-export class UserModule {}
+export class AuthModule {}
