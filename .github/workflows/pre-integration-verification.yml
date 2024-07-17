@@ -3,7 +3,7 @@ name: Pre Integration Verification Pipeline
 on:
   pull_request:
     branches:
-      - "develop"
+      - 'develop'
 
 jobs:
   setup:
@@ -24,7 +24,7 @@ jobs:
             ${{ runner.os }}-node-
       - name: Install dependencies
         run: npm install
-        
+
   test:
     runs-on: ubuntu-latest
     needs: [setup, lint, build]
@@ -42,8 +42,11 @@ jobs:
           POSTGRES_DB: test_db
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-    env: 
+    env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
+      JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -58,7 +61,7 @@ jobs:
         run: npx prisma migrate dev
       - name: Filling the database with the seeds
         run: npm run db:seed
-      
+
       - name: Run tests
         run: |
           npm run test:unit
@@ -96,7 +99,7 @@ jobs:
           POSTGRES_DB: test_db
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-    env: 
+    env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
     steps:
       - name: Checkout repository
@@ -112,6 +115,6 @@ jobs:
         run: npx prisma migrate dev
       - name: Filling the database with the seeds
         run: npm run db:seed
-      
+
       - name: Build application
         run: npm run build
