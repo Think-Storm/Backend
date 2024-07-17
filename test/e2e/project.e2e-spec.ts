@@ -7,17 +7,21 @@ import { ProjectTestUtils } from '../unit/modules/project/project.utils';
 import { ProjectModule } from '../../src/modules/project/project.module';
 import { UserRepository } from '../../src/modules/user/user.repository';
 import { ServiceException } from '../../src/common/exception-filter/serviceException';
+import { PrismaModule } from '../../src/prisma/prisma.module';
+import { PrismaClient } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
 
 describe('/projects', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
   let userRepository: UserRepository;
   let projectTestUtils: ProjectTestUtils;
+  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [ProjectModule],
-      providers: [PrismaService, ProjectTestUtils, UserRepository],
+      imports: [ProjectModule, PrismaModule.forTest(prismaClient)],
+      providers: [ProjectTestUtils, UserRepository, ConfigService],
     }).compile();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);

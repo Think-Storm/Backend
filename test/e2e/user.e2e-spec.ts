@@ -6,15 +6,19 @@ import { defaultCreateUserDto } from '../unit/modules/user/user.utils';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { afterEach } from 'node:test';
 import { ServiceException } from '../../src/common/exception-filter/serviceException';
+import { PrismaClient } from '@prisma/client';
+import { PrismaModule } from '../../src/prisma/prisma.module';
+import { ConfigService } from '@nestjs/config';
 
 describe('/users', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
+  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [UserModule],
-      providers: [PrismaService],
+      imports: [UserModule, PrismaModule.forTest(prismaClient)],
+      providers: [ConfigService],
     }).compile();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
