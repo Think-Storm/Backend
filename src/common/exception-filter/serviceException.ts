@@ -21,8 +21,12 @@ export class ServiceException extends Error {
     return new ServiceException(message, 400);
   };
 
-  static AuthException = (message: string): ServiceException => {
+  static UnAuthorizedException = (message: string): ServiceException => {
     return new ServiceException(message, 401);
+  };
+
+  static ForbiddenException = (message: string): ServiceException => {
+    return new ServiceException(message, 403);
   };
 
   static EntityNotFoundException = (message: string): ServiceException => {
