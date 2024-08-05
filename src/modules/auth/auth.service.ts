@@ -45,11 +45,11 @@ export class AuthService {
     return await this.jwtService.verify(token, { secret });
   };
 
-  getToken(user: UserResponseDto): string {
+  getToken = (user: UserResponseDto): string => {
     const token = this.signToken(user.id);
 
     return token;
-  }
+  };
 
   authentication(user: UserResponseDto, @Res() res: Response): UserResponseDto {
     const token = this.getToken(user);
