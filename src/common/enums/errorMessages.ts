@@ -9,7 +9,7 @@ export const errorMessages = {
   VALIDATION_ERROR: 'The validation has failed.',
   ENTITY_NOT_FOUND: (entity: string, id: string) =>
     `${entity} with id ${id} was not found.`,
-  BAD_REQUEST_LOGIN_ERROR: 'Please provide email or password.',
+  BAD_REQUEST_LOGIN_ERROR: 'Please provide email and password.',
   INCORRECT_EMAIL_OR_PASSWORD: 'Incorrect email or password.',
   PROTECT_ROUTES: 'You are not logged in! Please log in to get access.',
   INVALID_TOKEN: 'Invalid Token. Please log in again!',
