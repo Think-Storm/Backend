@@ -8,6 +8,7 @@ import { errorMessages } from '../../../src/common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
 import { JwtService } from '@nestjs/jwt';
 import { UserResponseDto } from '../user/dtos/userResponse.dto';
+import { DAY_TO_MILISECONDS_RATIO } from '../../common/consts';
 
 @Injectable()
 export class AuthService {
@@ -60,7 +61,7 @@ export class AuthService {
       secure: false,
       expires: new Date(
         Date.now() +
-          Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000,
+          Number(process.env.JWT_COOKIE_EXPIRES_IN) * DAY_TO_MILISECONDS_RATIO,
       ),
     };
     if (process.env.NODE_ENV === 'production') {
