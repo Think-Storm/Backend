@@ -120,7 +120,7 @@ describe('JwtAuthGuard', () => {
     const context = createMock<ExecutionContext>();
 
     expect(guard.canActivate(context)).rejects.toThrow(
-      ServiceException.AuthException(errorMessages.PROTECT_ROUTES),
+      ServiceException.UnAuthorizedException(errorMessages.PROTECT_ROUTES),
     );
   });
 
@@ -135,7 +135,7 @@ describe('JwtAuthGuard', () => {
     });
 
     expect(guard.canActivate(context)).rejects.toThrow(
-      ServiceException.AuthException(errorMessages.INVALID_TOKEN),
+      ServiceException.UnAuthorizedException(errorMessages.INVALID_TOKEN),
     );
   });
 
@@ -149,7 +149,7 @@ describe('JwtAuthGuard', () => {
     });
 
     expect(guard.canActivate(context)).rejects.toThrow(
-      ServiceException.AuthException(errorMessages.INVALID_TOKEN),
+      ServiceException.UnAuthorizedException(errorMessages.INVALID_TOKEN),
     );
   });
 
@@ -170,7 +170,7 @@ describe('JwtAuthGuard', () => {
     );
 
     expect(guard.canActivate(context)).rejects.toThrow(
-      ServiceException.AuthException(errorMessages.TOKEN_EXPIRED),
+      ServiceException.UnAuthorizedException(errorMessages.TOKEN_EXPIRED),
     );
   });
 
@@ -190,7 +190,7 @@ describe('JwtAuthGuard', () => {
     );
 
     expect(guard.canActivate(context)).rejects.toThrow(
-      ServiceException.AuthException(errorMessages.TOKEN_EXPIRED),
+      ServiceException.UnAuthorizedException(errorMessages.TOKEN_EXPIRED),
     );
   });
 
@@ -207,7 +207,7 @@ describe('JwtAuthGuard', () => {
     });
 
     expect(guard.canActivate(context)).rejects.toThrow(
-      ServiceException.AuthException(
+      ServiceException.UnAuthorizedException(
         errorMessages.ENTITY_NOT_FOUND('User', String(defaultUser.id)),
       ),
     );
@@ -225,7 +225,7 @@ describe('JwtAuthGuard', () => {
     });
 
     expect(guard.canActivate(context)).rejects.toThrow(
-      ServiceException.AuthException(
+      ServiceException.UnAuthorizedException(
         errorMessages.ENTITY_NOT_FOUND('User', String(defaultUser.id)),
       ),
     );
@@ -251,7 +251,9 @@ describe('JwtAuthGuard', () => {
       .mockResolvedValue(true);
 
     expect(guard.canActivate(context)).rejects.toThrow(
-      ServiceException.AuthException(errorMessages.USER_CHANGED_PASSWORD),
+      ServiceException.UnAuthorizedException(
+        errorMessages.USER_CHANGED_PASSWORD,
+      ),
     );
   });
 
@@ -274,7 +276,9 @@ describe('JwtAuthGuard', () => {
       .mockResolvedValue(true);
 
     expect(guard.canActivate(context)).rejects.toThrow(
-      ServiceException.AuthException(errorMessages.USER_CHANGED_PASSWORD),
+      ServiceException.UnAuthorizedException(
+        errorMessages.USER_CHANGED_PASSWORD,
+      ),
     );
   });
 });

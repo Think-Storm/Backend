@@ -32,7 +32,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     }
 
     if (!token) {
-      throw ServiceException.AuthException(errorMessages.PROTECT_ROUTES);
+      throw ServiceException.UnAuthorizedException(
+        errorMessages.PROTECT_ROUTES,
+      );
     }
 
     // 2) Verification token
@@ -44,16 +46,20 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       );
     } catch (err) {
       if (err.name === 'TokenExpiredError') {
-        throw ServiceException.AuthException(errorMessages.TOKEN_EXPIRED);
+        throw ServiceException.UnAuthorizedException(
+          errorMessages.TOKEN_EXPIRED,
+        );
       } else if (err.name === 'JsonWebTokenError') {
-        throw ServiceException.AuthException(errorMessages.INVALID_TOKEN);
+        throw ServiceException.UnAuthorizedException(
+          errorMessages.INVALID_TOKEN,
+        );
       }
     }
 
     // 3) Check if user still exists
     const user = await this.userRepository.getUserById(decoded.id);
     if (!user) {
-      throw ServiceException.AuthException(
+      throw ServiceException.UnAuthorizedException(
         errorMessages.ENTITY_NOT_FOUND('User', decoded.id),
       );
     }
@@ -62,7 +68,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     const changedPasswordAfter =
       await this.passwordEncryption.changedPasswordAfter(user, decoded.iat);
     if (changedPasswordAfter) {
-      throw ServiceException.AuthException(errorMessages.USER_CHANGED_PASSWORD);
+      throw ServiceException.UnAuthorizedException(
+        errorMessages.USER_CHANGED_PASSWORD,
+      );
     }
 
     return user;

@@ -138,11 +138,15 @@ describe('LocalAuthGuard', () => {
     await expect(async () => {
       await authService.checkUserAndPassword(defaultUser.email, password);
     }).rejects.toThrow(
-      ServiceException.AuthException(errorMessages.INCORRECT_EMAIL_OR_PASSWORD),
+      ServiceException.UnAuthorizedException(
+        errorMessages.INCORRECT_EMAIL_OR_PASSWORD,
+      ),
     );
 
     expect(guard.canActivate(context)).rejects.toThrow(
-      ServiceException.AuthException(errorMessages.INCORRECT_EMAIL_OR_PASSWORD),
+      ServiceException.UnAuthorizedException(
+        errorMessages.INCORRECT_EMAIL_OR_PASSWORD,
+      ),
     );
   });
 
@@ -167,11 +171,15 @@ describe('LocalAuthGuard', () => {
     await expect(async () => {
       await authService.checkUserAndPassword(defaultUser.email, password);
     }).rejects.toThrow(
-      ServiceException.AuthException(errorMessages.INCORRECT_EMAIL_OR_PASSWORD),
+      ServiceException.UnAuthorizedException(
+        errorMessages.INCORRECT_EMAIL_OR_PASSWORD,
+      ),
     );
 
     expect(guard.canActivate(context)).rejects.toThrow(
-      ServiceException.AuthException(errorMessages.INCORRECT_EMAIL_OR_PASSWORD),
+      ServiceException.UnAuthorizedException(
+        errorMessages.INCORRECT_EMAIL_OR_PASSWORD,
+      ),
     );
   });
 });
