@@ -29,7 +29,7 @@ export class AuthService {
         user.password,
       ))
     ) {
-      throw ServiceException.AuthException(
+      throw ServiceException.UnAuthorizedException(
         errorMessages.INCORRECT_EMAIL_OR_PASSWORD,
       );
     }
