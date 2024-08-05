@@ -69,7 +69,7 @@ describe('AuthService', () => {
         .mockResolvedValue(defaultUser);
 
       const passwordCheckSpy = jest
-        .spyOn(passwordEncryption, 'correctPassword')
+        .spyOn(passwordEncryption, 'isPasswordCorrect')
         .mockResolvedValue(true);
 
       expect(
@@ -105,7 +105,7 @@ describe('AuthService', () => {
         .mockResolvedValue(defaultUser);
 
       const passwordCheckSpy = jest
-        .spyOn(passwordEncryption, 'correctPassword')
+        .spyOn(passwordEncryption, 'isPasswordCorrect')
         .mockResolvedValue(false);
 
       try {

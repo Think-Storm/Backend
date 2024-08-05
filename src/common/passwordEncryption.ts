@@ -12,7 +12,7 @@ export class PasswordEncryption {
     };
   }
 
-  async correctPassword(candidatePassword: string, userPassword: string) {
+  async isPasswordCorrect(candidatePassword: string, userPassword: string) {
     return await bcrypt.compare(candidatePassword, userPassword);
   }
 
