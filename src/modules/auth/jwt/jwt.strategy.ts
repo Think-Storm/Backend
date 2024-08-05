@@ -8,6 +8,7 @@ import { Request } from 'express';
 import { UserRepository } from './../../user/user.repository';
 import { PasswordEncryption } from './../../../common/passwordEncryption';
 import { UserResponseDto } from '../../../modules/user/dtos/userResponse.dto';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -21,6 +22,21 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
   async validate(req: Request): Promise<UserResponseDto> {
     // 1) Getting token and check if it's there
+    const token = this.checkTokenExists(req);
+
+    // 2) Verification token
+    const decoded = await this.verifyAndDecodeToken(token);
+
+    // 3) Check if user still exists
+    const user = await this.checkUserExistsInDB(decoded.id);
+
+    // 4) Check if user changed password after the token was issued
+    await this.checkUserPasswordChanged(user, decoded.iat);
+
+    return user;
+  }
+
+  checkTokenExists(req: Request) {
     let token;
     if (
       req.headers?.authorization &&
@@ -36,8 +52,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         errorMessages.PROTECT_ROUTES,
       );
     }
+    return token;
+  }
 
-    // 2) Verification token
+  async verifyAndDecodeToken(token: string) {
     let decoded;
     try {
       decoded = await this.authService.verifyToken(
@@ -55,24 +73,26 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         );
       }
     }
+    return decoded;
+  }
 
-    // 3) Check if user still exists
-    const user = await this.userRepository.getUserById(decoded.id);
+  async checkUserExistsInDB(userId: number) {
+    const user = await this.userRepository.getUserById(userId);
     if (!user) {
       throw ServiceException.UnAuthorizedException(
-        errorMessages.ENTITY_NOT_FOUND('User', decoded.id),
+        errorMessages.ENTITY_NOT_FOUND('User', String(userId)),
       );
     }
+    return user;
+  }
 
-    // 4) Check if user changed password after the token was issued
+  async checkUserPasswordChanged(user: User, tokenIssuedAt) {
     const changedPasswordAfter =
-      await this.passwordEncryption.changedPasswordAfter(user, decoded.iat);
+      await this.passwordEncryption.changedPasswordAfter(user, tokenIssuedAt);
     if (changedPasswordAfter) {
       throw ServiceException.UnAuthorizedException(
         errorMessages.USER_CHANGED_PASSWORD,
       );
     }
-
-    return user;
   }
 }
