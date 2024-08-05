@@ -24,7 +24,10 @@ export class AuthService {
 
     if (
       !user ||
-      !(await this.passwordEncryption.correctPassword(password, user.password))
+      !(await this.passwordEncryption.isPasswordCorrect(
+        password,
+        user.password,
+      ))
     ) {
       throw ServiceException.AuthException(
         errorMessages.INCORRECT_EMAIL_OR_PASSWORD,
