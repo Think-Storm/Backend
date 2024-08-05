@@ -21,14 +21,10 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
     };
 
     // 1) Check if email and password exist
-    if (!loginUserDto.email || !loginUserDto.password) {
-      throw ServiceException.BadRequestException(
-        errorMessages.BAD_REQUEST_LOGIN_ERROR,
-      );
-    }
+    this.checkEmailAndPasswordExist(loginUserDto.email, loginUserDto.password);
 
     // 2) Check if user exists && password is correct
-    const user = await this.authService.checkUserAndPassword(
+    const user = await this.verifyUserAndPassword(
       loginUserDto.email,
       loginUserDto.password,
     );
@@ -37,6 +33,19 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
     user.passwordSalt = undefined;
     user.passwordChangedAt = undefined;
 
+    return user;
+  }
+
+  checkEmailAndPasswordExist(email: string, password: string) {
+    if (!email || !password) {
+      throw ServiceException.BadRequestException(
+        errorMessages.BAD_REQUEST_LOGIN_ERROR,
+      );
+    }
+  }
+
+  async verifyUserAndPassword(email: string, password: string) {
+    const user = await this.authService.checkUserAndPassword(email, password);
     return user;
   }
 }
