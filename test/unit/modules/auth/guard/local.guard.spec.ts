@@ -84,7 +84,7 @@ describe('LocalAuthGuard', () => {
 
     // Mock call to DB
     jest.spyOn(userRepository, 'getUserByEmail').mockResolvedValue(defaultUser);
-    jest.spyOn(passwordEncryption, 'correctPassword').mockResolvedValue(true);
+    jest.spyOn(passwordEncryption, 'isPasswordCorrect').mockResolvedValue(true);
 
     expect(await guard.canActivate(context)).toBeTruthy();
   });
@@ -160,7 +160,9 @@ describe('LocalAuthGuard', () => {
     // Mock call to DB
     jest.spyOn(userRepository, 'getUserByEmail').mockResolvedValue(defaultUser);
     // Mock call to DB
-    jest.spyOn(passwordEncryption, 'correctPassword').mockResolvedValue(false);
+    jest
+      .spyOn(passwordEncryption, 'isPasswordCorrect')
+      .mockResolvedValue(false);
 
     await expect(async () => {
       await authService.checkUserAndPassword(defaultUser.email, password);
