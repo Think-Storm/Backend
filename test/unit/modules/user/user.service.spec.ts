@@ -8,8 +8,6 @@ import { UserController } from '../../../../src/modules/user/user.controller';
 import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
-import { AuthService } from '../../../../src/modules/auth/auth.service';
-import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
 import { JwtService } from '@nestjs/jwt';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -31,8 +29,6 @@ describe('UserService', () => {
         UserRepository,
         PasswordEncryption,
         UserMapper,
-        AuthService,
-        AuthRepository,
         JwtService,
         ConfigService,
       ],
