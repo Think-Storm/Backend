@@ -9,18 +9,14 @@ import {
   HttpCode,
   UseInterceptors,
   ClassSerializerInterceptor,
-  //UseGuards,
+  // UseGuards,
 } from '@nestjs/common';
 import { UserResponseDto } from './dtos/userResponse.dto';
-import { AuthService } from '../auth/auth.service';
 //import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 
 @Controller()
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   @UseInterceptors(ClassSerializerInterceptor)
   @HttpCode(201)

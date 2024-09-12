@@ -5,8 +5,6 @@ import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { defaultCreateUserDto, defaultUserResponseDto } from './user.utils';
-import { AuthService } from '../../../../src/modules/auth/auth.service';
-import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
@@ -24,8 +22,6 @@ describe('UserController', () => {
       providers: [
         UserService,
         UserRepository,
-        AuthService,
-        AuthRepository,
         UserMapper,
         PasswordEncryption,
         JwtService,
