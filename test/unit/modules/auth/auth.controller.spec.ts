@@ -2,19 +2,19 @@ import { Test, TestingModule } from '@nestjs/testing';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const httpMocks = require('node-mocks-http');
 import { JwtModule } from '@nestjs/jwt';
-import { UserRepository } from '../../../../src/modules/user/user.repository';
-import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { defaultUserResponseDto } from '../user/user.utils';
 import { AuthController } from '../../../../src/modules/auth/auth.controller';
 import { AuthService } from '../../../../src/modules/auth/auth.service';
 import RequestWithUser from '../../../../src/modules/auth/local/requestWithUser.interface';
 import { LocalAuthGuard } from '../../../../src/modules/auth/local/local.guard';
-import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { PrismaClient } from '@prisma/client';
 import { PassportModule } from '@nestjs/passport';
+import { UserService } from '../../../../src/modules/user/user.service';
+import { UserRepository } from '../../../../src/modules/user/user.repository';
+import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -39,11 +39,11 @@ describe('AuthController', () => {
       ],
       controllers: [AuthController],
       providers: [
-        AuthService,
-        AuthRepository,
+        UserService,
         UserRepository,
         UserMapper,
         PasswordEncryption,
+        AuthService,
         ConfigService,
       ],
     })

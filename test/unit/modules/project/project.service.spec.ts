@@ -8,10 +8,12 @@ import { ServiceException } from '../../../../src/common/exception-filter/servic
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { defaultUser } from '../user/user.utils';
-import { UserModule } from '../../../../src/modules/user/user.module';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
+import { UserRepository } from '../../../../src/modules/user/user.repository';
+import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
+import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
@@ -23,7 +25,7 @@ describe('ProjectService', () => {
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prismaClient), UserModule],
+      imports: [PrismaModule.forTest(prismaClient)],
       controllers: [ProjectController],
       providers: [
         ProjectService,
@@ -31,6 +33,10 @@ describe('ProjectService', () => {
         ProjectMapper,
         ProjectTestUtils,
         ConfigService,
+        PasswordEncryption,
+        UserService,
+        UserRepository,
+        UserMapper,
       ],
     }).compile();
 

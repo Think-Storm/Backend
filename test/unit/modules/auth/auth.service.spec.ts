@@ -10,7 +10,6 @@ import { UserController } from '../../../../src/modules/user/user.controller';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { AuthService } from '../../../../src/modules/auth/auth.service';
-import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
 import { JsonWebTokenError, JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
@@ -43,10 +42,9 @@ describe('AuthService', () => {
       providers: [
         UserService,
         UserRepository,
-        PasswordEncryption,
         UserMapper,
+        PasswordEncryption,
         AuthService,
-        AuthRepository,
         ConfigService,
       ],
     }).compile();
@@ -78,6 +76,10 @@ describe('AuthService', () => {
 
       expect(emailCheckSpy).toHaveBeenCalledTimes(1);
       expect(passwordCheckSpy).toHaveBeenCalledTimes(1);
+      expect(passwordCheckSpy).toHaveBeenCalledWith(
+        password,
+        defaultUser.password,
+      );
     });
 
     it('should return 401 error if user does not exist', async () => {

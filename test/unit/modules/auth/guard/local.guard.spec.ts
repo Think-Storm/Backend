@@ -12,7 +12,6 @@ import { errorMessages } from '../../../../../src/common/enums/errorMessages';
 import { PasswordEncryption } from '../../../../../src/common/passwordEncryption';
 import { JwtStrategy } from '../../../../../src/modules/auth/jwt/jwt.strategy';
 import { LocalStrategy } from '../../../../../src/modules/auth/local/local.strategy';
-import { AuthRepository } from '../../../../../src/modules/auth/auth.repository';
 import { UserMapper } from '../../../../../src/modules/user/dtos/user.mapper';
 import { UserController } from '../../../../../src/modules/user/user.controller';
 import { UserService } from '../../../../../src/modules/user/user.service';
@@ -46,7 +45,6 @@ describe('LocalAuthGuard', () => {
       ],
       controllers: [UserController],
       providers: [
-        AuthRepository,
         AuthService,
         UserService,
         UserRepository,
