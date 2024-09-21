@@ -46,6 +46,9 @@ jobs:
           POSTGRES_PASSWORD: postgres
     env: 
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
+      JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
