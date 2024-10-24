@@ -2,31 +2,31 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { afterEach } from 'node:test';
 import { ProjectTestUtils } from '../unit/modules/project/project.utils';
 import { ProjectModule } from '../../src/modules/project/project.module';
-import { UserRepository } from '../../src/modules/user/user.repository';
 import { ServiceException } from '../../src/common/exception-filter/serviceException';
 import { PrismaModule } from '../../src/prisma/prisma.module';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../src/prisma/prisma.client';
 import { ConfigService } from '@nestjs/config';
+import { AuthRepository } from '../../src/modules/auth/auth.repository';
+import { AuthModule } from '../../src/modules/auth/auth.module';
+import refreshDatabase from '../../src/prisma/prisma.dbreset';
 
 describe('/projects', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
-  let userRepository: UserRepository;
+  let authRepository: AuthRepository;
   let projectTestUtils: ProjectTestUtils;
-  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [ProjectModule, PrismaModule.forTest(prismaClient)],
-      providers: [ProjectTestUtils, UserRepository, ConfigService],
+      imports: [ProjectModule, AuthModule, PrismaModule.forTest(prisma)],
+      providers: [ProjectTestUtils, ConfigService],
     }).compile();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
     projectTestUtils = moduleFixture.get<ProjectTestUtils>(ProjectTestUtils);
-    userRepository = moduleFixture.get<UserRepository>(UserRepository);
+    authRepository = moduleFixture.get<AuthRepository>(AuthRepository);
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -47,17 +47,12 @@ describe('/projects', () => {
 
     await app.init();
     await prismaService.$connect();
-    await prismaService.project.deleteMany();
-    await prismaService.user.deleteMany();
+    await refreshDatabase();
   });
 
   afterAll(async () => {
     await prismaService.$disconnect();
-  });
-
-  afterEach(async () => {
-    await prismaService.project.deleteMany();
-    await prismaService.user.deleteMany();
+    await refreshDatabase();
   });
 
   describe('/ POST (Create Project)', () => {
@@ -65,7 +60,7 @@ describe('/projects', () => {
       // Create User and Language in DB
       const createdProject = await projectTestUtils.createProjectInDB(
         prismaService,
-        userRepository,
+        authRepository,
       );
 
       const createProjectRequest = projectTestUtils.defaultCreateProjectDto;
@@ -92,11 +87,11 @@ describe('/projects', () => {
       // Create Project in DB
       const createdProject = await projectTestUtils.createProjectInDB(
         prismaService,
-        userRepository,
+        authRepository,
       );
 
       // fetch Project that has be created
-      return request(app.getHttpServer())
+      return await request(app.getHttpServer())
         .get(`/${createdProject.id}`)
         .expect(200);
     });
