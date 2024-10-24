@@ -4,20 +4,20 @@ import * as request from 'supertest';
 import { UserModule } from '../../src/modules/user/user.module';
 import { defaultCreateUserDto } from '../unit/modules/user/user.utils';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { afterEach } from 'node:test';
 import { ServiceException } from '../../src/common/exception-filter/serviceException';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../src/prisma/prisma.client';
 import { PrismaModule } from '../../src/prisma/prisma.module';
 import { ConfigService } from '@nestjs/config';
+import refreshDatabase from '../../src/prisma/prisma.dbreset';
+import { AuthModule } from '../../src/modules/auth/auth.module';
 
 describe('/users', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
-  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [UserModule, PrismaModule.forTest(prismaClient)],
+      imports: [UserModule, AuthModule, PrismaModule.forTest(prisma)],
       providers: [ConfigService],
     }).compile();
 
@@ -42,72 +42,63 @@ describe('/users', () => {
 
     await app.init();
     await prismaService.$connect();
-    await prismaService.project.deleteMany();
-    await prismaService.user.deleteMany();
+    await refreshDatabase();
   });
 
   afterAll(async () => {
     await prismaService.$disconnect();
-  });
-
-  afterEach(async () => {
-    await prismaService.project.deleteMany();
-    await prismaService.user.deleteMany();
-  });
-
-  describe('/ POST (Create User)', () => {
-    it('should return a 201 if everything is fine', async () => {
-      return request(app.getHttpServer())
-        .post('/')
-        .send(defaultCreateUserDto)
-        .expect(201);
-    });
-
-    it('should return a 400 if user already exists', async () => {
-      // Create User in DB
-      await request(app.getHttpServer())
-        .post('/')
-        .send(defaultCreateUserDto)
-        .expect(201);
-
-      // Duplicate User that should be refused
-      return request(app.getHttpServer())
-        .post('/')
-        .send(defaultCreateUserDto)
-        .expect(400);
-    });
+    await refreshDatabase();
   });
 
   describe('/:id GET (Get User)', () => {
     it('should return a 200 if it returns searched user', async () => {
       // Create User in DB
       const { body } = await request(app.getHttpServer())
-        .post('/')
-        .send(defaultCreateUserDto)
-        .expect(201);
+        .post('/register')
+        .send(defaultCreateUserDto);
 
-      return request(app.getHttpServer())
-        .get(`/${body.id}`)
-        .send(defaultCreateUserDto)
-        .expect(200);
+      expect(body.message).toBe('register success');
+      expect(body.data.id).toBe(1);
+      expect(body.data.email).toBe(defaultCreateUserDto.email);
+      expect(body.data.username).toBe(defaultCreateUserDto.username);
+      expect(body.data.birthdate).toBe(
+        defaultCreateUserDto.birthdate.toISOString(),
+      );
+      expect(body.data.fullName).toBe(defaultCreateUserDto.fullName);
+      expect(body.data.bio).toBe(defaultCreateUserDto.bio);
+      expect(body.data.createdAt).toBeDefined();
+      expect(body.data.lastUpdatedAt).toBeDefined();
+
+      const { body: searchedUserResult } = await request(
+        app.getHttpServer(),
+      ).get(`/${body.data.id}`);
+      expect(searchedUserResult.id).toBe(1);
+      expect(searchedUserResult.email).toBe(defaultCreateUserDto.email);
+      expect(searchedUserResult.username).toBe(defaultCreateUserDto.username);
+      expect(searchedUserResult.birthdate).toBe(
+        defaultCreateUserDto.birthdate.toISOString(),
+      );
+      expect(searchedUserResult.fullName).toBe(defaultCreateUserDto.fullName);
+      expect(searchedUserResult.bio).toBe(defaultCreateUserDto.bio);
+      expect(searchedUserResult.createdAt).toBeDefined();
+      expect(searchedUserResult.lastUpdatedAt).toBeDefined();
     });
 
     it('should return a 404 if userID does not exist', async () => {
-      // Create User in DB
-      const { body } = await request(app.getHttpServer())
-        .post('/')
-        .send(defaultCreateUserDto)
-        .expect(201);
+      const existUserId = 1;
 
       // request user that does not exist
-      return request(app.getHttpServer())
-        .get(`/${body.id + 1}`)
-        .expect(404);
+      const { body } = await request(app.getHttpServer()).get(
+        `/${existUserId + 1}`,
+      );
+
+      expect(body.statusCode).toBe(404);
     });
 
     it('should return a 400 if userID is not number', async () => {
-      // userid is not a numbere
-      return request(app.getHttpServer()).get(`/abc`).expect(400);
+      // userid is not a number
+      const { body } = await request(app.getHttpServer()).get(`/abc`);
+      expect(body.statusCode).toBe(400);
     });
   });
 });
