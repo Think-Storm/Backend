@@ -16,6 +16,7 @@ import { ThrottlerAbusingGuard } from './common/throttler/throttlerAbusingGuard'
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-ioredis';
 import { cachingConfig } from './common/redis/redis.config';
+import { WaitingListUserModule } from './modules/waiting_list_user/waitingListUser.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { cachingConfig } from './common/redis/redis.config';
     ProjectModule,
     CommonDataModule,
     AuthModule,
+    WaitingListUserModule,
     RouterModule.register([
       {
         path: 'users',
@@ -59,6 +61,10 @@ import { cachingConfig } from './common/redis/redis.config';
       {
         path: 'common-data',
         module: CommonDataModule,
+      },
+      {
+        path: 'waiting-list-users',
+        module: WaitingListUserModule,
       },
     ]),
   ],
