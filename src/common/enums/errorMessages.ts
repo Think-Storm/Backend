@@ -1,6 +1,8 @@
 export const errorMessages = {
   NONE_OPERATIONAL_ERROR:
     'Something went very wrong! This is not Operational Error.',
+  WAITING_LIST_USER_WITH_EMAIL_ALREADY_EXISTS:
+    'This email is already subscribed to the newsletter.',
   USER_WITH_EMAIL_ALREADY_EXISTS: 'This email is already used by another user.',
   ERROR_CREATING_USER_IN_DB: 'An error occurred while inserting User in DB.',
   ERROR_SEARCHING_PROJECTS:
