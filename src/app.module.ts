@@ -18,6 +18,7 @@ import * as redisStore from 'cache-manager-ioredis';
 import { cachingConfig } from './common/redis/redis.config';
 import { WaitingListUserModule } from './modules/waiting_list_user/waitingListUser.module';
 
+import { NewsletterModule } from './modules/newsletter/newsletter.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -48,7 +49,7 @@ import { WaitingListUserModule } from './modules/waiting_list_user/waitingListUs
     ProjectModule,
     CommonDataModule,
     AuthModule,
-    WaitingListUserModule,
+    NewsletterModule,
     RouterModule.register([
       {
         path: 'users',
@@ -63,8 +64,8 @@ import { WaitingListUserModule } from './modules/waiting_list_user/waitingListUs
         module: CommonDataModule,
       },
       {
-        path: 'waiting-list-users',
-        module: WaitingListUserModule,
+        path: 'newsletter',
+        module: NewsletterModule,
       },
     ]),
   ],
