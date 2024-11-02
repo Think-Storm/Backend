@@ -1,0 +1,56 @@
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: unit_test_db, e2e_test_db, coverage_test_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    container_name: thinkstorm-db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/create-multiple-database.sh:/docker-entrypoint-initdb.d/create-multiple-database.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  app:
+    build:
+      context: ../../
+      dockerfile: test/docker/Dockerfile
+    image: thinkstorm-env:test
+
+  unit:
+    image: thinkstorm-env:test
+    env_file: "../../.env"
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@thinkstorm-db:5432/unit_test_db"
+      TEST_TYPE: "unit"
+    depends_on:
+      db:
+        condition: service_healthy
+    container_name: unit
+
+  e2e:
+    image: thinkstorm-env:test
+    env_file: "../../.env"
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@thinkstorm-db:5432/e2e_test_db"
+      TEST_TYPE: "e2e"
+    depends_on:
+      db:
+        condition: service_healthy
+    container_name: e2e
+
+  cov:
+    image: thinkstorm-env:test
+    env_file: "../../.env"
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@thinkstorm-db:5432/coverage_test_db"
+      TEST_TYPE: "coverage"
+    depends_on:
+      db:
+        condition: service_healthy
+    container_name: cov

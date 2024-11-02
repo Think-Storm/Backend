@@ -53,3 +53,50 @@ npm run test:unit
 # run e2e tests
 npm run test:e2e
 ```
+### Running Test in a containerized environment
+
+```bash
+# run all tests
+npm run ctest
+```
+
+#### Options:
+- **help**: Show this help message and exit
+
+#### Services:
+- **unit**: Run unit tests only
+- **e2e**: Run end-to-end tests only
+- **cov**: Run coverage tests only
+- *(no argument)*: Run all tests (unit, e2e, and coverage) in parallel
+
+#### Examples:
+
+-  Builds the image if needed and runs all tests
+```bash
+# run all tests
+npm run ctest
+```
+
+-  Builds the image if needed and runs unit tests only
+```bash
+# run unit tests
+npm run ctest unit
+```
+  
+-  Builds the image if needed and runs e2e tests only
+```bash
+# run e2e tests
+npm run ctest e2e
+```
+  
+-  Builds the image if needed and runs coverage tests only
+```bash
+# run cov tests
+npm run ctest cov
+```
+
+-  Builds the image if needed and runs unit and e2e tests only
+```bash
+# run unit and e2e tests
+npm run ctest unit e2e
+```
