@@ -10,13 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
       - name: Cache Node.js modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -25,9 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-  test:
+  build:
     runs-on: ubuntu-latest
-    needs: [setup, lint, build]
+    needs: setup
     services:
       postgres:
         image: postgres:latest
@@ -39,53 +39,68 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         env:
-          POSTGRES_DB: test_db
+          POSTGRES_DB: test_db_build
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db_build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm install
+      - name: Set up Prisma
+        run: npx prisma migrate dev
+      - name: Seed the database
+        run: npm run db:seed
+      - name: Build application
+        run: npm run build
+
+  unit-test:
+    runs-on: ubuntu-latest
+    needs: build
+    services:
+      postgres:
+        image: postgres:latest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        env:
+          POSTGRES_DB: test_db_unit
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db_unit
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
       JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
       - name: Install dependencies
         run: npm install
-
       - name: Set up Prisma
         run: npx prisma migrate dev
-      - name: Filling the database with the seeds
+      - name: Seed the database
         run: npm run db:seed
+      - name: Run unit tests
+        run: npm run test:unit
 
-      - name: Run tests
-        run: |
-          npm run test:unit
-          npm run test:e2e
-          npm run test:cov
-
-  lint:
+  e2e-test:
     runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - name: Install dependencies
-        run: npm install
-      - name: Run linter
-        run: npm run lint
-
-  build:
-    runs-on: ubuntu-latest
-    needs: [setup, lint]
+    needs: build
     services:
       postgres:
         image: postgres:latest
@@ -97,25 +112,64 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         env:
-          POSTGRES_DB: test_db
+          POSTGRES_DB: test_db_e2e
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db_e2e
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
+      JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
       - name: Install dependencies
         run: npm install
-
       - name: Set up Prisma
         run: npx prisma migrate dev
-      - name: Filling the database with the seeds
+      - name: Seed the database
         run: npm run db:seed
+      - name: Run e2e tests
+        run: npm run test:e2e
 
-      - name: Build application
-        run: npm run build
+  coverage-test:
+    runs-on: ubuntu-latest
+    needs: build
+    services:
+      postgres:
+        image: postgres:latest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        env:
+          POSTGRES_DB: test_db_coverage
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db_coverage
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
+      JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm install
+      - name: Set up Prisma
+        run: npx prisma migrate dev
+      - name: Seed the database
+        run: npm run db:seed
+      - name: Run coverage tests
+        run: npm run test:cov
