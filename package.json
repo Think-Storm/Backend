@@ -19,6 +19,7 @@
     "test:e2e": "jest --runInBand --config ./test/e2e/jest-e2e.json",
     "test:unit": "jest --runInBand",
     "test:full": "npm run test:unit && npm run test:e2e",
+    "ctest": "test/run_test.sh",
     "db:migrate": "npx prisma migrate dev",
     "db:seed": "ts-node prisma/seed.ts",
     "prepare": "husky"
