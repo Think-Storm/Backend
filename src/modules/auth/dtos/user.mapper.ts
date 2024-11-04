@@ -1,6 +1,6 @@
 import { User } from '@prisma/client';
-import { UserResponseDto } from './userResponse.dto';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
+import { UserResponseDto } from './userResponse.dto';
 
 export class UserMapper {
   /**

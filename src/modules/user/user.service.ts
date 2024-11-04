@@ -1,18 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { ServiceException } from '../../common/exception-filter/serviceException';
-import { CreateUserDto } from './dtos/createUser.dto';
 import { UserRepository } from './user.repository';
-import { UserResponseDto } from './dtos/userResponse.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
+import { UserResponseDto } from '../auth/dtos/userResponse.dto';
+import { UserMapper } from '../auth/dtos/user.mapper';
 import { User } from '@prisma/client';
-import { PasswordEncryption } from '../../common/passwordEncryption';
-import { UserMapper } from './dtos/user.mapper';
+import { CreateUserDto } from '../auth/dtos/createUser.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     private userRepository: UserRepository,
-    private passwordEncryption: PasswordEncryption,
     private userMapper: UserMapper,
   ) {}
 
@@ -21,41 +19,9 @@ export class UserService {
    * @param email - The email to check
    * @returns A promise resolving to a User object or null
    */
-  async doesUserWithEmailExist(email: string): Promise<User> {
+  doesUserWithEmailExist = async (email: string): Promise<User> => {
     return this.userRepository.getUserByEmail(email);
-  }
-
-  /**
-   * Validates the CreateUserDto
-   * @param dto - The data transfer object to validate
-   * @throws BadRequestException if the email is already in use
-   */
-  async isUserCreateDtoValid(dto: CreateUserDto) {
-    if (await this.doesUserWithEmailExist(dto.email)) {
-      throw ServiceException.BadRequestException(
-        errorMessages.USER_WITH_EMAIL_ALREADY_EXISTS,
-      );
-    }
-  }
-
-  /**
-   * Creates a new user
-   * @param createUserDto - The data transfer object for creating a user
-   * @returns A promise resolving to a UserResponseDto
-   */
-  async createUser(createUserDto: CreateUserDto): Promise<UserResponseDto> {
-    const passwordInformation =
-      await this.passwordEncryption.createSaltAndHashedPassword(
-        createUserDto.password,
-      );
-    createUserDto.password = passwordInformation.hashedPassword;
-    const createdUser = await this.userRepository.createUser(
-      createUserDto,
-      passwordInformation.passwordSalt,
-    );
-
-    return this.userMapper.userToUserResponseDTO(createdUser);
-  }
+  };
 
   /**
    * get user by ID
@@ -71,4 +37,17 @@ export class UserService {
       );
     return this.userMapper.userToUserResponseDTO(foundUser);
   }
+
+  /**
+   * create user
+   * @param createUserDto - CreateUserDto that has new user information
+   * @param passwordSalt - passwordSalt for encrypting password
+   * @returns A promise resolving to a User object or null
+   */
+  createUser = async (
+    createUserDto: CreateUserDto,
+    passwordSalt: string,
+  ): Promise<User> => {
+    return this.userRepository.createUser(createUserDto, passwordSalt);
+  };
 }
