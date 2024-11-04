@@ -12,7 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
-import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
+import { UserMapper } from '../../../../src/modules/auth/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 
 describe('ProjectService', () => {

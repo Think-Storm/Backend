@@ -1,13 +1,13 @@
 import { ProjectRepository } from '../../../../src/modules/project/project.repository';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { ProjectTestUtils } from './project.utils';
 import { defaultCreateUserDto } from '../user/user.utils';
 import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
 import { PrismaClient, Project } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
+import { UserRepository } from '../../../../src/modules/user/user.repository';
 
 describe('ProjectRepository', () => {
   let prismaService: PrismaService;

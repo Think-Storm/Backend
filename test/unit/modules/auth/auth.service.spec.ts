@@ -2,10 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const httpMocks = require('node-mocks-http');
 import { UserService } from '../../../../src/modules/user/user.service';
-import { defaultUser, defaultUserResponseDto } from '../user/user.utils';
+import {
+  defaultCreateUserDto,
+  defaultUser,
+  defaultUserResponseDto,
+} from '../user/user.utils';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
-import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
+import { UserMapper } from '../../../../src/modules/auth/dtos/user.mapper';
 import { UserController } from '../../../../src/modules/user/user.controller';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
@@ -15,9 +19,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { PrismaClient } from '@prisma/client';
 import { PassportModule } from '@nestjs/passport';
+import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
 
 describe('AuthService', () => {
   let authService: AuthService;
+  let userService: UserService;
   let userRepository: UserRepository;
   let passwordEncryption: PasswordEncryption;
 
@@ -50,12 +56,100 @@ describe('AuthService', () => {
     }).compile();
 
     authService = module.get<AuthService>(AuthService);
+    userService = module.get<UserService>(UserService);
     userRepository = module.get<UserRepository>(UserRepository);
     passwordEncryption = module.get<PasswordEncryption>(PasswordEncryption);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('IsUserCreateDtoValid function', () => {
+    it('should throw an exception if user already exists with email', async () => {
+      // Mock call to DB to return a User
+      const spy = jest
+        .spyOn(userRepository, 'getUserByEmail')
+        .mockResolvedValue(defaultUser);
+
+      expect(
+        authService.isUserCreateDtoValid(defaultCreateUserDto),
+      ).rejects.toThrow(ServiceException);
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not throw an exception if no user exists with email', async () => {
+      // Mock call to DB not to return a User
+      const spy = jest
+        .spyOn(userRepository, 'getUserByEmail')
+        .mockResolvedValue(null);
+
+      expect(() =>
+        authService.isUserCreateDtoValid(defaultCreateUserDto),
+      ).not.toThrow();
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('register function', () => {
+    it('should create user and map the result into UserResponseDto', async () => {
+      // Mock call to Dto validator
+      const validatorSpy = jest.spyOn(authService, 'isUserCreateDtoValid');
+
+      // Mock call to the password and salt creation
+      const passwordSpy = jest
+        .spyOn(passwordEncryption, 'createSaltAndHashedPassword')
+        .mockResolvedValue(defaultSaltAndPassword);
+
+      // Mock call to DB
+      const dbSpy = jest
+        .spyOn(userRepository, 'createUser')
+        .mockResolvedValue(defaultUser);
+
+      const expectedResponseDto = {
+        id: defaultUser.id,
+        email: defaultUser.email,
+        username: defaultUser.username,
+        fullName: defaultUser.fullName,
+        birthdate: defaultUser.birthdate,
+        avatar: defaultUser.avatar,
+        bio: defaultUser.bio,
+        createdAt: defaultUser.createdAt,
+        lastUpdatedAt: defaultUser.lastUpdatedAt,
+      };
+
+      const userResponseDto = await authService.register(defaultCreateUserDto);
+
+      expect(validatorSpy).toHaveBeenCalledTimes(1);
+      // Checking the mapper
+      expect(userResponseDto).toEqual(expectedResponseDto);
+      expect(userResponseDto).not.toHaveProperty('password');
+      expect(userResponseDto).not.toHaveProperty('passwordSalt');
+
+      expect(passwordSpy).toHaveBeenCalledTimes(1);
+
+      expect(dbSpy).toHaveBeenCalledTimes(1);
+      expect(dbSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          password: defaultSaltAndPassword.hashedPassword,
+        }),
+        defaultSaltAndPassword.passwordSalt,
+      );
+    });
+
+    it('should throw 404 error if user is not found', async () => {
+      // create User
+      await authService.register(defaultCreateUserDto);
+
+      try {
+        await userService.getUserById(999);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toEqual(
+          errorMessages.ENTITY_NOT_FOUND('User', '999'),
+        );
+      }
+    });
   });
 
   describe('checkUserAndPassword function', () => {
