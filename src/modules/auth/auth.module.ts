@@ -8,6 +8,8 @@ import { JwtStrategy } from './jwt/jwt.strategy';
 import { LocalStrategy } from './local/local.strategy';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from '../user/user.module';
+import { UserMapper } from './dtos/user.mapper';
+import { PrismaService } from '../../prisma/prisma.service';
 
 /**
  * Module for auth-related components and services
@@ -30,6 +32,8 @@ import { UserModule } from '../user/user.module';
   controllers: [AuthController],
   providers: [
     AuthService,
+    UserMapper,
+    PrismaService,
     PasswordEncryption,
     JwtStrategy,
     LocalStrategy,
