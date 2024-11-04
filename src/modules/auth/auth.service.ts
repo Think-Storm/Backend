@@ -1,20 +1,71 @@
 import { Injectable, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { PasswordEncryption } from '../../common/passwordEncryption';
-import { UserRepository } from './../user/user.repository';
+import { AuthRepository } from './auth.repository';
+import { UserRepository } from '../user/user.repository';
 import { errorMessages } from '../../../src/common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
 import { JwtService } from '@nestjs/jwt';
-import { UserResponseDto } from '../user/dtos/userResponse.dto';
+import { UserResponseDto } from '../auth/dtos/userResponse.dto';
 import { DAY_TO_MILISECONDS_RATIO } from '../../common/consts';
+import { CreateUserDto } from '../auth/dtos/createUser.dto';
+import { UserMapper } from './../auth/dtos/user.mapper';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
   constructor(
+    private authRepository: AuthRepository,
     private userRepository: UserRepository,
+    private userMapper: UserMapper,
     private passwordEncryption: PasswordEncryption,
     private readonly jwtService: JwtService,
   ) {}
+
+  /**
+   * Checks if a user with the given email exists
+   * @param email - The email to check
+   * @returns A promise resolving to a User object or null
+   */
+  doesUserWithEmailExist = async (email: string): Promise<User> => {
+    return this.userRepository.getUserByEmail(email);
+  };
+
+  /**
+   * Validates the CreateUserDto
+   * @param dto - The data transfer object to validate
+   * @throws BadRequestException if the email is already in use
+   */
+  isUserCreateDtoValid = async (dto: CreateUserDto) => {
+    if (await this.doesUserWithEmailExist(dto.email)) {
+      throw ServiceException.BadRequestException(
+        errorMessages.USER_WITH_EMAIL_ALREADY_EXISTS,
+      );
+    }
+  };
+
+  /**
+   * Creates a new user
+   * @param createUserDto - The data transfer object for creating a user
+   * @returns A promise resolving to a UserResponseDto
+   */
+  register = async (createUserDto: CreateUserDto): Promise<UserResponseDto> => {
+    // 1) check if there user email exists
+    await this.isUserCreateDtoValid(createUserDto);
+
+    // 2) create salt password and save encrypted password, user Info
+    const passwordInformation =
+      await this.passwordEncryption.createSaltAndHashedPassword(
+        createUserDto.password,
+      );
+    createUserDto.password = passwordInformation.hashedPassword;
+    const createdUser = await this.authRepository.createUser(
+      createUserDto,
+      passwordInformation.passwordSalt,
+    );
+
+    return this.userMapper.userToUserResponseDTO(createdUser);
+  };
 
   checkUserAndPassword = async (email: string, password: string) => {
     const user = await this.userRepository.getUserByEmail(email);
