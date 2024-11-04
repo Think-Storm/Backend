@@ -3,7 +3,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 const httpMocks = require('node-mocks-http');
 import { JwtModule } from '@nestjs/jwt';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
-import { defaultUserResponseDto } from '../user/user.utils';
+import {
+  defaultCreateUserDto,
+  defaultUserResponseDto,
+} from '../user/user.utils';
 import { AuthController } from '../../../../src/modules/auth/auth.controller';
 import { AuthService } from '../../../../src/modules/auth/auth.service';
 import RequestWithUser from '../../../../src/modules/auth/local/requestWithUser.interface';
@@ -14,7 +17,7 @@ import { PrismaClient } from '@prisma/client';
 import { PassportModule } from '@nestjs/passport';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
-import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
+import { UserMapper } from '../../../../src/modules/auth/dtos/user.mapper';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -79,7 +82,36 @@ describe('AuthController', () => {
       expect(mainSpy).toHaveBeenCalledTimes(1);
       expect(mainSpy).toHaveBeenCalledWith(req.user, res);
       expect(response._getData()).toStrictEqual({
-        message: 'success',
+        message: 'login success',
+        data: defaultUserResponseDto,
+      });
+    });
+  });
+
+  describe('register function', () => {
+    it('should return a correct responseDto', async () => {
+      const res = httpMocks.createResponse();
+
+      // Mock call to DB
+      const registerSpy = jest
+        .spyOn(authService, 'register')
+        .mockResolvedValue(defaultUserResponseDto);
+      // Mock call to DB
+      const authenticationSpy = jest
+        .spyOn(authService, 'authentication')
+        .mockReturnValue(defaultUserResponseDto);
+
+      const response = await authController.register(defaultCreateUserDto, res);
+
+      expect(registerSpy).toHaveBeenCalledTimes(1);
+      expect(authenticationSpy).toHaveBeenCalledTimes(1);
+      expect(registerSpy).toHaveBeenCalledWith(defaultCreateUserDto);
+      expect(authenticationSpy).toHaveBeenCalledWith(
+        defaultUserResponseDto,
+        res,
+      );
+      expect(response._getData()).toStrictEqual({
+        message: 'register success',
         data: defaultUserResponseDto,
       });
     });
