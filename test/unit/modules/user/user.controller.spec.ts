@@ -2,9 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from '../../../../src/modules/user/user.controller';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
-import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
+import { UserMapper } from '../../../../src/modules/auth/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
-import { defaultCreateUserDto, defaultUserResponseDto } from './user.utils';
+import { defaultUserResponseDto } from './user.utils';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
@@ -35,25 +35,6 @@ describe('UserController', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe('createUser function', () => {
-    it('should return a correct responseDto', async () => {
-      // Mock call to Dto validator
-      const validatorSpy = jest.spyOn(userService, 'isUserCreateDtoValid');
-
-      // Mock call to DB
-      const mainSpy = jest
-        .spyOn(userService, 'createUser')
-        .mockResolvedValue(defaultUserResponseDto);
-
-      const response = await userController.createUser(defaultCreateUserDto);
-
-      expect(validatorSpy).toHaveBeenCalledTimes(1);
-      expect(mainSpy).toHaveBeenCalledTimes(1);
-      expect(mainSpy).toHaveBeenCalledWith(defaultCreateUserDto);
-      expect(response).toBe(defaultUserResponseDto);
-    });
   });
 
   describe('getUser function', () => {

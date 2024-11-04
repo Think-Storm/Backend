@@ -5,7 +5,7 @@ import {
   Project,
   Status,
 } from '@prisma/client';
-import { UserRepository } from '../../../../src/modules/user/user.repository';
+import { AuthRepository } from './../../../../src/modules/auth/auth.repository';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { defaultCreateUserDto } from '../user/user.utils';
 import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
@@ -17,15 +17,15 @@ export class ProjectTestUtils {
   /**
    * Creates a project in the database.
    * @param prismaService - The Prisma service for database access.
-   * @param userRepository - The user repository for user-related database operations.
+   * @param AuthRepository - The user repository for user-related database operations.
    * @returns The created project.
    */
   async createProjectInDB(
     prismaService: PrismaService,
-    userRepository: UserRepository,
+    authRepository: AuthRepository,
   ): Promise<Project> {
     // Create a User in DB as project founder
-    const insertedUser = await userRepository.createUser(
+    const insertedUser = await authRepository.createUser(
       defaultCreateUserDto,
       defaultPasswordSalt,
     );

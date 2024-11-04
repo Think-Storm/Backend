@@ -8,20 +8,23 @@ import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
+import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
 
 describe('UserRepository', () => {
   let prismaService: PrismaService;
   let userRepository: UserRepository;
+  let authRepository: AuthRepository;
   const prismaClient = new PrismaClient();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [PrismaModule.forTest(prismaClient)],
-      providers: [UserRepository, ConfigService],
+      providers: [UserRepository, AuthRepository, ConfigService],
     }).compile();
 
     prismaService = module.get<PrismaService>(PrismaService);
     userRepository = module.get<UserRepository>(UserRepository);
+    authRepository = module.get<AuthRepository>(AuthRepository);
 
     await prismaService.$connect();
     await prismaService.project.deleteMany();
@@ -36,7 +39,7 @@ describe('UserRepository', () => {
 
   describe('createUser function', () => {
     it('should create a new user in DB', async () => {
-      const user = await userRepository.createUser(
+      const user = await authRepository.createUser(
         defaultCreateUserDto,
         defaultPasswordSalt,
       );
@@ -59,7 +62,7 @@ describe('UserRepository', () => {
   describe('getUserByEmail function', () => {
     it('should retrieve a user in DB with email', async () => {
       // Create a User in DB to fetch
-      await userRepository.createUser(
+      await authRepository.createUser(
         defaultCreateUserDto,
         defaultPasswordSalt,
       );
@@ -74,7 +77,7 @@ describe('UserRepository', () => {
 
     it('should not retrieve a user in DB if there is no user with email', async () => {
       // Create a User in DB with a different email
-      await userRepository.createUser(
+      await authRepository.createUser(
         defaultCreateUserDto,
         defaultPasswordSalt,
       );
@@ -89,7 +92,7 @@ describe('UserRepository', () => {
   describe('getUser function', () => {
     it('should get a searched user in DB', async () => {
       // create a user
-      const createdUser = await userRepository.createUser(
+      const createdUser = await authRepository.createUser(
         defaultCreateUserDto,
         defaultPasswordSalt,
       );
@@ -113,7 +116,7 @@ describe('UserRepository', () => {
 
     it('should fail if userId is String type', async () => {
       // create a user
-      await userRepository.createUser(
+      await authRepository.createUser(
         defaultCreateUserDto,
         defaultPasswordSalt,
       );

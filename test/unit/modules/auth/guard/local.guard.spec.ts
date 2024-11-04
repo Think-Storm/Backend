@@ -12,12 +12,13 @@ import { errorMessages } from '../../../../../src/common/enums/errorMessages';
 import { PasswordEncryption } from '../../../../../src/common/passwordEncryption';
 import { JwtStrategy } from '../../../../../src/modules/auth/jwt/jwt.strategy';
 import { LocalStrategy } from '../../../../../src/modules/auth/local/local.strategy';
-import { UserMapper } from '../../../../../src/modules/user/dtos/user.mapper';
+import { UserMapper } from '../../../../../src/modules/auth/dtos/user.mapper';
 import { UserController } from '../../../../../src/modules/user/user.controller';
 import { UserService } from '../../../../../src/modules/user/user.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaModule } from '../../../../../src/prisma/prisma.module';
+import { AuthRepository } from '../../../../../src/modules/auth/auth.repository';
 
 describe('LocalAuthGuard', () => {
   let authService: AuthService;
@@ -46,6 +47,7 @@ describe('LocalAuthGuard', () => {
       controllers: [UserController],
       providers: [
         AuthService,
+        AuthRepository,
         UserService,
         UserRepository,
         UserMapper,

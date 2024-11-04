@@ -1,7 +1,7 @@
 import { ProjectRepository } from '../../../../src/modules/project/project.repository';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
-import { UserRepository } from '../../../../src/modules/user/user.repository';
+import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
 import { ProjectTestUtils } from './project.utils';
 import { defaultCreateUserDto } from '../user/user.utils';
 import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
@@ -12,7 +12,7 @@ import { PrismaModule } from '../../../../src/prisma/prisma.module';
 describe('ProjectRepository', () => {
   let prismaService: PrismaService;
   let projectRepository: ProjectRepository;
-  let userRepository: UserRepository;
+  let authRepository: AuthRepository;
   let projectTestUtils: ProjectTestUtils;
   const prismaClient = new PrismaClient();
 
@@ -21,7 +21,7 @@ describe('ProjectRepository', () => {
       imports: [PrismaModule.forTest(prismaClient)],
       providers: [
         ProjectRepository,
-        UserRepository,
+        AuthRepository,
         ProjectTestUtils,
         ConfigService,
       ],
@@ -29,7 +29,7 @@ describe('ProjectRepository', () => {
 
     prismaService = module.get<PrismaService>(PrismaService);
     projectRepository = module.get<ProjectRepository>(ProjectRepository);
-    userRepository = module.get<UserRepository>(UserRepository);
+    authRepository = module.get<AuthRepository>(AuthRepository);
     projectTestUtils = module.get<ProjectTestUtils>(ProjectTestUtils);
 
     await prismaService.$connect();
@@ -48,7 +48,7 @@ describe('ProjectRepository', () => {
       // Create a Project in DB
       const insertedProject = await projectTestUtils.createProjectInDB(
         prismaService,
-        userRepository,
+        authRepository,
       );
 
       // Retrieve the created Project by ID
@@ -63,7 +63,7 @@ describe('ProjectRepository', () => {
       // Create a Project in DB
       const insertedProject = await projectTestUtils.createProjectInDB(
         prismaService,
-        userRepository,
+        authRepository,
       );
 
       const findProjectByIdResponse: Project | null =
@@ -75,7 +75,7 @@ describe('ProjectRepository', () => {
   describe('createProject function', () => {
     it('should create a project in DB', async () => {
       // Create a founder User
-      const user = await userRepository.createUser(
+      const user = await authRepository.createUser(
         defaultCreateUserDto,
         defaultPasswordSalt,
       );
