@@ -8,14 +8,14 @@ import { ServiceException } from '../../src/common/exception-filter/serviceExcep
 import { PrismaModule } from '../../src/prisma/prisma.module';
 import prisma from '../../src/prisma/prisma.client';
 import { ConfigService } from '@nestjs/config';
-import { AuthRepository } from '../../src/modules/auth/auth.repository';
 import { AuthModule } from '../../src/modules/auth/auth.module';
 import refreshDatabase from '../../src/prisma/prisma.dbreset';
+import { UserRepository } from '../../src/modules/user/user.repository';
 
 describe('/projects', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
-  let authRepository: AuthRepository;
+  let userRepository: UserRepository;
   let projectTestUtils: ProjectTestUtils;
 
   beforeEach(async () => {
@@ -26,7 +26,7 @@ describe('/projects', () => {
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
     projectTestUtils = moduleFixture.get<ProjectTestUtils>(ProjectTestUtils);
-    authRepository = moduleFixture.get<AuthRepository>(AuthRepository);
+    userRepository = moduleFixture.get<UserRepository>(UserRepository);
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -60,7 +60,7 @@ describe('/projects', () => {
       // Create User and Language in DB
       const createdProject = await projectTestUtils.createProjectInDB(
         prismaService,
-        authRepository,
+        userRepository,
       );
 
       const createProjectRequest = projectTestUtils.defaultCreateProjectDto;
@@ -87,7 +87,7 @@ describe('/projects', () => {
       // Create Project in DB
       const createdProject = await projectTestUtils.createProjectInDB(
         prismaService,
-        authRepository,
+        userRepository,
       );
 
       // fetch Project that has be created

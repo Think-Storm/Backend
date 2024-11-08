@@ -11,7 +11,6 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { AuthService } from '../../../../src/modules/auth/auth.service';
-import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
 
 describe('UserService', () => {
   let authService: AuthService;
@@ -25,7 +24,6 @@ describe('UserService', () => {
       controllers: [UserController],
       providers: [
         AuthService,
-        AuthRepository,
         UserService,
         UserRepository,
         PasswordEncryption,

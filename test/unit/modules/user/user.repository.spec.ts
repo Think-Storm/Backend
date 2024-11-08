@@ -8,23 +8,20 @@ import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
-import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
 
 describe('UserRepository', () => {
   let prismaService: PrismaService;
   let userRepository: UserRepository;
-  let authRepository: AuthRepository;
   const prismaClient = new PrismaClient();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [PrismaModule.forTest(prismaClient)],
-      providers: [UserRepository, AuthRepository, ConfigService],
+      providers: [UserRepository, ConfigService],
     }).compile();
 
     prismaService = module.get<PrismaService>(PrismaService);
     userRepository = module.get<UserRepository>(UserRepository);
-    authRepository = module.get<AuthRepository>(AuthRepository);
 
     await prismaService.$connect();
     await prismaService.project.deleteMany();
@@ -39,7 +36,7 @@ describe('UserRepository', () => {
 
   describe('createUser function', () => {
     it('should create a new user in DB', async () => {
-      const user = await authRepository.createUser(
+      const user = await userRepository.createUser(
         defaultCreateUserDto,
         defaultPasswordSalt,
       );
@@ -62,7 +59,7 @@ describe('UserRepository', () => {
   describe('getUserByEmail function', () => {
     it('should retrieve a user in DB with email', async () => {
       // Create a User in DB to fetch
-      await authRepository.createUser(
+      await userRepository.createUser(
         defaultCreateUserDto,
         defaultPasswordSalt,
       );
@@ -77,7 +74,7 @@ describe('UserRepository', () => {
 
     it('should not retrieve a user in DB if there is no user with email', async () => {
       // Create a User in DB with a different email
-      await authRepository.createUser(
+      await userRepository.createUser(
         defaultCreateUserDto,
         defaultPasswordSalt,
       );
@@ -92,7 +89,7 @@ describe('UserRepository', () => {
   describe('getUser function', () => {
     it('should get a searched user in DB', async () => {
       // create a user
-      const createdUser = await authRepository.createUser(
+      const createdUser = await userRepository.createUser(
         defaultCreateUserDto,
         defaultPasswordSalt,
       );
@@ -116,7 +113,7 @@ describe('UserRepository', () => {
 
     it('should fail if userId is String type', async () => {
       // create a user
-      await authRepository.createUser(
+      await userRepository.createUser(
         defaultCreateUserDto,
         defaultPasswordSalt,
       );
@@ -126,6 +123,28 @@ describe('UserRepository', () => {
         expect(e).toBeInstanceOf(ServiceException);
         expect(e.message).toContain(errorMessages.VALIDATION_ERROR);
       }
+    });
+  });
+
+  describe('createUser function', () => {
+    it('should create a new user in DB', async () => {
+      const user = await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+
+      expect(user).toHaveProperty('id');
+      expect(user.createdAt).toBeDefined();
+      expect(user.lastUpdatedAt).toBeDefined();
+      expect(user.username).toBe(defaultCreateUserDto.username);
+      expect(user.fullName).toBe(defaultCreateUserDto.fullName);
+      expect(user.email).toBe(defaultCreateUserDto.email);
+      expect(user.password).toBe(defaultCreateUserDto.password);
+      expect(user.birthdate.toDateString()).toBe(
+        defaultCreateUserDto.birthdate.toDateString(),
+      );
+      expect(user.bio).toBe(defaultCreateUserDto.bio);
+      expect(user.passwordSalt).toBe(defaultPasswordSalt);
     });
   });
 });

@@ -4,6 +4,8 @@ import { UserRepository } from './user.repository';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { UserResponseDto } from '../auth/dtos/userResponse.dto';
 import { UserMapper } from '../auth/dtos/user.mapper';
+import { User } from '@prisma/client';
+import { CreateUserDto } from '../auth/dtos/createUser.dto';
 
 @Injectable()
 export class UserService {
@@ -11,6 +13,15 @@ export class UserService {
     private userRepository: UserRepository,
     private userMapper: UserMapper,
   ) {}
+
+  /**
+   * Checks if a user with the given email exists
+   * @param email - The email to check
+   * @returns A promise resolving to a User object or null
+   */
+  doesUserWithEmailExist = async (email: string): Promise<User> => {
+    return this.userRepository.getUserByEmail(email);
+  };
 
   /**
    * get user by ID
@@ -26,4 +37,17 @@ export class UserService {
       );
     return this.userMapper.userToUserResponseDTO(foundUser);
   }
+
+  /**
+   * create user
+   * @param createUserDto - CreateUserDto that has new user information
+   * @param passwordSalt - passwordSalt for encrypting password
+   * @returns A promise resolving to a User object or null
+   */
+  createUser = async (
+    createUserDto: CreateUserDto,
+    passwordSalt: string,
+  ): Promise<User> => {
+    return this.userRepository.createUser(createUserDto, passwordSalt);
+  };
 }

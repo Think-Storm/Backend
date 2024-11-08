@@ -18,7 +18,6 @@ import { PassportModule } from '@nestjs/passport';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/auth/dtos/user.mapper';
-import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -43,7 +42,6 @@ describe('AuthController', () => {
       ],
       controllers: [AuthController],
       providers: [
-        AuthRepository,
         UserService,
         UserRepository,
         UserMapper,

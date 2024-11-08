@@ -18,7 +18,6 @@ import { UserService } from '../../../../../src/modules/user/user.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaModule } from '../../../../../src/prisma/prisma.module';
-import { AuthRepository } from '../../../../../src/modules/auth/auth.repository';
 
 describe('LocalAuthGuard', () => {
   let authService: AuthService;
@@ -47,7 +46,6 @@ describe('LocalAuthGuard', () => {
       controllers: [UserController],
       providers: [
         AuthService,
-        AuthRepository,
         UserService,
         UserRepository,
         UserMapper,

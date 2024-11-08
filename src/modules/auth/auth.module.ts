@@ -2,7 +2,6 @@ import { Global, Module } from '@nestjs/common';
 import { PasswordEncryption } from '../../common/passwordEncryption';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { AuthRepository } from './auth.repository';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt/jwt.strategy';
@@ -33,7 +32,6 @@ import { PrismaService } from '../../prisma/prisma.service';
   controllers: [AuthController],
   providers: [
     AuthService,
-    AuthRepository,
     UserMapper,
     PrismaService,
     PasswordEncryption,
@@ -43,7 +41,6 @@ import { PrismaService } from '../../prisma/prisma.service';
   ],
   exports: [
     AuthService,
-    AuthRepository,
     PassportModule.register({ defaultStrategy: 'jwt', session: false }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

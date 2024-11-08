@@ -19,14 +19,12 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { PrismaClient } from '@prisma/client';
 import { PassportModule } from '@nestjs/passport';
-import { AuthRepository } from '../../../../src/modules/auth/auth.repository';
 import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
 
 describe('AuthService', () => {
   let authService: AuthService;
   let userService: UserService;
   let userRepository: UserRepository;
-  let authRepository: AuthRepository;
   let passwordEncryption: PasswordEncryption;
 
   const prismaClient = new PrismaClient();
@@ -50,7 +48,6 @@ describe('AuthService', () => {
       providers: [
         UserService,
         UserRepository,
-        AuthRepository,
         UserMapper,
         PasswordEncryption,
         AuthService,
@@ -61,7 +58,6 @@ describe('AuthService', () => {
     authService = module.get<AuthService>(AuthService);
     userService = module.get<UserService>(UserService);
     userRepository = module.get<UserRepository>(UserRepository);
-    authRepository = module.get<AuthRepository>(AuthRepository);
     passwordEncryption = module.get<PasswordEncryption>(PasswordEncryption);
   });
 
@@ -107,7 +103,7 @@ describe('AuthService', () => {
 
       // Mock call to DB
       const dbSpy = jest
-        .spyOn(authRepository, 'createUser')
+        .spyOn(userRepository, 'createUser')
         .mockResolvedValue(defaultUser);
 
       const expectedResponseDto = {
