@@ -46,7 +46,7 @@ RUN apt-get update -qq && \
 # Copy built application
 COPY --from=build /app /app
 
-RUN prisma migrate deploy
+RUN npx prisma migrate deploy
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
