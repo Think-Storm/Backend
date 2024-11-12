@@ -1,12 +1,10 @@
-# fly.toml app configuration file generated for thinkstorm-backend on 2024-11-12T21:22:21+01:00
+# fly.toml app configuration file generated for thinkstorm-backend on 2024-11-12T21:47:48+01:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'thinkstorm-backend'
+app = 'ts-backend'
 primary_region = 'cdg'
-
-[build]
 
 [http_service]
   internal_port = 3000
