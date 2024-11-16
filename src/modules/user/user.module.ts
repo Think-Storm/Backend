@@ -5,7 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { UserRepository } from './user.repository';
 import { PasswordEncryption } from '../../common/passwordEncryption';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { UserMapper } from '../auth/dtos/user.mapper';
+import { UserMapper } from '../user/dtos/user.mapper';
 
 /**
  * Module for user-related components and services

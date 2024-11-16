@@ -1,4 +1,4 @@
-import { UserResponseDto } from '../auth/dtos/userResponse.dto';
+import { UserResponseDto } from '../user/dtos/userResponse.dto';
 import { UserService } from './user.service';
 import {
   Controller,

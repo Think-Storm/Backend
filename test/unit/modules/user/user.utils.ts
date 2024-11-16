@@ -1,6 +1,6 @@
 import { User } from '@prisma/client';
-import { CreateUserDto } from '../../../../src/modules/auth/dtos/createUser.dto';
-import { UserResponseDto } from '../../../../src/modules/auth/dtos/userResponse.dto';
+import { CreateUserDto } from '../../../../src/modules/user/dtos/createUser.dto';
+import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
 
 export const loginUserDto = {
   email: 'email@email.com',

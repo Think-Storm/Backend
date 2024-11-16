@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from '../../../../src/modules/user/user.controller';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
-import { UserMapper } from '../../../../src/modules/auth/dtos/user.mapper';
+import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { defaultUserResponseDto } from './user.utils';
 import { JwtService } from '@nestjs/jwt';
