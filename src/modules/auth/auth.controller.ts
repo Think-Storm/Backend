@@ -11,7 +11,7 @@ import {
 import { Response } from 'express';
 import { LocalAuthGuard } from './local/local.guard';
 import RequestWithUser from './local/requestWithUser.interface';
-import { CreateUserDto } from './dtos/createUser.dto';
+import { CreateUserDto } from '../user/dtos/createUser.dto';
 
 @Controller()
 export class AuthController {

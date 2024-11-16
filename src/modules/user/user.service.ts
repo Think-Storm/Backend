@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { UserRepository } from './user.repository';
 import { errorMessages } from '../../common/enums/errorMessages';
-import { UserResponseDto } from '../auth/dtos/userResponse.dto';
-import { UserMapper } from '../auth/dtos/user.mapper';
+import { UserResponseDto } from '../user/dtos/userResponse.dto';
+import { UserMapper } from '../user/dtos/user.mapper';
 import { User } from '@prisma/client';
-import { CreateUserDto } from '../auth/dtos/createUser.dto';
+import { CreateUserDto } from '../user/dtos/createUser.dto';
 
 @Injectable()
 export class UserService {
