@@ -5,7 +5,7 @@ import { AuthService } from '../auth.service';
 import { loginUserDto } from '../dtos/loginUser.dto';
 import { ServiceException } from './../../../common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
-import { UserResponseDto } from '../../../../src/modules/auth/dtos/userResponse.dto';
+import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
 import { Request } from 'express';
 
 @Injectable()

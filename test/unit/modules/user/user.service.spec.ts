@@ -3,7 +3,7 @@ import { UserService } from '../../../../src/modules/user/user.service';
 import { defaultCreateUserDto, defaultUser } from './user.utils';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
-import { UserMapper } from '../../../../src/modules/auth/dtos/user.mapper';
+import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { UserController } from '../../../../src/modules/user/user.controller';
 import { JwtService } from '@nestjs/jwt';
 import { ClassSerializerInterceptor } from '@nestjs/common';

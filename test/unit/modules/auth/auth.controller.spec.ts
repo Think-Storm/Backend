@@ -17,7 +17,7 @@ import { PrismaClient } from '@prisma/client';
 import { PassportModule } from '@nestjs/passport';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
-import { UserMapper } from '../../../../src/modules/auth/dtos/user.mapper';
+import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 
 describe('AuthController', () => {
   let authController: AuthController;

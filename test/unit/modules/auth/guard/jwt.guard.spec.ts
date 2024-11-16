@@ -17,7 +17,7 @@ import { JwtAuthGuard } from '../../../../../src/modules/auth/jwt/jwt.guard';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaModule } from '../../../../../src/prisma/prisma.module';
-import { UserMapper } from '../../../../../src/modules/auth/dtos/user.mapper';
+import { UserMapper } from '../../../../../src/modules/user/dtos/user.mapper';
 
 describe('JwtAuthGuard', () => {
   jest.useFakeTimers();

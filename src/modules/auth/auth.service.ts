@@ -4,10 +4,10 @@ import { PasswordEncryption } from '../../common/passwordEncryption';
 import { errorMessages } from '../../../src/common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
 import { JwtService } from '@nestjs/jwt';
-import { UserResponseDto } from '../auth/dtos/userResponse.dto';
+import { UserResponseDto } from '../user/dtos/userResponse.dto';
 import { DAY_TO_MILISECONDS_RATIO } from '../../common/consts';
-import { CreateUserDto } from '../auth/dtos/createUser.dto';
-import { UserMapper } from './../auth/dtos/user.mapper';
+import { CreateUserDto } from '../user/dtos/createUser.dto';
+import { UserMapper } from './../user/dtos/user.mapper';
 import { UserService } from './../user/user.service';
 
 @Injectable()

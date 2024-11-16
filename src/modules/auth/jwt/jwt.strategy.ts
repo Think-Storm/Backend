@@ -7,7 +7,7 @@ import { Strategy } from 'passport-custom';
 import { Request } from 'express';
 import { UserRepository } from './../../user/user.repository';
 import { PasswordEncryption } from './../../../common/passwordEncryption';
-import { UserResponseDto } from '../../../modules/auth/dtos/userResponse.dto';
+import { UserResponseDto } from '../../../modules/user/dtos/userResponse.dto';
 import { User } from '@prisma/client';
 
 @Injectable()
