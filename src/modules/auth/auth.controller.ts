@@ -12,7 +12,8 @@ import { Response } from 'express';
 import { LocalAuthGuard } from './local/local.guard';
 import RequestWithUser from './local/requestWithUser.interface';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { loginUserDto } from '../auth/dtos/loginUser.dto';
 
 @ApiTags('auth')
 @Controller()
@@ -23,6 +24,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('/login')
   @ApiOperation({ summary: 'User login' })
+  @ApiBody({ type: loginUserDto })
   @ApiResponse({ status: 200, description: 'Login success' })
   @ApiResponse({
     status: 400,
@@ -45,6 +47,7 @@ export class AuthController {
   @HttpCode(201)
   @Post('/register')
   @ApiOperation({ summary: 'User registration' })
+  @ApiBody({ type: CreateUserDto })
   @ApiResponse({ status: 201, description: 'Register success' })
   @ApiResponse({ status: 400, description: 'User already exists' })
   async register(
