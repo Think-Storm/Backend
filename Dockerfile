@@ -31,9 +31,10 @@ RUN npx prisma generate
 # Copy application code
 COPY --link . .
 
+# Dummy URL to allow the build to complete
+ENV DATABASE_URL='postgresql://user:password@host:5432/ts-db'
 # Build application
 RUN npm run build
-
 
 # Final stage for app image
 FROM base
@@ -45,8 +46,6 @@ RUN apt-get update -qq && \
 
 # Copy built application
 COPY --from=build /app /app
-
-RUN npx prisma migrate deploy
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
