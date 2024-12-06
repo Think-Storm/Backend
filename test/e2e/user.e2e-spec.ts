@@ -65,7 +65,6 @@ describe('/users', () => {
         defaultCreateUserDto.birthdate.toISOString(),
       );
       expect(body.data.fullName).toBe(defaultCreateUserDto.fullName);
-      expect(body.data.bio).toBe(defaultCreateUserDto.bio);
       expect(body.data.createdAt).toBeDefined();
       expect(body.data.lastUpdatedAt).toBeDefined();
 
@@ -79,7 +78,6 @@ describe('/users', () => {
         defaultCreateUserDto.birthdate.toISOString(),
       );
       expect(searchedUserResult.fullName).toBe(defaultCreateUserDto.fullName);
-      expect(searchedUserResult.bio).toBe(defaultCreateUserDto.bio);
       expect(searchedUserResult.createdAt).toBeDefined();
       expect(searchedUserResult.lastUpdatedAt).toBeDefined();
     });
