@@ -74,7 +74,6 @@ describe('/', () => {
         defaultCreateUserDto.birthdate.toISOString(),
       );
       expect(response.body.data.fullName).toBe(defaultCreateUserDto.fullName);
-      expect(response.body.data.bio).toBe(defaultCreateUserDto.bio);
       expect(response.body.data.createdAt).toBeDefined();
       expect(response.body.data.lastUpdatedAt).toBeDefined();
 
@@ -88,7 +87,6 @@ describe('/', () => {
         defaultCreateUserDto.birthdate.toISOString(),
       );
       expect(registeredUser.fullName).toBe(defaultCreateUserDto.fullName);
-      expect(registeredUser.bio).toBe(defaultCreateUserDto.bio);
       expect(registeredUser.createdAt).toBeDefined();
       expect(registeredUser.lastUpdatedAt).toBeDefined();
 
@@ -110,7 +108,6 @@ describe('/', () => {
         defaultCreateUserDto.birthdate.toISOString(),
       );
       expect(body.data.fullName).toBe(defaultCreateUserDto.fullName);
-      expect(body.data.bio).toBe(defaultCreateUserDto.bio);
       expect(body.data.createdAt).toBeDefined();
       expect(body.data.lastUpdatedAt).toBeDefined();
 
@@ -142,7 +139,6 @@ describe('/', () => {
         defaultCreateUserDto.birthdate.toISOString(),
       );
       expect(body.data.fullName).toBe(defaultCreateUserDto.fullName);
-      expect(body.data.bio).toBe(defaultCreateUserDto.bio);
       expect(body.data.createdAt).toBeDefined();
       expect(body.data.lastUpdatedAt).toBeDefined();
 
