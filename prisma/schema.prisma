@@ -8,74 +8,187 @@ generator client {
 }
 
 model User {
-  id            Int     @id @default(autoincrement())
-  email         String  @unique
-  username      String
-  password      String
-  passwordSalt  String  @map("password_salt")
+  id                Int                  @id @default(autoincrement())
+  email             String               @unique
+  username          String
+  password          String
+  passwordSalt      String               @map("password_salt")
   passwordChangedAt DateTime?
-  fullName      String? @map("full_name")
-  birthdate     DateTime?
-  avatar        String?
-  bio           String?
-  createdAt     DateTime @default(now()) @map("created_at")
-  lastUpdatedAt DateTime @updatedAt @map("last_updated_at")
-  userProfile   UserProfile?
-  founded_projects  Project[] @relation("FounderProjects")
-  projects  Project[]
+  fullName          String?              @map("full_name")
+  birthdate         DateTime?
+  founded_projects  Project[]            @relation("FounderProjects")
+  projects          Project[]
+  Like              Like[]
+  Involvement       Involvement[]
+  JoinRequest       JoinRequest[]
+  userProfile       UserProfile?
+  createdAt         DateTime             @default(now()) @map("created_at")
+  lastUpdatedAt     DateTime             @updatedAt @map("last_updated_at")
 
   @@map("users")
 }
 
 model UserProfile {
-  id            Int     @id @default(autoincrement())
-  userId        Int     @unique @map("user_id")
-  preferedRole  String? @map("prefered_role")
-  location      String?
-  website       String?
-  interests     String[]
-  skills        String[]
-  createdAt     DateTime @default(now()) @map("created_at")
-  lastUpdatedAt DateTime @updatedAt @map("last_updated_at")
-  user          User     @relation(fields: [userId], references: [id])
-
+  id                Int                  @id @default(autoincrement())
+  userId            Int                  @unique @map("user_id")
+  avatar            String?
+  bio               String?
+  preferedRole      String?              @map("prefered_role")
+  location          String?
+  website           String?
+  interests         UserProfileDomainLabel[]
+  skills            UserProfileTechnicalLabel[]
+  user              User                 @relation(fields: [userId], references: [id])
+  languages         UserProfileLanguage[]
+  
   @@map("user_profiles")
 }
 
 model Project {
-  id            Int     @id @default(autoincrement())
-  founderId     Int     @map("founder_id")
-  title         String
-  description   String?
-  labels        String[]
-  goal          Goal
-  status        Status
-  languageCode  LanguageCode @map("language_code")
-  milestone     DateTime?
-  createdAt     DateTime  @default(now()) @map("created_at")
-  lastUpdatedAt DateTime  @updatedAt @map("last_updated_at")
-  founder       User      @relation(fields: [founderId], references: [id], name: "FounderProjects")
-  language      Language  @relation(fields: [languageCode], references: [code])
-  users         User[]
+  id              Int                     @id @default(autoincrement())
+  founderId       Int                     @map("founder_id")
+  title           String
+  description     String?
+  goal            Goal
+  status          ProjectStatus
+  languageCode    LanguageCode            @map("language_code")
+  milestone       DateTime?
+  createdAt       DateTime                @default(now()) @map("created_at")
+  lastUpdatedAt   DateTime                @updatedAt @map("last_updated_at")
+  founder         User                    @relation(fields: [founderId], references: [id], name: "FounderProjects")
+  language        Language                @relation(fields: [languageCode], references: [code])
+  users           User[]
+  domainLabels    ProjectDomainLabel[]    
+  technicalLabels ProjectTechnicalLabel[]
+  Like            Like[]
+  Involvement     Involvement[]
+  JoinRequest     JoinRequest[]
 
   @@map("projects")
+}
+
+model TechnicalLabel {
+  name     String                 @id @unique
+  projects ProjectTechnicalLabel[]
+  users    UserProfileTechnicalLabel[]
+
+  @@map("technical_labels")
+}
+
+model DomainLabel {
+  name     String              @id @unique
+  projects ProjectDomainLabel[]
+  users    UserProfileDomainLabel[]
+
+  @@map("domain_labels")
+}
+
+model UserProfileDomainLabel {
+  userId      Int            @map("user_id")
+  labelName   String         @map("label_name")
+  label       DomainLabel    @relation(fields: [labelName], references: [name])
+  userProfile UserProfile?   @relation(fields: [userId], references: [userId])
+
+  @@id([userId, labelName])
+  @@map("user_profile_domain_labels")
+}
+
+model UserProfileTechnicalLabel {
+  userId      Int            @map("user_id")
+  labelName   String         @map("label_name")
+  label       TechnicalLabel @relation(fields: [labelName], references: [name])
+  userProfile UserProfile?   @relation(fields: [userId], references: [userId])
+
+  @@id([userId, labelName])
+  @@map("user_profile_technical_labels")
+}
+
+
+model ProjectDomainLabel {
+  projectId   Int         @map("project_id")
+  labelName   String      @map("label_name")
+  project     Project     @relation(fields: [projectId], references: [id])
+  label       DomainLabel @relation(fields: [labelName], references: [name])
+
+  @@id([projectId, labelName])
+  @@map("project_domain_labels")
+}
+
+model ProjectTechnicalLabel {
+  projectId   Int            @map("project_id")
+  labelName   String         @map("label_name")
+  project     Project        @relation(fields: [projectId], references: [id])
+  label       TechnicalLabel @relation(fields: [labelName], references: [name])
+
+  @@id([projectId, labelName])
+  @@map("project_technical_labels")
+}
+
+model Like {
+  userId    Int     @map("user_id")
+  projectId Int     @map("project_id")
+  user      User    @relation(fields: [userId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
+
+  @@id([userId, projectId])
+  @@map("likes")
+}
+
+model Involvement {
+  userId    Int     @map("user_id")
+  projectId Int     @map("project_id")
+  role      Role
+  user      User    @relation(fields: [userId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
+
+  @@id([userId, projectId])
+  @@map("involvements")
+}
+
+model JoinRequest {
+  userId    Int               @map("user_id")
+  projectId Int               @map("project_id")
+  role      Role
+  status    JoinRequestStatus @default(Pending)
+  user      User              @relation(fields: [userId], references: [id])
+  project   Project           @relation(fields: [projectId], references: [id])
+
+  @@id([userId, projectId])
+  @@map("join_requests")
 }
 
 model Language {
   code          LanguageCode @id
   name          LanguageName
-  createdAt     DateTime @default(now()) @map("created_at")
-  lastUpdatedAt DateTime @updatedAt @map("last_updated_at")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  lastUpdatedAt DateTime     @updatedAt @map("last_updated_at")
   projects      Project[]
+  userProfiles  UserProfileLanguage[]
 
   @@map("languages")
 }
 
-enum Status {
+model UserProfileLanguage {
+  userId          Int            @map("user_id")
+  languageCode    LanguageCode   @map("language_code")
+  language        Language       @relation(fields: [languageCode], references: [code])
+  userProfile     UserProfile?   @relation(fields: [userId], references: [userId])
+
+  @@id([userId, languageCode])
+  @@map("user_profile_languages")
+}
+
+enum ProjectStatus {
   Complete
   InProgress
   OnHold
   Canceled
+}
+
+enum JoinRequestStatus {
+  Pending
+  Accepted
+  Rejected
 }
 
 enum Goal {
@@ -89,10 +202,43 @@ enum LanguageCode {
   EN
   FR
   KR
+  ES
+  DE
+  IT
+  JA
+  ZH
+  RU
+  AR
 }
 
 enum LanguageName {
   English
   French
   Korean
+  Spanish
+  German
+  Italian
+  Japanese
+  Chinese
+  Russian
+  Arabic
+}
+
+enum Role {
+  Developer
+  Designer
+  Manager
+  ProductOwner
+  ScrumMaster
+  Tester
+  DevOps
+  DataScientist
+  BusinessAnalyst
+  Marketing
+  Sales
+  CustomerSupport
+  HR
+  Finance
+  Legal
+  Other
 }
