@@ -1,14 +1,10 @@
-import { LanguageCode, LanguageName, PrismaClient } from '@prisma/client';
-
+import { PrismaClient } from '@prisma/client';
+import { languages } from './seed-data/language';
+import { technicalLabel } from './seed-data/technicalLabel';
+import { domainLabel } from './seed-data/domainLabel';
 const prisma = new PrismaClient();
 
 async function main() {
-  const languages = [
-    { code: LanguageCode.EN, name: LanguageName.English },
-    { code: LanguageCode.FR, name: LanguageName.French },
-    { code: LanguageCode.KR, name: LanguageName.Korean },
-  ];
-
   languages.forEach(async (language) => {
     await prisma.language.upsert({
       where: { code: language.code },
@@ -19,8 +15,24 @@ async function main() {
       },
     });
   });
-
-  console.log('Languages have been seeded');
+  technicalLabel.forEach(async (label) => {
+    await prisma.technicalLabel.upsert({
+      where: { name: label.name },
+      update: {},
+      create: {
+        name: label.name,
+      },
+    });
+  });
+  domainLabel.forEach(async (label) => {
+    await prisma.domainLabel.upsert({
+      where: { name: label.name },
+      update: {},
+      create: {
+        name: label.name,
+      },
+    });
+  });
 }
 
 main()
