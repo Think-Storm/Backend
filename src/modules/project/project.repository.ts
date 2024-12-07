@@ -38,13 +38,45 @@ export class ProjectRepository {
           founderId: createProjectRequestDto.founderId,
           title: createProjectRequestDto.title,
           description: createProjectRequestDto.description,
-          labels: createProjectRequestDto.labels,
           goal: createProjectRequestDto.goal,
           status: createProjectRequestDto.status,
           languageCode: createProjectRequestDto.languageCode,
           milestone: createProjectRequestDto.milestone,
+          domainLabels: {
+            create: createProjectRequestDto.domainLabels.map((domainLabel) => {
+              return {
+                label: {
+                  connect: {
+                    name: domainLabel,
+                  },
+                },
+              };
+            }),
+          },
+          technicalLabels: {
+            create: createProjectRequestDto.technicalLabels.map(
+              (technicalLabel) => {
+                return {
+                  label: {
+                    connect: {
+                      name: technicalLabel,
+                    },
+                  },
+                };
+              },
+            ),
+          },
         },
-        include: { language: true, users: true, founder: true },
+        include: {
+          language: true,
+          users: true,
+          founder: true,
+          domainLabels: true,
+          technicalLabels: true,
+          Like: true,
+          Involvement: true,
+          JoinRequest: true,
+        },
       });
     } catch (error) {
       throw ServiceException.EntityNotFoundException(
