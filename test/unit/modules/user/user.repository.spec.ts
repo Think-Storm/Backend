@@ -8,6 +8,7 @@ import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
+import refreshDatabase from '../../../../src/prisma/prisma.dbreset';
 
 describe('UserRepository', () => {
   let prismaService: PrismaService;
@@ -24,14 +25,12 @@ describe('UserRepository', () => {
     userRepository = module.get<UserRepository>(UserRepository);
 
     await prismaService.$connect();
-    await prismaService.project.deleteMany();
-    await prismaService.user.deleteMany();
+    await refreshDatabase();
   });
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await prismaService.project.deleteMany();
-    await prismaService.user.deleteMany();
+    await refreshDatabase();
   });
 
   describe('createUser function', () => {
