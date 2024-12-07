@@ -1,4 +1,10 @@
-import { Goal, Language, LanguageCode, Status, User } from '@prisma/client';
+import {
+  Goal,
+  Language,
+  LanguageCode,
+  ProjectStatus,
+  User,
+} from '@prisma/client';
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -27,10 +33,17 @@ export class ProjectResponseDto {
 
   @Expose()
   @ApiProperty({
-    example: ['Fintech', 'python'],
-    description: 'The labels associated with the project',
+    example: ['NestJS', 'JavaScript', 'Jest'],
+    description: 'The technical labels associated with the project',
   })
-  labels: string[];
+  technicalLabels?: string[];
+
+  @Expose()
+  @ApiProperty({
+    example: ['Cooking', 'Design', 'Geography'],
+    description: 'The domain labels associated with the project',
+  })
+  domainLabels?: string[];
 
   @Expose()
   @ApiProperty({
@@ -44,9 +57,9 @@ export class ProjectResponseDto {
   @ApiProperty({
     example: 'ACTIVE',
     description: 'The status of the project',
-    enum: Status,
+    enum: ProjectStatus,
   })
-  status: Status;
+  status: ProjectStatus;
 
   @Expose()
   @ApiProperty({

@@ -56,8 +56,15 @@ export class UserRepository {
           password: createUserDto.password,
           passwordSalt: passwordSalt,
           fullName: createUserDto.fullName,
-          bio: createUserDto.bio,
           birthdate: createUserDto.birthdate,
+        },
+        include: {
+          founded_projects: true,
+          projects: true,
+          Like: true,
+          Involvement: true,
+          JoinRequest: true,
+          userProfile: true,
         },
       });
     } catch (error) {
