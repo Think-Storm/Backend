@@ -38,8 +38,6 @@ export const defaultUser: User = {
   passwordChangedAt: null,
   fullName: 'Full Name',
   birthdate: new Date('2000-01-01'),
-  avatar: 'avatar',
-  bio: 'bio',
   createdAt: new Date('2000-01-01'),
   lastUpdatedAt: new Date('2000-01-01'),
 };

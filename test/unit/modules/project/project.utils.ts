@@ -3,7 +3,7 @@ import {
   LanguageCode,
   LanguageName,
   Project,
-  Status,
+  ProjectStatus,
 } from '@prisma/client';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { defaultCreateUserDto } from '../user/user.utils';
@@ -41,18 +41,41 @@ export class ProjectTestUtils {
     });
 
     // Create a Project in DB and return it
-    return prismaService.project.create({
+    const createdProject = prismaService.project.create({
       data: {
         founderId: insertedUser.id,
         title: 'fakeTitle',
-        labels: ['fakelabel', 'fakelabel2'],
+        technicalLabels: {
+          create: ['NestJS', 'JavaScript', 'Jest'].map((technicalLabel) => {
+            return {
+              label: {
+                connect: {
+                  name: technicalLabel,
+                },
+              },
+            };
+          }),
+        },
+        domainLabels: {
+          create: ['Cooking', 'Design', 'Geography'].map((domainLabel) => {
+            return {
+              label: {
+                connect: {
+                  name: domainLabel,
+                },
+              },
+            };
+          }),
+        },
         goal: Goal.Education,
-        status: Status.InProgress,
+        status: ProjectStatus.InProgress,
         languageCode: insertedLanguage.code,
         createdAt: new Date('2000-01-01'),
         lastUpdatedAt: new Date('2000-01-01'),
       },
     });
+
+    return createdProject;
   }
 
   defaultProjectResponseDto: ProjectResponseDto = {
@@ -65,9 +88,10 @@ export class ProjectTestUtils {
       createdAt: new Date('2000-01-01'),
       lastUpdatedAt: new Date('2000-01-01'),
     },
-    labels: ['fakelabel', 'fakelabel2'],
+    technicalLabels: ['NestJS', 'JavaScript', 'Jest'],
+    domainLabels: ['Cooking', 'Design', 'Geography'],
     goal: Goal.Education,
-    status: Status.InProgress,
+    status: ProjectStatus.InProgress,
     users: [],
     milestone: new Date('2000-01-01'),
     createdAt: new Date('2000-01-01'),
@@ -80,9 +104,8 @@ export class ProjectTestUtils {
     founderId: 0,
     title: 'title',
     description: 'description',
-    labels: ['fakelabel', 'fakelabel2'],
     goal: Goal.Education,
-    status: Status.InProgress,
+    status: ProjectStatus.InProgress,
     languageCode: LanguageCode.EN,
     milestone: new Date('2000-01-01'),
     createdAt: new Date('2000-01-01'),
@@ -93,9 +116,10 @@ export class ProjectTestUtils {
     founderId: 0,
     title: 'title',
     description: 'description',
-    labels: ['fakelabel', 'fakelabel2'],
+    technicalLabels: ['NestJS', 'JavaScript', 'Jest'],
+    domainLabels: ['Cooking', 'Design', 'Geography'],
     goal: Goal.Education,
-    status: Status.InProgress,
+    status: ProjectStatus.InProgress,
     languageCode: 'EN',
     milestone: new Date('2000-01-01'),
   };
