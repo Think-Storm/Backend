@@ -8,6 +8,7 @@ import { PrismaClient, Project } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
+import refreshDatabase from '../../../../src/prisma/prisma.dbreset';
 
 describe('ProjectRepository', () => {
   let prismaService: PrismaService;
@@ -34,14 +35,12 @@ describe('ProjectRepository', () => {
     projectTestUtils = module.get<ProjectTestUtils>(ProjectTestUtils);
 
     await prismaService.$connect();
-    await prismaService.project.deleteMany();
-    await prismaService.user.deleteMany();
+    await refreshDatabase();
   });
 
   afterEach(async () => {
     jest.clearAllMocks();
-    await prismaService.project.deleteMany();
-    await prismaService.user.deleteMany();
+    await refreshDatabase();
   });
 
   describe('findProjectById function', () => {
