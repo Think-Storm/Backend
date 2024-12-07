@@ -1,4 +1,4 @@
-import { Goal, LanguageCode, Status } from '@prisma/client';
+import { Goal, LanguageCode, ProjectStatus } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsString,
@@ -31,23 +31,36 @@ export class CreateProjectRequestDto {
   description?: string;
 
   @ApiProperty({
-    description: 'The labels associated with the project',
+    description: 'The technical labels associated with the project',
     type: [String],
     required: false,
   })
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  labels?: string[];
+  technicalLabels?: string[];
+
+  @ApiProperty({
+    description: 'The domain labels associated with the project',
+    type: [String],
+    required: false,
+  })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  domainLabels?: string[];
 
   @ApiProperty({ description: 'The goal of the project', enum: Goal })
   @IsEnum(Goal)
   @IsNotEmpty()
   goal: Goal;
-  @ApiProperty({ description: 'The status of the project', enum: Status })
-  @IsEnum(Status)
+  @ApiProperty({
+    description: 'The status of the project',
+    enum: ProjectStatus,
+  })
+  @IsEnum(ProjectStatus)
   @IsNotEmpty()
-  status: Status;
+  status: ProjectStatus;
 
   @ApiProperty({
     description: 'The language code of the project',
