@@ -115,6 +115,8 @@ describe('ProjectService', () => {
       expectedResponseDto.founder = undefined;
       expectedResponseDto.language = undefined;
       expectedResponseDto.users = undefined;
+      expectedResponseDto.technicalLabels = undefined;
+      expectedResponseDto.domainLabels = undefined;
 
       const projectResponseDto = await projectService.createProject(
         projectTestUtils.defaultCreateProjectDto,
