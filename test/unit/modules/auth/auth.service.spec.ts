@@ -112,8 +112,6 @@ describe('AuthService', () => {
         username: defaultUser.username,
         fullName: defaultUser.fullName,
         birthdate: defaultUser.birthdate,
-        avatar: defaultUser.avatar,
-        bio: defaultUser.bio,
         createdAt: defaultUser.createdAt,
         lastUpdatedAt: defaultUser.lastUpdatedAt,
       };

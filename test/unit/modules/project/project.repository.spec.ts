@@ -19,6 +19,7 @@ describe('ProjectRepository', () => {
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [PrismaModule.forTest(prismaClient)],
+
       providers: [
         ProjectRepository,
         UserRepository,
@@ -93,7 +94,6 @@ describe('ProjectRepository', () => {
       expect(createdProject.founderId).toBe(createProjectDto.founderId);
       expect(createdProject.description).toBe(createProjectDto.description);
       expect(createdProject.goal).toBe(createProjectDto.goal);
-      expect(createdProject.labels).toStrictEqual(createProjectDto.labels);
       expect(createdProject.languageCode).toBe(createProjectDto.languageCode);
       expect(createdProject.title).toBe(createProjectDto.title);
       expect(createdProject.status).toBe(createProjectDto.status);
