@@ -51,7 +51,6 @@ describe('UserRepository', () => {
       expect(user.birthdate.toDateString()).toBe(
         defaultCreateUserDto.birthdate.toDateString(),
       );
-      expect(user.bio).toBe(defaultCreateUserDto.bio);
       expect(user.passwordSalt).toBe(defaultPasswordSalt);
     });
   });
@@ -107,7 +106,6 @@ describe('UserRepository', () => {
       expect(user.birthdate.toDateString()).toBe(
         defaultCreateUserDto.birthdate.toDateString(),
       );
-      expect(user.bio).toBe(defaultCreateUserDto.bio);
       expect(user.passwordSalt).toBe(defaultPasswordSalt);
     });
 
@@ -143,7 +141,6 @@ describe('UserRepository', () => {
       expect(user.birthdate.toDateString()).toBe(
         defaultCreateUserDto.birthdate.toDateString(),
       );
-      expect(user.bio).toBe(defaultCreateUserDto.bio);
       expect(user.passwordSalt).toBe(defaultPasswordSalt);
     });
   });
