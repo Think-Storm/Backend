@@ -39,9 +39,4 @@ export class CreateUserDto {
   @Transform(({ value }) => new Date(value))
   @IsOptional()
   birthdate: Date;
-
-  @ApiProperty({ description: 'Bio of the user', required: false })
-  @IsString()
-  @IsOptional()
-  bio: string;
 }
