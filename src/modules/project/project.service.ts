@@ -6,6 +6,7 @@ import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { UserService } from '../user/user.service';
+import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
 
 @Injectable()
 export class ProjectService {
@@ -44,5 +45,30 @@ export class ProjectService {
       await this.projectRepository.createProject(createProjectDto);
 
     return this.projectMapper.projectToProjectResponseDto(createdProject);
+  }
+
+  /**
+   * Updates a project
+   * @param id - The id of the project to update
+   * @param updateProjectDto - The data transfer object for updating a project
+   * @param userId - The id of the user making the request
+   * @returns A promise resolving to the updated ProjectResponseDto
+   */
+  async updateProject(
+    body: UpdateProjectRequestDto,
+  ): Promise<ProjectResponseDto> {
+    const project = await this.projectRepository.findProjectById(body.id);
+    if (!project) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('Project', body.id.toString()),
+      );
+    }
+    if (project.founderId !== body.founderId) {
+      throw ServiceException.ForbiddenException(
+        errorMessages.FORBIDDEN('You are not the owner of this project'),
+      );
+    }
+    const updatedProject = await this.projectRepository.updateProject(body);
+    return this.projectMapper.projectToProjectResponseDto(updatedProject);
   }
 }

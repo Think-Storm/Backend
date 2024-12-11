@@ -1,8 +1,17 @@
-import { Controller, Get, Param, HttpCode, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  HttpCode,
+  Post,
+  Body,
+  Put,
+} from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { GetProjectRequestDto } from './dtos/getProjectRequest.dto';
 import { ProjectResponseDto } from './dtos/projectResponse.dto';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
+import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -50,5 +59,29 @@ export class ProjectController {
   })
   async createProject(@Body() body: CreateProjectRequestDto) {
     return this.projectService.createProject(body);
+  }
+
+  @HttpCode(204)
+  @Put(':id')
+  @ApiOperation({ summary: 'Update project details' })
+  @ApiParam({ name: 'id', required: true, description: 'Project ID' })
+  @ApiBody({ type: UpdateProjectRequestDto })
+  @ApiResponse({
+    status: 204,
+    description: 'Update project success',
+    type: ProjectResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Only the project owner can update the project',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
+  async updateProject(
+    @Body() body: UpdateProjectRequestDto,
+  ): Promise<ProjectResponseDto> {
+    return this.projectService.updateProject(body);
   }
 }
