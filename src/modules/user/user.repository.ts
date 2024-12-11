@@ -61,9 +61,9 @@ export class UserRepository {
         include: {
           founded_projects: true,
           projects: true,
-          Like: true,
-          Involvement: true,
-          JoinRequest: true,
+          like: true,
+          involvement: true,
+          joinRequest: true,
           userProfile: true,
         },
       });

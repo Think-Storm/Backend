@@ -73,9 +73,9 @@ export class ProjectRepository {
           founder: true,
           domainLabels: true,
           technicalLabels: true,
-          Like: true,
-          Involvement: true,
-          JoinRequest: true,
+          like: true,
+          involvement: true,
+          joinRequest: true,
         },
       });
     } catch (error) {
