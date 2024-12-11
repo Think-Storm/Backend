@@ -26,14 +26,6 @@ export class UserResponseDto {
   @Expose()
   birthdate?: Date;
 
-  @ApiProperty({ required: false })
-  @Expose()
-  avatar?: string;
-
-  @ApiProperty({ required: false })
-  @Expose()
-  bio?: string;
-
   @ApiProperty({ type: String, format: 'date-time' })
   @Expose()
   createdAt: Date;
