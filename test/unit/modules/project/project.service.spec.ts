@@ -133,4 +133,96 @@ describe('ProjectService', () => {
       );
     });
   });
+
+  describe('updateProject', () => {
+    it('should throw an 404 exception if project with id is not found', async () => {
+      // Mock call to DB not to return a Project
+      const spy = jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(null);
+
+      try {
+        await projectService.updateProject(
+          projectTestUtils.defaultUpdateProjectDto,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toContain(
+          errorMessages.ENTITY_NOT_FOUND(
+            'Project',
+            projectTestUtils.defaultUpdateProjectDto.id.toString(),
+          ),
+        );
+      }
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(
+        projectTestUtils.defaultUpdateProjectDto.id,
+      );
+    });
+
+    it('should throw an 403 exception if the user is not the owner of the project', async () => {
+      // Mock call to DB to return a Project
+      const spy = jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(projectTestUtils.defaultProject);
+
+      try {
+        await projectService.updateProject({
+          ...projectTestUtils.defaultUpdateProjectDto,
+          founderId: 1,
+        });
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toContain(
+          errorMessages.FORBIDDEN('You are not the owner of this project'),
+        );
+      }
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(
+        projectTestUtils.defaultUpdateProjectDto.id,
+      );
+    });
+
+    it('should update a project if the user is the owner of the project', async () => {
+      // Mock call to DB to return a Project
+      const mockProject = {
+        ...projectTestUtils.defaultProject,
+        founderId: projectTestUtils.defaultUpdateProjectDto.founderId,
+      };
+
+      const spy = jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(mockProject);
+
+      const dbSpy = jest
+        .spyOn(projectRepository, 'updateProject')
+        .mockResolvedValue(mockProject);
+
+      const expectedResponseDto = projectTestUtils.defaultProjectResponseDto;
+      expectedResponseDto.founder = undefined;
+      expectedResponseDto.language = undefined;
+      expectedResponseDto.users = undefined;
+      expectedResponseDto.technicalLabels = undefined;
+      expectedResponseDto.domainLabels = undefined;
+
+      const projectResponseDto = await projectService.updateProject(
+        projectTestUtils.defaultUpdateProjectDto,
+      );
+
+      // Checking the mapper
+      expect(projectResponseDto).toEqual(expectedResponseDto);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(
+        projectTestUtils.defaultUpdateProjectDto.id,
+      );
+
+      expect(dbSpy).toHaveBeenCalledTimes(1);
+      expect(dbSpy).toHaveBeenCalledWith(
+        projectTestUtils.defaultUpdateProjectDto,
+      );
+    });
+  });
 });

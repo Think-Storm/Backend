@@ -95,53 +95,54 @@ export class ProjectRepository {
   async updateProject(
     updateProjectRequestDto: UpdateProjectRequestDto,
   ): Promise<Project> {
-    try {
-      return this.prisma.project.update({
-        where: { id: updateProjectRequestDto.id },
-        data: {
-          title: updateProjectRequestDto.title,
-          description: updateProjectRequestDto.description,
-          status: updateProjectRequestDto.status,
-          languageCode: updateProjectRequestDto.languageCode,
-          milestone: updateProjectRequestDto.milestone,
-          goal: updateProjectRequestDto.goal,
-          domainLabels: {
-            set: updateProjectRequestDto.domainLabels?.map((domainLabel) => ({
-              projectId_labelName: {
-                projectId: updateProjectRequestDto.id,
-                labelName: domainLabel,
+    return this.prisma.project.update({
+      where: { id: updateProjectRequestDto.id },
+      data: {
+        title: updateProjectRequestDto.title,
+        description: updateProjectRequestDto.description,
+        status: updateProjectRequestDto.status,
+        languageCode: updateProjectRequestDto.languageCode,
+        milestone: updateProjectRequestDto.milestone,
+        goal: updateProjectRequestDto.goal,
+        domainLabels: {
+          deleteMany: {},
+          // If domainLabels is provided, create new domainLabels
+          ...(updateProjectRequestDto.domainLabels && {
+            create: updateProjectRequestDto.domainLabels.map((domainLabel) => ({
+              label: {
+                connect: {
+                  name: domainLabel,
+                },
               },
             })),
-          },
-          technicalLabels: {
-            set: updateProjectRequestDto.technicalLabels?.map(
+          }),
+        },
+        technicalLabels: {
+          deleteMany: {},
+          // If technicalLabels is provided, create new technicalLabels
+          ...(updateProjectRequestDto.technicalLabels && {
+            create: updateProjectRequestDto.technicalLabels.map(
               (technicalLabel) => ({
-                projectId_labelName: {
-                  projectId: updateProjectRequestDto.id,
-                  labelName: technicalLabel,
+                label: {
+                  connect: {
+                    name: technicalLabel,
+                  },
                 },
               }),
             ),
-          },
+          }),
         },
-        include: {
-          language: true,
-          users: true,
-          founder: true,
-          domainLabels: true,
-          technicalLabels: true,
-          like: true,
-          involvement: true,
-          joinRequest: true,
-        },
-      });
-    } catch (error) {
-      throw ServiceException.EntityNotFoundException(
-        errorMessages.ENTITY_NOT_FOUND(
-          'Project',
-          updateProjectRequestDto.id.toString(),
-        ),
-      );
-    }
+      },
+      include: {
+        language: true,
+        users: true,
+        founder: true,
+        domainLabels: true,
+        technicalLabels: true,
+        like: true,
+        involvement: true,
+        joinRequest: true,
+      },
+    });
   }
 }

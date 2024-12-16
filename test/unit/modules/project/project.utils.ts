@@ -120,7 +120,20 @@ export class ProjectTestUtils {
     domainLabels: ['Cooking', 'Design', 'Geography'],
     goal: Goal.Education,
     status: ProjectStatus.InProgress,
-    languageCode: 'EN',
+    languageCode: LanguageCode.EN,
     milestone: new Date('2000-01-01'),
+  };
+
+  defaultUpdateProjectDto = {
+    id: 1,
+    founderId: 1,
+    title: 'updatedTitle',
+    description: 'updatedDescription',
+    status: ProjectStatus.Complete,
+    languageCode: LanguageCode.FR,
+    goal: Goal.OpenSource,
+    milestone: new Date('2021-01-01'),
+    domainLabels: ['Science', 'Technology'],
+    technicalLabels: ['TypeScript', 'GraphQL'],
   };
 }

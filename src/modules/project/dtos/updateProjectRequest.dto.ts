@@ -86,5 +86,5 @@ export class UpdateProjectRequestDto {
   @ApiProperty({ description: 'The goal of the project', enum: Goal })
   @IsEnum(Goal)
   @IsNotEmpty()
-  goal: Goal;
+  goal?: Goal;
 }

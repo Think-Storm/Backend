@@ -101,4 +101,38 @@ describe('ProjectRepository', () => {
       );
     });
   });
+
+  describe('updateProject function', () => {
+    it('should update a project in DB', async () => {
+      // Create a Project in DB
+      const insertedProject = await projectTestUtils.createProjectInDB(
+        prismaService,
+        userRepository,
+      );
+
+      // Update the Project
+      const updatedProject = await projectRepository.updateProject({
+        id: insertedProject.id,
+        founderId: insertedProject.founderId,
+        title: 'newTitle',
+        description: 'newDescription',
+        status: 'InProgress',
+        languageCode: 'EN',
+        milestone: new Date('2000-01-02'),
+        domainLabels: ['newDomainLabel'],
+      });
+
+      expect(updatedProject).not.toBeNull();
+      expect(updatedProject).toHaveProperty('id');
+      expect(updatedProject.createdAt).toBeDefined();
+      expect(updatedProject.lastUpdatedAt).toBeDefined();
+      expect(updatedProject.founderId).toBe(insertedProject.founderId);
+      expect(updatedProject.description).toBe('newDescription');
+      expect(updatedProject.goal).toBe(insertedProject.goal);
+      expect(updatedProject.languageCode).toBe('EN');
+      expect(updatedProject.title).toBe('newTitle');
+      expect(updatedProject.status).toBe('InProgress');
+      expect(updatedProject.milestone).toStrictEqual(new Date('2000-01-02'));
+    });
+  });
 });
