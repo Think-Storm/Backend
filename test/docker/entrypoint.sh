@@ -6,7 +6,7 @@ set -e
 
 # Database setup
 echo "Setting up the database..."
-npx prisma migrate dev
+npx prisma migrate deploy
 npm run db:seed
 
 # Function to run tests
