@@ -8,7 +8,7 @@ import { ServiceException } from '../../src/common/exception-filter/serviceExcep
 import { PrismaClient } from '@prisma/client';
 import { PrismaModule } from '../../src/prisma/prisma.module';
 import { ConfigService } from '@nestjs/config';
-import refreshDatabase from 'src/prisma/prisma.dbreset';
+import refreshDatabase from '../../src/prisma/prisma.dbreset';
 
 describe('/newsletter-subscriptions', () => {
   let app: INestApplication;
