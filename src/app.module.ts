@@ -16,7 +16,6 @@ import { ThrottlerAbusingGuard } from './common/throttler/throttlerAbusingGuard'
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-ioredis';
 import { cachingConfig } from './common/redis/redis.config';
-import { WaitingListUserModule } from './modules/waiting_list_user/waitingListUser.module';
 
 import { NewsletterModule } from './modules/newsletter/newsletter.module';
 @Module({
