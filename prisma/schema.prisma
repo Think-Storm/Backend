@@ -8,39 +8,40 @@ generator client {
 }
 
 model User {
-  id                Int                  @id @default(autoincrement())
-  email             String               @unique
+  id                Int           @id @default(autoincrement())
+  email             String        @unique
   username          String
   password          String
-  passwordSalt      String               @map("password_salt")
+  passwordSalt      String        @map("password_salt")
   passwordChangedAt DateTime?
-  fullName          String?              @map("full_name")
+  fullName          String?       @map("full_name")
   birthdate         DateTime?
-  founded_projects  Project[]            @relation("FounderProjects")
+  founded_projects  Project[]     @relation("FounderProjects")
   projects          Project[]
   like              Like[]
   involvement       Involvement[]
   joinRequest       JoinRequest[]
   userProfile       UserProfile?
-  createdAt         DateTime             @default(now()) @map("created_at")
-  lastUpdatedAt     DateTime             @updatedAt @map("last_updated_at")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  lastUpdatedAt     DateTime      @updatedAt @map("last_updated_at")
 
   @@map("users")
 }
 
 model UserProfile {
-  id                Int                  @id @default(autoincrement())
-  userId            Int                  @unique @map("user_id")
-  avatar            String?
-  bio               String?
-  preferedRole      String?              @map("prefered_role")
-  location          String?
-  website           String?
-  interests         UserProfileDomainLabel[]
-  skills            UserProfileTechnicalLabel[]
-  user              User                 @relation(fields: [userId], references: [id])
-  languages         UserProfileLanguage[]
-  
+  id           Int                         @id @default(autoincrement())
+  userId       Int                         @unique @map("user_id")
+  avatar       String?
+  bio          String?
+  preferedRole String?                     @map("prefered_role")
+  location     String?
+  website      String?
+  interests    UserProfileDomainLabel[]
+  skills       UserProfileTechnicalLabel[]
+  user         User                        @relation(fields: [userId], references: [id])
+  languages    UserProfileLanguage[]
+  role         Role?                        @relation(fields: [preferedRole], references: [name])
+
   @@map("user_profiles")
 }
 
@@ -58,7 +59,7 @@ model Project {
   founder         User                    @relation(fields: [founderId], references: [id], name: "FounderProjects")
   language        Language                @relation(fields: [languageCode], references: [code])
   users           User[]
-  domainLabels    ProjectDomainLabel[]    
+  domainLabels    ProjectDomainLabel[]
   technicalLabels ProjectTechnicalLabel[]
   like            Like[]
   involvement     Involvement[]
@@ -68,7 +69,7 @@ model Project {
 }
 
 model TechnicalLabel {
-  name     String                 @id @unique
+  name     String                      @id @unique
   projects ProjectTechnicalLabel[]
   users    UserProfileTechnicalLabel[]
 
@@ -76,7 +77,7 @@ model TechnicalLabel {
 }
 
 model DomainLabel {
-  name     String              @id @unique
+  name     String                   @id @unique
   projects ProjectDomainLabel[]
   users    UserProfileDomainLabel[]
 
@@ -84,10 +85,10 @@ model DomainLabel {
 }
 
 model UserProfileDomainLabel {
-  userId      Int            @map("user_id")
-  labelName   String         @map("label_name")
-  label       DomainLabel    @relation(fields: [labelName], references: [name])
-  userProfile UserProfile?   @relation(fields: [userId], references: [userId])
+  userId      Int          @map("user_id")
+  labelName   String       @map("label_name")
+  label       DomainLabel  @relation(fields: [labelName], references: [name])
+  userProfile UserProfile? @relation(fields: [userId], references: [userId])
 
   @@id([userId, labelName])
   @@map("user_profile_domain_labels")
@@ -103,22 +104,21 @@ model UserProfileTechnicalLabel {
   @@map("user_profile_technical_labels")
 }
 
-
 model ProjectDomainLabel {
-  projectId   Int         @map("project_id")
-  labelName   String      @map("label_name")
-  project     Project     @relation(fields: [projectId], references: [id])
-  label       DomainLabel @relation(fields: [labelName], references: [name])
+  projectId Int         @map("project_id")
+  labelName String      @map("label_name")
+  project   Project     @relation(fields: [projectId], references: [id])
+  label     DomainLabel @relation(fields: [labelName], references: [name])
 
   @@id([projectId, labelName])
   @@map("project_domain_labels")
 }
 
 model ProjectTechnicalLabel {
-  projectId   Int            @map("project_id")
-  labelName   String         @map("label_name")
-  project     Project        @relation(fields: [projectId], references: [id])
-  label       TechnicalLabel @relation(fields: [labelName], references: [name])
+  projectId Int            @map("project_id")
+  labelName String         @map("label_name")
+  project   Project        @relation(fields: [projectId], references: [id])
+  label     TechnicalLabel @relation(fields: [labelName], references: [name])
 
   @@id([projectId, labelName])
   @@map("project_technical_labels")
@@ -137,9 +137,10 @@ model Like {
 model Involvement {
   userId    Int     @map("user_id")
   projectId Int     @map("project_id")
-  role      Role
+  roleName  String  @map("role_name")
   user      User    @relation(fields: [userId], references: [id])
   project   Project @relation(fields: [projectId], references: [id])
+  role      Role    @relation(fields: [roleName], references: [name])
 
   @@id([userId, projectId])
   @@map("involvements")
@@ -148,31 +149,43 @@ model Involvement {
 model JoinRequest {
   userId    Int               @map("user_id")
   projectId Int               @map("project_id")
-  role      Role
+  roleName  String            @map("role_name")
   status    JoinRequestStatus @default(Pending)
   user      User              @relation(fields: [userId], references: [id])
   project   Project           @relation(fields: [projectId], references: [id])
+  role      Role              @relation(fields: [roleName], references: [name])
 
   @@id([userId, projectId])
   @@map("join_requests")
 }
 
 model Language {
-  code          LanguageCode @id
+  code          LanguageCode          @id
   name          LanguageName
-  createdAt     DateTime     @default(now()) @map("created_at")
-  lastUpdatedAt DateTime     @updatedAt @map("last_updated_at")
+  createdAt     DateTime              @default(now()) @map("created_at")
+  lastUpdatedAt DateTime              @updatedAt @map("last_updated_at")
   projects      Project[]
   userProfiles  UserProfileLanguage[]
 
   @@map("languages")
 }
 
+model Role {
+  name          String        @id @unique
+  createdAt     DateTime      @default(now()) @map("created_at")
+  lastUpdatedAt DateTime      @updatedAt @map("last_updated_at")
+  joinRequests  JoinRequest[]
+  Involvement   Involvement[]
+  UserProfile   UserProfile[]
+
+  @@map("roles")
+}
+
 model UserProfileLanguage {
-  userId          Int            @map("user_id")
-  languageCode    LanguageCode   @map("language_code")
-  language        Language       @relation(fields: [languageCode], references: [code])
-  userProfile     UserProfile?   @relation(fields: [userId], references: [userId])
+  userId       Int          @map("user_id")
+  languageCode LanguageCode @map("language_code")
+  language     Language     @relation(fields: [languageCode], references: [code])
+  userProfile  UserProfile? @relation(fields: [userId], references: [userId])
 
   @@id([userId, languageCode])
   @@map("user_profile_languages")
@@ -222,23 +235,4 @@ enum LanguageName {
   Chinese
   Russian
   Arabic
-}
-
-enum Role {
-  Developer
-  Designer
-  Manager
-  ProductOwner
-  ScrumMaster
-  Tester
-  DevOps
-  DataScientist
-  BusinessAnalyst
-  Marketing
-  Sales
-  CustomerSupport
-  HR
-  Finance
-  Legal
-  Other
 }
