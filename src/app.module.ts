@@ -16,6 +16,7 @@ import { ThrottlerAbusingGuard } from './common/throttler/throttlerAbusingGuard'
 import { CacheModule } from '@nestjs/cache-manager';
 import * as redisStore from 'cache-manager-ioredis';
 import { cachingConfig } from './common/redis/redis.config';
+import { NotificationModule } from './modules/notification/notification.module';
 
 import { NewsletterModule } from './modules/newsletter/newsletter.module';
 @Module({
@@ -49,6 +50,7 @@ import { NewsletterModule } from './modules/newsletter/newsletter.module';
     CommonDataModule,
     AuthModule,
     NewsletterModule,
+    NotificationModule,
     RouterModule.register([
       {
         path: 'users',
@@ -65,6 +67,10 @@ import { NewsletterModule } from './modules/newsletter/newsletter.module';
       {
         path: 'newsletter',
         module: NewsletterModule,
+      },
+      {
+        path: 'notifications',
+        module: NotificationModule,
       },
     ]),
   ],
