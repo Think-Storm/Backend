@@ -8,6 +8,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { RedisThrottlerStorageService } from './common/throttler/redisThrottlerStorage.service';
 import { RedisService } from './common/throttler/redisThrottler.service';
 import { ConfigService } from '@nestjs/config';
+import { PrismaExceptionFilter } from './common/exception-filter/prisma-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -33,9 +34,9 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(
-    new ServiceExceptionToHttpExceptionFilter(redisThrottlerStorageService),
+    new ServiceExceptionToHttpExceptionFilter(),
+    new PrismaExceptionFilter(),
   );
-
   app.use(cookieParser());
 
   const config = new DocumentBuilder()
