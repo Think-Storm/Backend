@@ -1,0 +1,56 @@
+import {
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  UseGuards,
+} from '@nestjs/common';
+import { NotificationService } from './notification.service';
+import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
+import { User } from '@prisma/client';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { GetUser } from '../auth/decorators/getUser.decorator';
+
+@ApiTags('notifications')
+@Controller()
+@UseGuards(JwtAuthGuard)
+export class NotificationController {
+  constructor(private notificationService: NotificationService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Get all notifications for the authenticated user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns all notifications for the user',
+  })
+  async getAllNotifications(@GetUser() user: User) {
+    return this.notificationService.getUserNotifications(user.id);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a notification by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification deleted successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Notification not found',
+  })
+  async deleteNotification(@Param('id', ParseIntPipe) id: number) {
+    return this.notificationService.deleteNotification(id);
+  }
+
+  @Delete()
+  @ApiOperation({
+    summary: 'Delete all notifications for the authenticated user',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'All notifications deleted successfully',
+  })
+  async deleteAllNotifications(@GetUser() user: User) {
+    return this.notificationService.clearAllNotifications(user.id);
+  }
+}
