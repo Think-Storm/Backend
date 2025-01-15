@@ -11,6 +11,7 @@ import { UserMapper } from '../user/dtos/user.mapper';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PasswordEncryption } from '../../common/encryption/passwordEncryption';
 
+import { NotificationModule } from '../notification/notification.module';
 /**
  * Module for auth-related components and services
  */
@@ -18,6 +19,7 @@ import { PasswordEncryption } from '../../common/encryption/passwordEncryption';
 @Module({
   imports: [
     UserModule,
+    NotificationModule,
     PassportModule.register({ defaultStrategy: 'jwt', session: false }),
     JwtModule.registerAsync({
       imports: [ConfigModule],

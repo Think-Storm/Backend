@@ -33,7 +33,7 @@ model User {
   userProfile       UserProfile?
   createdAt         DateTime      @default(now()) @map("created_at")
   lastUpdatedAt     DateTime      @updatedAt @map("last_updated_at")
-
+  notifications     Notification[]
   @@map("users")
 }
 
@@ -75,6 +75,20 @@ model Project {
   joinRequest     JoinRequest[]
 
   @@map("projects")
+}
+
+model Notification {
+  id              Int                     @id @default(autoincrement())
+  userId          Int                     @map("user_id")
+  type            NotificationType
+  description     String
+  link            String?
+  isRead          Boolean                 @default(false)
+  createdAt       DateTime                @default(now()) @map("created_at")
+  lastUpdatedAt   DateTime                @updatedAt @map("last_updated_at")
+  user            User                    @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
 }
 
 model TechnicalLabel {
@@ -244,4 +258,11 @@ enum LanguageName {
   Chinese
   Russian
   Arabic
+}
+
+enum NotificationType {
+  JoinRequest
+  AcceptJoinRequest
+  InviteToProject
+  Welcome
 }

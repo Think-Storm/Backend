@@ -10,6 +10,7 @@ import { UserMapper } from './../user/dtos/user.mapper';
 import { UserService } from './../user/user.service';
 import { PasswordEncryption } from '../../common/encryption/passwordEncryption';
 
+import { NotificationService } from '../notification/notification.service';
 @Injectable()
 export class AuthService {
   constructor(
@@ -17,6 +18,7 @@ export class AuthService {
     private userMapper: UserMapper,
     private passwordEncryption: PasswordEncryption,
     private readonly jwtService: JwtService,
+    private notificationService: NotificationService,
   ) {}
 
   /**
@@ -50,6 +52,11 @@ export class AuthService {
     const createdUser = await this.userService.createUser(
       createUserDto,
       passwordInformation.passwordSalt,
+    );
+
+    await this.notificationService.createWelcomeNotification(
+      createdUser.id,
+      createdUser.username,
     );
 
     return this.userMapper.userToUserResponseDTO(createdUser);
