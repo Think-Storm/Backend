@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client';
 import { languages } from './seed-data/language';
 import { technicalLabel } from './seed-data/technicalLabel';
 import { domainLabel } from './seed-data/domainLabel';
+import { roles } from './seed-data/role';
 const prisma = new PrismaClient();
 
 async function main() {
@@ -31,6 +32,13 @@ async function main() {
       create: {
         name: label.name,
       },
+    });
+  });
+  roles.forEach(async (role) => {
+    await prisma.role.upsert({
+      where: { name: role.name },
+      update: {},
+      create: { name: role.name },
     });
   });
 }
