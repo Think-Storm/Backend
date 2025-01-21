@@ -16,7 +16,7 @@ export class CommonDataService {
 
   /**
    * Finds all languages
-   * @returns A promise resolving to the ProjectResponseDto
+   * @returns A promise resolving to the CommonDatatoCommonDataResponseDto
    */
 
   async findAllLanguages(): Promise<CommonDataResponseDto[]> {
