@@ -3,6 +3,7 @@ import { UserModule } from './modules/user/user.module';
 import { APP_GUARD, RouterModule } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProjectModule } from './modules/project/project.module';
+import { CommonDataModule } from './modules/common-data/common-data.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
@@ -44,6 +45,7 @@ import { cachingConfig } from './common/redis/redis.config';
     }),
     UserModule,
     ProjectModule,
+    CommonDataModule,
     AuthModule,
     RouterModule.register([
       {
@@ -53,6 +55,10 @@ import { cachingConfig } from './common/redis/redis.config';
       {
         path: 'projects',
         module: ProjectModule,
+      },
+      {
+        path: 'common-data',
+        module: CommonDataModule,
       },
     ]),
   ],
