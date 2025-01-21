@@ -3,6 +3,7 @@ import { UserModule } from './modules/user/user.module';
 import { RouterModule } from '@nestjs/core';
 import { AuthModule } from './modules/auth/auth.module';
 import { ProjectModule } from './modules/project/project.module';
+import { CommonDataModule } from './modules/common-data/common-data.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
@@ -22,6 +23,7 @@ import { JwtModule } from '@nestjs/jwt';
     }),
     UserModule,
     ProjectModule,
+    CommonDataModule,
     AuthModule,
     RouterModule.register([
       {
@@ -31,6 +33,10 @@ import { JwtModule } from '@nestjs/jwt';
       {
         path: 'projects',
         module: ProjectModule,
+      },
+      {
+        path: 'common-data',
+        module: CommonDataModule,
       },
     ]),
   ],
