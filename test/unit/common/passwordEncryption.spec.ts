@@ -1,32 +1,142 @@
 import { PasswordEncryption } from '../../../src/common/passwordEncryption';
 import * as bcrypt from 'bcrypt';
-import { Test, TestingModule } from '@nestjs/testing';
+import { User } from '@prisma/client';
+
+jest.mock('bcrypt', () => ({
+  genSalt: jest.fn(),
+  hash: jest.fn(),
+  compare: jest.fn(),
+}));
 
 describe('PasswordEncryption', () => {
   let passwordEncryption: PasswordEncryption;
-  const defaultPassword = 'defaultPassword';
 
-  beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [PasswordEncryption],
-    }).compile();
-
-    passwordEncryption = module.get<PasswordEncryption>(PasswordEncryption);
+  beforeEach(() => {
+    passwordEncryption = new PasswordEncryption();
+    jest.clearAllMocks();
   });
 
-  describe('createSaltAndHashedPassword function', () => {
-    it('should return salt and correctly hashed password ', async () => {
-      const passwordData =
-        await passwordEncryption.createSaltAndHashedPassword(defaultPassword);
+  describe('createSaltAndHashedPassword', () => {
+    it('should create salt and hashed password', async () => {
+      const mockSalt = 'test-salt';
+      const mockHash = 'hashed-password';
+      const password = 'test-password';
 
-      expect(passwordData.passwordSalt).toBeDefined();
-      expect(passwordData.passwordSalt.length).toBeGreaterThan(0);
+      (bcrypt.genSalt as jest.Mock).mockResolvedValue(mockSalt);
+      (bcrypt.hash as jest.Mock).mockResolvedValue(mockHash);
 
-      const expectedHashedPassword = await bcrypt.hash(
-        defaultPassword,
-        passwordData.passwordSalt,
+      const result =
+        await passwordEncryption.createSaltAndHashedPassword(password);
+
+      expect(result).toEqual({
+        passwordSalt: mockSalt,
+        hashedPassword: mockHash,
+      });
+      expect(bcrypt.genSalt).toHaveBeenCalled();
+      expect(bcrypt.hash).toHaveBeenCalledWith(password, mockSalt);
+    });
+
+    it('should handle errors during salt generation', async () => {
+      const error = new Error('Salt generation failed');
+      (bcrypt.genSalt as jest.Mock).mockRejectedValue(error);
+
+      await expect(
+        passwordEncryption.createSaltAndHashedPassword('test-password'),
+      ).rejects.toThrow('Salt generation failed');
+    });
+
+    it('should handle errors during password hashing', async () => {
+      const error = new Error('Hash generation failed');
+      (bcrypt.genSalt as jest.Mock).mockResolvedValue('test-salt');
+      (bcrypt.hash as jest.Mock).mockRejectedValue(error);
+
+      await expect(
+        passwordEncryption.createSaltAndHashedPassword('test-password'),
+      ).rejects.toThrow('Hash generation failed');
+    });
+  });
+
+  describe('isPasswordCorrect', () => {
+    it('should return true for correct password', async () => {
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+
+      const result = await passwordEncryption.isPasswordCorrect(
+        'correct-password',
+        'hashed-password',
       );
-      expect(passwordData.hashedPassword).toBe(expectedHashedPassword);
+
+      expect(result).toBe(true);
+      expect(bcrypt.compare).toHaveBeenCalledWith(
+        'correct-password',
+        'hashed-password',
+      );
+    });
+
+    it('should return false for incorrect password', async () => {
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+
+      const result = await passwordEncryption.isPasswordCorrect(
+        'wrong-password',
+        'hashed-password',
+      );
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle bcrypt compare errors', async () => {
+      const error = new Error('Compare failed');
+      (bcrypt.compare as jest.Mock).mockRejectedValue(error);
+
+      await expect(
+        passwordEncryption.isPasswordCorrect(
+          'test-password',
+          'hashed-password',
+        ),
+      ).rejects.toThrow('Compare failed');
+    });
+  });
+
+  describe('changedPasswordAfter', () => {
+    it('should return true if password was changed after token was issued', async () => {
+      const user = {
+        passwordChangedAt: new Date(Date.now()),
+      } as User;
+      const tokenTimestamp = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
+
+      const result = await passwordEncryption.changedPasswordAfter(
+        user,
+        tokenTimestamp,
+      );
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false if password was changed before token was issued', async () => {
+      const user = {
+        passwordChangedAt: new Date(Date.now() - 7200000), // 2 hours ago
+      } as User;
+      const tokenTimestamp = Math.floor(Date.now() / 1000) - 3600; // 1 hour ago
+
+      const result = await passwordEncryption.changedPasswordAfter(
+        user,
+        tokenTimestamp,
+      );
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false if password was never changed', async () => {
+      const user = {
+        passwordChangedAt: null,
+      } as User;
+      const tokenTimestamp = Math.floor(Date.now() / 1000);
+
+      const result = await passwordEncryption.changedPasswordAfter(
+        user,
+        tokenTimestamp,
+      );
+
+      expect(result).toBe(false);
     });
   });
 });
