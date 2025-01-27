@@ -3,7 +3,7 @@ import { CommonDataRepository } from './common-data.repository';
 import { CommonDataMapper } from './dto/common-data.mapper';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
-import { CommonDataResponseDto } from './dto/commonDataResponse.dto';
+import { LanguageResponseDto } from './dto/commonDataResponse.dto';
 
 @Injectable()
 export class CommonDataService {
@@ -16,10 +16,10 @@ export class CommonDataService {
 
   /**
    * Finds all languages
-   * @returns A promise resolving to the CommonDatatoCommonDataResponseDto
+   * @returns A promise resolving to the LanguageResponseDto
    */
 
-  async findAllLanguages(): Promise<CommonDataResponseDto[]> {
+  async getAllLanguages(): Promise<LanguageResponseDto[]> {
     const fetchedLanguage = await this.commonDataRepository.getAllLanguages();
 
     if (!fetchedLanguage || fetchedLanguage.length === 0) {
@@ -28,8 +28,6 @@ export class CommonDataService {
       );
     }
 
-    return this.commonDataMapper.commonDataToCommonDataResponseDto(
-      fetchedLanguage,
-    );
+    return this.commonDataMapper.mapLanguages(fetchedLanguage);
   }
 }

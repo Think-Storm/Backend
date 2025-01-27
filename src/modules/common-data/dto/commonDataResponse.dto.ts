@@ -1,34 +1,31 @@
-import { Language, LanguageCode } from '@prisma/client';
+import { LanguageCode, LanguageName } from '@prisma/client';
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsNotEmpty } from 'class-validator';
 
-export class CommonDataResponseDto {
+/**
+ * A DTO class that represents the response of a language
+ */
+export class LanguageResponseDto {
   @Expose()
+  @IsNotEmpty()
+  @IsEnum(LanguageCode)
   @ApiProperty({
-    example: 'EN',
-    description: 'The code of the language',
+    example: LanguageCode.EN,
+    description: 'The ISO code of the language',
     enum: LanguageCode,
+    enumName: 'LanguageCode',
   })
   code: LanguageCode;
 
   @Expose()
+  @IsNotEmpty()
+  @IsEnum(LanguageName)
   @ApiProperty({
-    example: 'English',
-    description: 'The name of the language',
+    example: LanguageName.English,
+    description: 'The full name of the language',
+    enum: LanguageName,
+    enumName: 'LanguageName',
   })
-  name: Language;
-
-  @Expose()
-  @ApiProperty({
-    example: '2023-01-01T00:00:00.000Z',
-    description: 'The creation date of the language',
-  })
-  createdAt: Date;
-
-  @Expose()
-  @ApiProperty({
-    example: '2023-01-02T00:00:00.000Z',
-    description: 'The last update date of the language',
-  })
-  lastUpdatedAt: Date;
+  name: LanguageName;
 }

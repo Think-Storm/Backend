@@ -1,6 +1,5 @@
-import { Language } from '@prisma/client';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
-import { CommonDataResponseDto } from './commonDataResponse.dto';
+import { LanguageResponseDto } from './commonDataResponse.dto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CommonDataMapper {
@@ -8,12 +7,12 @@ export class CommonDataMapper {
    * Maps a Language entity to a CommonDataResponseDto
    * @returns A CommonDataResponseDto with the mapped data
    */
-  @ApiProperty({ type: CommonDataResponseDto })
-  commonDataToCommonDataResponseDto(
-    languages: Language[],
-  ): CommonDataResponseDto[] {
+  @ApiProperty({ type: LanguageResponseDto })
+  mapLanguages(
+    languages: { code: string; name: string }[],
+  ): LanguageResponseDto[] {
     return languages.map((language) =>
-      plainToInstance(CommonDataResponseDto, instanceToPlain(language), {
+      plainToInstance(LanguageResponseDto, instanceToPlain(language), {
         excludeExtraneousValues: true,
       }),
     );
