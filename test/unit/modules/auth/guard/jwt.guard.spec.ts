@@ -18,6 +18,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import prisma from '../../../../../src/prisma/prisma.client';
 import { PrismaModule } from '../../../../../src/prisma/prisma.module';
 import { UserMapper } from '../../../../../src/modules/user/dtos/user.mapper';
+import { NotificationService } from '../../../../../src/modules/notification/notification.service';
+import { NotificationRepository } from '../../../../../src/modules/notification/notification.repository';
 
 describe('JwtAuthGuard', () => {
   jest.useFakeTimers();
@@ -53,6 +55,8 @@ describe('JwtAuthGuard', () => {
         JwtStrategy,
         LocalStrategy,
         ConfigService,
+        NotificationService,
+        NotificationRepository,
       ],
     }).compile();
 
