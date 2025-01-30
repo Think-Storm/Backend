@@ -92,8 +92,10 @@ describe('ServiceException', () => {
           prismaError,
         );
 
-        expect(error.statusCode).toBe(400);
-        expect(error.message).toBe(`${errorMessages.BAD_REQUEST} test error`);
+        expect(error.statusCode).toBe(409);
+        expect(error.message).toBe(
+          `${errorMessages.USER_WITH_EMAIL_ALREADY_EXISTS} test error`,
+        );
         expect(error.error).toBe(prismaError);
       });
 
