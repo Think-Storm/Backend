@@ -8,7 +8,7 @@ import { UserController } from '../../../../src/modules/user/user.controller';
 import { JwtService } from '@nestjs/jwt';
 import { ClassSerializerInterceptor } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../../src/prisma/prisma.client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { AuthService } from '../../../../src/modules/auth/auth.service';
 
@@ -16,11 +16,10 @@ describe('UserService', () => {
   let authService: AuthService;
   let userService: UserService;
   let userRepository: UserRepository;
-  const prismaClient = new PrismaClient();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prismaClient)],
+      imports: [PrismaModule.forTest(prisma)],
       controllers: [UserController],
       providers: [
         AuthService,
