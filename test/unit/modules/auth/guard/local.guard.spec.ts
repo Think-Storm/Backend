@@ -17,6 +17,8 @@ import { UserService } from '../../../../../src/modules/user/user.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import prisma from '../../../../../src/prisma/prisma.client';
 import { PrismaModule } from '../../../../../src/prisma/prisma.module';
+import { NotificationService } from '../../../../../src/modules/notification/notification.service';
+import { NotificationRepository } from '../../../../../src/modules/notification/notification.repository';
 
 describe('LocalAuthGuard', () => {
   let userService: UserService;
@@ -63,6 +65,9 @@ describe('LocalAuthGuard', () => {
           provide: UserRepository,
           useValue: mockUserRepository,
         },
+        NotificationService,
+        NotificationRepository,
+        UserRepository,
         UserMapper,
         PasswordEncryption,
         {

@@ -22,6 +22,8 @@ import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { defaultPasswordSalt } from '../../../../test/unit/common/passwordEncryption.utils';
+import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
+import { NotificationService } from '../../../../src/modules/notification/notification.service';
 
 describe('UserService', () => {
   let authService: AuthService;
@@ -41,6 +43,8 @@ describe('UserService', () => {
         UserMapper,
         JwtService,
         ConfigService,
+        NotificationService,
+        NotificationRepository,
       ],
     })
       .overrideInterceptor(ClassSerializerInterceptor)
