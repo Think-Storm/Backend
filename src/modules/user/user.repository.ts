@@ -13,13 +13,17 @@ export class UserRepository {
    * @returns A promise resolving to a User object or null
    */
   async getUserByEmail(email: string) {
-    return this.prisma.user.findFirst({
-      where: {
-        email: {
-          equals: email.toLowerCase(),
+    try {
+      return await this.prisma.user.findFirst({
+        where: {
+          email: {
+            equals: email.toLowerCase(),
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(error.message, error);
+    }
   }
   /**
    *
@@ -49,7 +53,7 @@ export class UserRepository {
     passwordSalt: string,
   ): Promise<User> {
     try {
-      return this.prisma.user.create({
+      return await this.prisma.user.create({
         data: {
           username: createUserDto.username,
           email: createUserDto.email.toLowerCase(),
