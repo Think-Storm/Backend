@@ -10,7 +10,6 @@ import {
 } from '../../../utils/user.utils';
 import { AuthController } from '../../../../src/modules/auth/auth.controller';
 import { AuthService } from '../../../../src/modules/auth/auth.service';
-import RequestWithUser from '../../../../src/modules/auth/local/requestWithUser.interface';
 import { LocalAuthGuard } from '../../../../src/modules/auth/local/local.guard';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
@@ -23,9 +22,9 @@ import { JwtStrategy } from '../../../../src/modules/auth/jwt/jwt.strategy';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { PasswordEncryption } from '../../../../src/common/encryption/passwordEncryption';
-
 import { NotificationService } from '../../../../src/modules/notification/notification.service';
 import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
+
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
@@ -75,16 +74,13 @@ describe('AuthController', () => {
 
   describe('login function', () => {
     it('should return logged in user responseDto and jwt token', async () => {
-      const req = {
-        user: defaultUserResponseDto,
-      } as RequestWithUser;
       const res = httpMocks.createResponse();
 
       const authSpy = jest
         .spyOn(authService, 'authentication')
         .mockReturnValue(defaultUserResponseDto);
 
-      const response = await authController.login(req, res);
+      const response = await authController.login(defaultUserResponseDto, res);
 
       expect(authSpy).toHaveBeenCalledWith(defaultUserResponseDto, res);
       expect(response._getData()).toEqual({
@@ -94,7 +90,6 @@ describe('AuthController', () => {
     });
 
     it('should handle unauthorized access', async () => {
-      const req = { user: null } as RequestWithUser;
       const res = httpMocks.createResponse();
 
       jest.spyOn(authService, 'authentication').mockImplementation(() => {
@@ -103,7 +98,7 @@ describe('AuthController', () => {
         );
       });
 
-      await expect(authController.login(req, res)).rejects.toThrow(
+      await expect(authController.login(null, res)).rejects.toThrow(
         ServiceException,
       );
     });
