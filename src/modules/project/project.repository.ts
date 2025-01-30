@@ -19,7 +19,23 @@ export class ProjectRepository {
       where: {
         id: id,
       },
-      include: { language: true, users: true, founder: true },
+      include: {
+        language: true,
+        users: {
+          omit: {
+            password: true,
+            passwordSalt: true,
+            passwordChangedAt: true,
+          },
+        },
+        founder: {
+          omit: {
+            password: true,
+            passwordSalt: true,
+            passwordChangedAt: true,
+          },
+        },
+      },
     });
   }
 
@@ -69,8 +85,20 @@ export class ProjectRepository {
         },
         include: {
           language: true,
-          users: true,
-          founder: true,
+          users: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
+          founder: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
           domainLabels: true,
           technicalLabels: true,
           like: true,
