@@ -20,13 +20,14 @@ import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import prisma from '../../../../src/prisma/prisma.client';
 import { PassportModule } from '@nestjs/passport';
 import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
-
+import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
+import { NotificationService } from '../../../../src/modules/notification/notification.service';
 describe('AuthService', () => {
   let authService: AuthService;
   let userService: UserService;
   let userRepository: UserRepository;
   let passwordEncryption: PasswordEncryption;
-
+  let notificationService: NotificationService;
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -50,10 +51,13 @@ describe('AuthService', () => {
         PasswordEncryption,
         AuthService,
         ConfigService,
+        NotificationService,
+        NotificationRepository,
       ],
     }).compile();
 
     authService = module.get<AuthService>(AuthService);
+    notificationService = module.get<NotificationService>(NotificationService);
     userService = module.get<UserService>(UserService);
     userRepository = module.get<UserRepository>(UserRepository);
     passwordEncryption = module.get<PasswordEncryption>(PasswordEncryption);
@@ -104,6 +108,10 @@ describe('AuthService', () => {
         .spyOn(userRepository, 'createUser')
         .mockResolvedValue(defaultUser);
 
+      const notificationSpy = jest
+        .spyOn(notificationService, 'createWelcomeNotification')
+        .mockImplementation();
+
       const expectedResponseDto = {
         ...defaultUserResponseDto,
         id: defaultUser.id,
@@ -131,6 +139,11 @@ describe('AuthService', () => {
           password: defaultSaltAndPassword.hashedPassword,
         }),
         defaultSaltAndPassword.passwordSalt,
+      );
+      expect(notificationSpy).toHaveBeenCalledTimes(1);
+      expect(notificationSpy).toHaveBeenCalledWith(
+        defaultUser.id,
+        defaultUser.username,
       );
     });
 
