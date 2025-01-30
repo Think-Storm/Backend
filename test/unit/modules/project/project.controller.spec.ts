@@ -150,6 +150,7 @@ describe('ProjectController', () => {
         defaultUserResponseDto,
       ) as any;
       mockRequest.headers = createAuthHeader(mockJwtToken);
+      mockRequest.user = { id: 1 }; // Explicitly set the user ID
 
       const serviceSpy = jest
         .spyOn(projectService, 'updateProject')
@@ -158,7 +159,7 @@ describe('ProjectController', () => {
       // Execute
       await projectController.updateProject(
         defaultUpdateProjectDto,
-        mockRequest,
+        mockRequest.user, // Pass the user object directly
       );
 
       // Verify correct parameters are passed
@@ -176,6 +177,7 @@ describe('ProjectController', () => {
         defaultUserResponseDto,
       ) as any;
       mockRequest.headers = createAuthHeader(mockJwtToken);
+      mockRequest.user = { id: 1 }; // Explicitly set the user ID
 
       const serviceSpy = jest
         .spyOn(projectService, 'deleteProject')
@@ -184,7 +186,7 @@ describe('ProjectController', () => {
       // Execute
       await projectController.deleteProject(
         defaultDeleteProjectDto,
-        mockRequest,
+        mockRequest.user, // Pass the user object directly
       );
 
       // Verify correct parameters are passed
