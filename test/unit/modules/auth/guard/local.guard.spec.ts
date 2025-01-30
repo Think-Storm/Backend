@@ -16,7 +16,7 @@ import { UserMapper } from '../../../../../src/modules/user/dtos/user.mapper';
 import { UserController } from '../../../../../src/modules/user/user.controller';
 import { UserService } from '../../../../../src/modules/user/user.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../../../src/prisma/prisma.client';
 import { PrismaModule } from '../../../../../src/prisma/prisma.module';
 
 describe('LocalAuthGuard', () => {
@@ -24,14 +24,13 @@ describe('LocalAuthGuard', () => {
   let userRepository: UserRepository;
   let passwordEncryption: PasswordEncryption;
   let guard: LocalAuthGuard;
-  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     guard = new LocalAuthGuard();
 
     const app: TestingModule = await Test.createTestingModule({
       imports: [
-        PrismaModule.forTest(prismaClient),
+        PrismaModule.forTest(prisma),
         PassportModule.register({ defaultStrategy: 'jwt', session: false }),
         JwtModule.registerAsync({
           imports: [ConfigModule],

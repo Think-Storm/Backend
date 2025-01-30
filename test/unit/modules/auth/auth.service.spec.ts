@@ -17,7 +17,7 @@ import { AuthService } from '../../../../src/modules/auth/auth.service';
 import { JsonWebTokenError, JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../../src/prisma/prisma.client';
 import { PassportModule } from '@nestjs/passport';
 import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
 
@@ -27,12 +27,10 @@ describe('AuthService', () => {
   let userRepository: UserRepository;
   let passwordEncryption: PasswordEncryption;
 
-  const prismaClient = new PrismaClient();
-
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
-        PrismaModule.forTest(prismaClient),
+        PrismaModule.forTest(prisma),
         PassportModule.register({ defaultStrategy: 'jwt', session: false }),
         JwtModule.registerAsync({
           imports: [ConfigModule],

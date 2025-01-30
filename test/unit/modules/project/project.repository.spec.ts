@@ -4,7 +4,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProjectTestUtils } from './project.utils';
 import { defaultCreateUserDto } from '../user/user.utils';
 import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
-import { PrismaClient, Project } from '@prisma/client';
+import { Project } from '@prisma/client';
+import prisma from '../../../../src/prisma/prisma.client';
 import { ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
@@ -15,11 +16,10 @@ describe('ProjectRepository', () => {
   let projectRepository: ProjectRepository;
   let userRepository: UserRepository;
   let projectTestUtils: ProjectTestUtils;
-  const prismaClient = new PrismaClient();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prismaClient)],
+      imports: [PrismaModule.forTest(prisma)],
 
       providers: [
         ProjectRepository,
