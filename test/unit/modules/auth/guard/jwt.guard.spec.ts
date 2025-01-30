@@ -15,7 +15,7 @@ import { UserController } from '../../../../../src/modules/user/user.controller'
 import { UserService } from '../../../../../src/modules/user/user.service';
 import { JwtAuthGuard } from '../../../../../src/modules/auth/jwt/jwt.guard';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../../../src/prisma/prisma.client';
 import { PrismaModule } from '../../../../../src/prisma/prisma.module';
 import { UserMapper } from '../../../../../src/modules/user/dtos/user.mapper';
 
@@ -26,13 +26,12 @@ describe('JwtAuthGuard', () => {
   let authService: AuthService;
   let userRepository: UserRepository;
   let passwordEncryption: PasswordEncryption;
-  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     guard = new JwtAuthGuard();
     const app: TestingModule = await Test.createTestingModule({
       imports: [
-        PrismaModule.forTest(prismaClient),
+        PrismaModule.forTest(prisma),
         PassportModule.register({ defaultStrategy: 'jwt', session: false }),
         JwtModule.registerAsync({
           imports: [ConfigModule],

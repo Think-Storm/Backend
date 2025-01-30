@@ -9,7 +9,7 @@ import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { defaultUser } from '../user/user.utils';
 import { ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../../src/prisma/prisma.client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
@@ -21,11 +21,9 @@ describe('ProjectService', () => {
   let projectTestUtils: ProjectTestUtils;
   let userService: UserService;
 
-  const prismaClient = new PrismaClient();
-
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prismaClient)],
+      imports: [PrismaModule.forTest(prisma)],
       controllers: [ProjectController],
       providers: [
         ProjectService,

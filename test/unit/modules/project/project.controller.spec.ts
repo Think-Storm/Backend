@@ -5,7 +5,7 @@ import { ProjectRepository } from '../../../../src/modules/project/project.repos
 import { ProjectMapper } from '../../../../src/modules/project/dtos/project.mapper';
 import { ProjectTestUtils } from './project.utils';
 import { ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../../src/prisma/prisma.client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
@@ -16,11 +16,10 @@ describe('ProjectController', () => {
   let projectController: ProjectController;
   let projectService: ProjectService;
   let projectTestUtils: ProjectTestUtils;
-  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prismaClient)],
+      imports: [PrismaModule.forTest(prisma)],
       controllers: [ProjectController],
       providers: [
         ProjectService,

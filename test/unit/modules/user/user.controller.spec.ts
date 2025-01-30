@@ -7,17 +7,16 @@ import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { defaultUserResponseDto } from './user.utils';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../../src/prisma/prisma.client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 
 describe('UserController', () => {
   let userController: UserController;
   let userService: UserService;
-  const prismaClient = new PrismaClient();
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prismaClient)],
+      imports: [PrismaModule.forTest(prisma)],
       controllers: [UserController],
       providers: [
         UserService,

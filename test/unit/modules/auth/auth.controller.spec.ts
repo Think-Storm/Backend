@@ -13,7 +13,7 @@ import RequestWithUser from '../../../../src/modules/auth/local/requestWithUser.
 import { LocalAuthGuard } from '../../../../src/modules/auth/local/local.guard';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../../../src/prisma/prisma.client';
 import { PassportModule } from '@nestjs/passport';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
@@ -22,12 +22,11 @@ import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
-  let prismaClient: PrismaClient;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [
-        PrismaModule.forTest(prismaClient),
+        PrismaModule.forTest(prisma),
         ConfigModule.forRoot({ isGlobal: true }),
         PassportModule.register({ defaultStrategy: 'jwt', session: false }),
         JwtModule.registerAsync({

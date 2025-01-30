@@ -13,11 +13,11 @@ import refreshDatabase from '../../../../src/prisma/prisma.dbreset';
 describe('UserRepository', () => {
   let prismaService: PrismaService;
   let userRepository: UserRepository;
-  const prismaClient = new PrismaClient();
+  const prisma = new PrismaClient();
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prismaClient)],
+      imports: [PrismaModule.forTest(prisma)],
       providers: [UserRepository, ConfigService],
     }).compile();
 
