@@ -24,6 +24,8 @@ import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { PasswordEncryption } from '../../../../src/common/encryption/passwordEncryption';
 
+import { NotificationService } from '../../../../src/modules/notification/notification.service';
+import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
@@ -48,6 +50,8 @@ describe('AuthController', () => {
       controllers: [AuthController],
       providers: [
         UserService,
+        NotificationService,
+        NotificationRepository,
         UserRepository,
         PasswordEncryption,
         UserMapper,
