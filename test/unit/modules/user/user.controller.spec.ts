@@ -29,6 +29,8 @@ import {
   createMockRequestWithUser,
   mockJwtToken,
 } from '../../../../test/utils/jwt.utils';
+import { NotificationService } from '../../../../src/modules/notification/notification.service';
+import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
 
 describe('UserController', () => {
   let userController: UserController;
@@ -45,6 +47,8 @@ describe('UserController', () => {
         UserRepository,
         UserMapper,
         PasswordEncryption,
+        NotificationService,
+        NotificationRepository,
         {
           provide: JwtService,
           useValue: {
