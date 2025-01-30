@@ -26,4 +26,6 @@ export const errorMessages = {
   FORBIDDEN: (message: string) => `Forbidden. ${message}`,
   THROTTLER_BLOCK:
     'Too many requests. You have been blocked. Try again in 1 hour.',
+  FOREIGN_KEY_CONSTRAINT_VIOLATION:
+    'Please check with foreign key constraint before you perform.',
 };
