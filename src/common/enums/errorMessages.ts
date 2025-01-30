@@ -15,4 +15,7 @@ export const errorMessages = {
   INVALID_TOKEN: 'Invalid Token. Please log in again!',
   TOKEN_EXPIRED: 'Your token has expired. Please log in again!',
   USER_CHANGED_PASSWORD: 'User recently changed password! Please log in again!',
+  FORBIDDEN: (message: string) => `Forbidden. ${message}`,
+  FOREIGN_KEY_CONSTRAINT_VIOLATION:
+    'Please check with foreign key constraint before you perform.',
 };

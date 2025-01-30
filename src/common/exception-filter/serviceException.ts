@@ -40,6 +40,14 @@ export class ServiceException extends Error {
         400,
         error,
       );
+    } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2003') {
+        return new ServiceException(
+          errorMessages.FOREIGN_KEY_CONSTRAINT_VIOLATION + message,
+          500,
+          error,
+        );
+      }
     } else {
       return new ServiceException(
         errorMessages.SERVER_ERROR + message,
