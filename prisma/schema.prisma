@@ -56,8 +56,8 @@ model Project {
   milestone       DateTime?
   createdAt       DateTime                @default(now()) @map("created_at")
   lastUpdatedAt   DateTime                @updatedAt @map("last_updated_at")
-  founder         User                    @relation(fields: [founderId], references: [id], name: "FounderProjects")
-  language        Language                @relation(fields: [languageCode], references: [code])
+  founder         User?                   @relation(fields: [founderId], references: [id], name: "FounderProjects", onDelete: SetNull)
+  language        Language?               @relation(fields: [languageCode], references: [code], onDelete: SetNull)
   users           User[]
   domainLabels    ProjectDomainLabel[]
   technicalLabels ProjectTechnicalLabel[]
@@ -107,8 +107,8 @@ model UserProfileTechnicalLabel {
 model ProjectDomainLabel {
   projectId Int         @map("project_id")
   labelName String      @map("label_name")
-  project   Project     @relation(fields: [projectId], references: [id])
-  label     DomainLabel @relation(fields: [labelName], references: [name])
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label     DomainLabel @relation(fields: [labelName], references: [name], onDelete: Cascade)
 
   @@id([projectId, labelName])
   @@map("project_domain_labels")
@@ -117,8 +117,8 @@ model ProjectDomainLabel {
 model ProjectTechnicalLabel {
   projectId Int            @map("project_id")
   labelName String         @map("label_name")
-  project   Project        @relation(fields: [projectId], references: [id])
-  label     TechnicalLabel @relation(fields: [labelName], references: [name])
+  project   Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  label     TechnicalLabel @relation(fields: [labelName], references: [name], onDelete: Cascade)
 
   @@id([projectId, labelName])
   @@map("project_technical_labels")
@@ -127,8 +127,8 @@ model ProjectTechnicalLabel {
 model Like {
   userId    Int     @map("user_id")
   projectId Int     @map("project_id")
-  user      User    @relation(fields: [userId], references: [id])
-  project   Project @relation(fields: [projectId], references: [id])
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@id([userId, projectId])
   @@map("likes")
@@ -138,9 +138,9 @@ model Involvement {
   userId    Int     @map("user_id")
   projectId Int     @map("project_id")
   roleName  String  @map("role_name")
-  user      User    @relation(fields: [userId], references: [id])
-  project   Project @relation(fields: [projectId], references: [id])
-  role      Role    @relation(fields: [roleName], references: [name])
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  role      Role?   @relation(fields: [roleName], references: [name], onDelete: SetNull)
 
   @@id([userId, projectId])
   @@map("involvements")
@@ -151,9 +151,9 @@ model JoinRequest {
   projectId Int               @map("project_id")
   roleName  String            @map("role_name")
   status    JoinRequestStatus @default(Pending)
-  user      User              @relation(fields: [userId], references: [id])
-  project   Project           @relation(fields: [projectId], references: [id])
-  role      Role              @relation(fields: [roleName], references: [name])
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  role      Role?             @relation(fields: [roleName], references: [name], onDelete: SetNull)
 
   @@id([userId, projectId])
   @@map("join_requests")
