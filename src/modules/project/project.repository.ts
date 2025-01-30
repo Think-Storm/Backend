@@ -15,12 +15,16 @@ export class ProjectRepository {
    * @returns A promise resolving to a Project object or null
    */
   async findProjectById(id: number): Promise<Project> {
-    return this.prisma.project.findUnique({
-      where: {
-        id: id,
-      },
-      include: { language: true, users: true, founder: true },
-    });
+    try {
+      return await this.prisma.project.findUnique({
+        where: {
+          id: id,
+        },
+        include: { language: true, users: true, founder: true },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(error.message, error);
+    }
   }
 
   /**
@@ -33,7 +37,7 @@ export class ProjectRepository {
     createProjectRequestDto: CreateProjectRequestDto,
   ): Promise<Project> {
     try {
-      return this.prisma.project.create({
+      return await this.prisma.project.create({
         data: {
           founderId: createProjectRequestDto.founderId,
           title: createProjectRequestDto.title,
@@ -82,6 +86,33 @@ export class ProjectRepository {
       throw ServiceException.EntityNotFoundException(
         errorMessages.ERROR_CREATING_PROJECT_IN_DB,
       );
+    }
+  }
+
+  /**
+   * Deletes a Project by id
+   * @param id - The id of the Project to delete
+   * @returns A promise resolving to a Project object or null
+   */
+  async deleteProjectById(id: number): Promise<Project> {
+    try {
+      return await this.prisma.project.delete({
+        where: {
+          id: id,
+        },
+        include: {
+          language: true,
+          users: true,
+          founder: true,
+          domainLabels: true,
+          technicalLabels: true,
+          like: true,
+          involvement: true,
+          joinRequest: true,
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(error.message, error);
     }
   }
 }

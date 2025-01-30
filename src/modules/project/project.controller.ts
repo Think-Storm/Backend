@@ -1,4 +1,14 @@
-import { Controller, Get, Param, HttpCode, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  HttpCode,
+  Post,
+  Body,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { GetProjectRequestDto } from './dtos/getProjectRequest.dto';
 import { ProjectResponseDto } from './dtos/projectResponse.dto';
@@ -10,6 +20,7 @@ import {
   ApiParam,
   ApiBody,
 } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 
 @ApiTags('projects')
 @Controller()
@@ -50,5 +61,26 @@ export class ProjectController {
   })
   async createProject(@Body() body: CreateProjectRequestDto) {
     return this.projectService.createProject(body);
+  }
+
+  @HttpCode(200)
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete project by ID' })
+  @ApiParam({ name: 'id', required: true, description: 'Project ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Delete project success',
+    type: ProjectResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Target project for deletion was not found',
+  })
+  @UseGuards(JwtAuthGuard)
+  async deleteProject(
+    @Param() deleteProjectDto: GetProjectRequestDto,
+    @Request() req,
+  ) {
+    return this.projectService.deleteProject(deleteProjectDto, req.user.id);
   }
 }

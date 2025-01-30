@@ -6,6 +6,7 @@ import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { UserService } from '../user/user.service';
+import { GetProjectRequestDto } from './dtos/getProjectRequest.dto';
 
 @Injectable()
 export class ProjectService {
@@ -44,5 +45,31 @@ export class ProjectService {
       await this.projectRepository.createProject(createProjectDto);
 
     return this.projectMapper.projectToProjectResponseDto(createdProject);
+  }
+
+  /**
+   * Deletes a project
+   * @param deleteProjectDto - The data transfer object for deleting a project
+   * @returns A promise resolving to a DeleteProjectResponseDto
+   */
+  async deleteProject(
+    deleteProjectDto: GetProjectRequestDto,
+    userId: number,
+  ): Promise<ProjectResponseDto> {
+    // Checks if project does exist
+    const foundProject = await this.getProjectById(deleteProjectDto.id);
+
+    // Authorization check in service layer
+    if (foundProject.founder.id !== userId) {
+      throw ServiceException.ForbiddenException(
+        errorMessages.FORBIDDEN('You are not the owner of this project'),
+      );
+    }
+
+    const deletedProject = await this.projectRepository.deleteProjectById(
+      deleteProjectDto.id,
+    );
+
+    return this.projectMapper.projectToProjectResponseDto(deletedProject);
   }
 }
