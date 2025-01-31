@@ -38,9 +38,9 @@ model UserProfile {
   website      String?
   interests    UserProfileDomainLabel[]
   skills       UserProfileTechnicalLabel[]
-  user         User                        @relation(fields: [userId], references: [id])
+  user         User                        @relation(fields: [userId], references: [id], onUpdate: Cascade)
   languages    UserProfileLanguage[]
-  role         Role?                        @relation(fields: [preferedRole], references: [name])
+  role         Role?                       @relation(fields: [preferedRole], references: [name], onUpdate: Cascade)
 
   @@map("user_profiles")
 }
@@ -56,8 +56,8 @@ model Project {
   milestone       DateTime?
   createdAt       DateTime                @default(now()) @map("created_at")
   lastUpdatedAt   DateTime                @updatedAt @map("last_updated_at")
-  founder         User                    @relation(fields: [founderId], references: [id], name: "FounderProjects")
-  language        Language                @relation(fields: [languageCode], references: [code])
+  founder         User                    @relation(fields: [founderId], references: [id], name: "FounderProjects", onUpdate: Cascade)
+  language        Language                @relation(fields: [languageCode], references: [code], onUpdate: Cascade)
   users           User[]
   domainLabels    ProjectDomainLabel[]
   technicalLabels ProjectTechnicalLabel[]
@@ -87,8 +87,8 @@ model DomainLabel {
 model UserProfileDomainLabel {
   userId      Int          @map("user_id")
   labelName   String       @map("label_name")
-  label       DomainLabel  @relation(fields: [labelName], references: [name])
-  userProfile UserProfile? @relation(fields: [userId], references: [userId])
+  label       DomainLabel  @relation(fields: [labelName], references: [name], onUpdate: Cascade)
+  userProfile UserProfile? @relation(fields: [userId], references: [userId], onUpdate: Cascade)
 
   @@id([userId, labelName])
   @@map("user_profile_domain_labels")
@@ -97,8 +97,8 @@ model UserProfileDomainLabel {
 model UserProfileTechnicalLabel {
   userId      Int            @map("user_id")
   labelName   String         @map("label_name")
-  label       TechnicalLabel @relation(fields: [labelName], references: [name])
-  userProfile UserProfile?   @relation(fields: [userId], references: [userId])
+  label       TechnicalLabel @relation(fields: [labelName], references: [name], onUpdate: Cascade)
+  userProfile UserProfile?   @relation(fields: [userId], references: [userId], onUpdate: Cascade)
 
   @@id([userId, labelName])
   @@map("user_profile_technical_labels")
@@ -107,8 +107,8 @@ model UserProfileTechnicalLabel {
 model ProjectDomainLabel {
   projectId Int         @map("project_id")
   labelName String      @map("label_name")
-  project   Project     @relation(fields: [projectId], references: [id])
-  label     DomainLabel @relation(fields: [labelName], references: [name])
+  project   Project     @relation(fields: [projectId], references: [id], onUpdate: Cascade)
+  label     DomainLabel @relation(fields: [labelName], references: [name], onUpdate: Cascade)
 
   @@id([projectId, labelName])
   @@map("project_domain_labels")
@@ -117,8 +117,8 @@ model ProjectDomainLabel {
 model ProjectTechnicalLabel {
   projectId Int            @map("project_id")
   labelName String         @map("label_name")
-  project   Project        @relation(fields: [projectId], references: [id])
-  label     TechnicalLabel @relation(fields: [labelName], references: [name])
+  project   Project        @relation(fields: [projectId], references: [id], onUpdate: Cascade)
+  label     TechnicalLabel @relation(fields: [labelName], references: [name], onUpdate: Cascade)
 
   @@id([projectId, labelName])
   @@map("project_technical_labels")
@@ -127,8 +127,8 @@ model ProjectTechnicalLabel {
 model Like {
   userId    Int     @map("user_id")
   projectId Int     @map("project_id")
-  user      User    @relation(fields: [userId], references: [id])
-  project   Project @relation(fields: [projectId], references: [id])
+  user      User    @relation(fields: [userId], references: [id], onUpdate: Cascade)
+  project   Project @relation(fields: [projectId], references: [id], onUpdate: Cascade)
 
   @@id([userId, projectId])
   @@map("likes")
@@ -138,9 +138,9 @@ model Involvement {
   userId    Int     @map("user_id")
   projectId Int     @map("project_id")
   roleName  String  @map("role_name")
-  user      User    @relation(fields: [userId], references: [id])
-  project   Project @relation(fields: [projectId], references: [id])
-  role      Role    @relation(fields: [roleName], references: [name])
+  user      User    @relation(fields: [userId], references: [id], onUpdate: Cascade)
+  project   Project @relation(fields: [projectId], references: [id], onUpdate: Cascade)
+  role      Role    @relation(fields: [roleName], references: [name], onUpdate: Cascade)
 
   @@id([userId, projectId])
   @@map("involvements")
@@ -151,9 +151,9 @@ model JoinRequest {
   projectId Int               @map("project_id")
   roleName  String            @map("role_name")
   status    JoinRequestStatus @default(Pending)
-  user      User              @relation(fields: [userId], references: [id])
-  project   Project           @relation(fields: [projectId], references: [id])
-  role      Role              @relation(fields: [roleName], references: [name])
+  user      User              @relation(fields: [userId], references: [id], onUpdate: Cascade)
+  project   Project           @relation(fields: [projectId], references: [id], onUpdate: Cascade)
+  role      Role              @relation(fields: [roleName], references: [name], onUpdate: Cascade)
 
   @@id([userId, projectId])
   @@map("join_requests")
@@ -184,8 +184,8 @@ model Role {
 model UserProfileLanguage {
   userId       Int          @map("user_id")
   languageCode LanguageCode @map("language_code")
-  language     Language     @relation(fields: [languageCode], references: [code])
-  userProfile  UserProfile? @relation(fields: [userId], references: [userId])
+  language     Language     @relation(fields: [languageCode], references: [code], onUpdate: Cascade)
+  userProfile  UserProfile? @relation(fields: [userId], references: [userId], onUpdate: Cascade)
 
   @@id([userId, languageCode])
   @@map("user_profile_languages")
