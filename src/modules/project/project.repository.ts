@@ -4,6 +4,7 @@ import { Project } from '@prisma/client';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
+import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
 
 @Injectable()
 export class ProjectRepository {
@@ -111,5 +112,67 @@ export class ProjectRepository {
         errorMessages.ERROR_CREATING_PROJECT_IN_DB,
       );
     }
+  }
+
+  /**
+   * Updates a project
+   * @param id - The id of the project to update
+   * @param updateProjectRequestDto - The data transfer object containing project update details
+   * @returns A promise resolving to the updated Project object
+   */
+  async updateProject(
+    updateProjectRequestDto: UpdateProjectRequestDto,
+  ): Promise<Project> {
+    return this.prisma.project.update({
+      where: { id: updateProjectRequestDto.id },
+      data: {
+        title: updateProjectRequestDto.title,
+        description: updateProjectRequestDto.description,
+        status: updateProjectRequestDto.status,
+        languageCode: updateProjectRequestDto.languageCode,
+        milestone: updateProjectRequestDto.milestone,
+        goal: updateProjectRequestDto.goal,
+        domainLabels: {
+          deleteMany: {},
+          create: updateProjectRequestDto.domainLabels.map((domainLabel) => ({
+            label: {
+              connect: {
+                name: domainLabel,
+              },
+            },
+          })),
+        },
+        technicalLabels: {
+          deleteMany: {},
+          create: updateProjectRequestDto.technicalLabels.map(
+            (technicalLabel) => ({
+              label: {
+                connect: {
+                  name: technicalLabel,
+                },
+              },
+            }),
+          ),
+        },
+      },
+      include: {
+        language: true,
+        users: true,
+        founder: true,
+        domainLabels: {
+          include: {
+            label: true,
+          },
+        },
+        technicalLabels: {
+          include: {
+            label: true,
+          },
+        },
+        like: true,
+        involvement: true,
+        joinRequest: true,
+      },
+    });
   }
 }
