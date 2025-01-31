@@ -15,21 +15,21 @@ import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
-import { JwtService } from '@nestjs/jwt';
-import { MockJwtService, mockJwtToken } from '../../../utils/jwt.utils';
+import { mockJwtToken } from '../../../utils/jwt.utils';
 import { defaultUserResponseDto } from '../../../utils/user.utils';
 import { createMockRequestWithUser } from '../../../utils/jwt.utils';
 import { JwtAuthGuard } from '../../../../src/modules/auth/jwt/jwt.guard';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
+import { ExecutionContext } from '@nestjs/common';
+import { createAuthHeader, mockGuardContext } from '../../../utils/auth.utils';
 
 describe('ProjectController', () => {
   let projectController: ProjectController;
   let projectService: ProjectService;
-  const prismaClient = new PrismaClient();
 
-  const setupTestModule = async (guardResponse: boolean) => {
+  const setupTestModule = async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prismaClient)],
+      imports: [PrismaModule.forTest(prisma)],
       controllers: [ProjectController],
       providers: [
         ProjectService,
@@ -41,21 +41,24 @@ describe('ProjectController', () => {
         UserService,
         UserRepository,
         UserMapper,
-        {
-          provide: JwtService,
-          useClass: MockJwtService,
-        },
       ],
     })
       .overrideGuard(JwtAuthGuard)
-      .useValue({ canActivate: () => guardResponse })
+      .useValue({
+        canActivate: (context: ExecutionContext) => {
+          context = mockGuardContext(defaultUserResponseDto);
+          const request = context.switchToHttp().getRequest();
+          request['user'] = { id: defaultUserResponseDto.id };
+          return true;
+        },
+      })
       .compile();
 
     return module;
   };
 
   beforeEach(async () => {
-    const app = await setupTestModule(true);
+    const app = await setupTestModule();
     projectController = app.get<ProjectController>(ProjectController);
     projectService = app.get<ProjectService>(ProjectService);
   });
@@ -95,6 +98,32 @@ describe('ProjectController', () => {
       expect(serviceSpy).toHaveBeenCalledTimes(1);
       expect(serviceSpy).toHaveBeenCalledWith(defaultCreateProjectDto);
       expect(response).toBe(defaultProjectResponseDto);
+    });
+  });
+
+  describe('updateProject function', () => {
+    it('should pass correct parameters to service when authenticated', async () => {
+      // Setup
+      const mockRequest = createMockRequestWithUser(
+        defaultUserResponseDto,
+      ) as any;
+      mockRequest.headers = createAuthHeader(mockJwtToken);
+
+      const serviceSpy = jest
+        .spyOn(projectService, 'updateProject')
+        .mockResolvedValue(defaultProjectResponseDto);
+
+      // Execute
+      await projectController.updateProject(
+        defaultUpdateProjectDto,
+        mockRequest,
+      );
+
+      // Verify correct parameters are passed
+      expect(serviceSpy).toHaveBeenCalledWith(
+        defaultUpdateProjectDto, // Body parameter
+        mockRequest.user.id, // User ID from request
+      );
     });
   });
 });
