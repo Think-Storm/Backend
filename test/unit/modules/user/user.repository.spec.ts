@@ -1,7 +1,7 @@
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
-import { defaultCreateUserDto } from './user.utils';
+import { defaultCreateUserDto } from '../../../utils/user.utils';
 import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';

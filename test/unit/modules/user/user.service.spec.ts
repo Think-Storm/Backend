@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserService } from '../../../../src/modules/user/user.service';
-import { defaultCreateUserDto, defaultUser } from './user.utils';
+import { defaultCreateUserDto, defaultUser } from '../../../utils/user.utils';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';

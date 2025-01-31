@@ -3,7 +3,11 @@ import { ProjectController } from '../../../../src/modules/project/project.contr
 import { ProjectService } from '../../../../src/modules/project/project.service';
 import { ProjectRepository } from '../../../../src/modules/project/project.repository';
 import { ProjectMapper } from '../../../../src/modules/project/dtos/project.mapper';
-import { ProjectTestUtils } from './project.utils';
+import {
+  defaultCreateProjectDto,
+  defaultProjectResponseDto,
+  defaultUpdateProjectDto,
+} from '../../../utils/project.utils';
 import { ConfigService } from '@nestjs/config';
 import prisma from '../../../../src/prisma/prisma.client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
@@ -11,32 +15,49 @@ import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
+import { JwtService } from '@nestjs/jwt';
+import { MockJwtService, mockJwtToken } from '../../../utils/jwt.utils';
+import { defaultUserResponseDto } from '../../../utils/user.utils';
+import { createMockRequestWithUser } from '../../../utils/jwt.utils';
+import { JwtAuthGuard } from '../../../../src/modules/auth/jwt/jwt.guard';
+import { PrismaService } from '../../../../src/prisma/prisma.service';
 
 describe('ProjectController', () => {
   let projectController: ProjectController;
   let projectService: ProjectService;
-  let projectTestUtils: ProjectTestUtils;
+  const prismaClient = new PrismaClient();
 
-  beforeEach(async () => {
-    const app: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prisma)],
+  const setupTestModule = async (guardResponse: boolean) => {
+    const module: TestingModule = await Test.createTestingModule({
+      imports: [PrismaModule.forTest(prismaClient)],
       controllers: [ProjectController],
       providers: [
         ProjectService,
+        PrismaService,
         ProjectRepository,
         ProjectMapper,
-        ProjectTestUtils,
         ConfigService,
         PasswordEncryption,
         UserService,
         UserRepository,
         UserMapper,
+        {
+          provide: JwtService,
+          useClass: MockJwtService,
+        },
       ],
-    }).compile();
+    })
+      .overrideGuard(JwtAuthGuard)
+      .useValue({ canActivate: () => guardResponse })
+      .compile();
 
+    return module;
+  };
+
+  beforeEach(async () => {
+    const app = await setupTestModule(true);
     projectController = app.get<ProjectController>(ProjectController);
     projectService = app.get<ProjectService>(ProjectService);
-    projectTestUtils = app.get<ProjectTestUtils>(ProjectTestUtils);
   });
 
   afterEach(() => {
@@ -48,17 +69,15 @@ describe('ProjectController', () => {
       // Mock service function
       const serviceSpy = jest
         .spyOn(projectService, 'getProjectById')
-        .mockResolvedValue(projectTestUtils.defaultProjectResponseDto);
+        .mockResolvedValue(defaultProjectResponseDto);
 
       const response = await projectController.getProjectById({
-        id: projectTestUtils.defaultProjectResponseDto.id,
+        id: defaultProjectResponseDto.id,
       });
 
       expect(serviceSpy).toHaveBeenCalledTimes(1);
-      expect(serviceSpy).toHaveBeenCalledWith(
-        projectTestUtils.defaultProjectResponseDto.id,
-      );
-      expect(response).toBe(projectTestUtils.defaultProjectResponseDto);
+      expect(serviceSpy).toHaveBeenCalledWith(defaultProjectResponseDto.id);
+      expect(response).toBe(defaultProjectResponseDto);
     });
   });
 
@@ -67,17 +86,15 @@ describe('ProjectController', () => {
       // Mock service function
       const serviceSpy = jest
         .spyOn(projectService, 'createProject')
-        .mockResolvedValue(projectTestUtils.defaultProjectResponseDto);
+        .mockResolvedValue(defaultProjectResponseDto);
 
       const response = await projectController.createProject(
-        projectTestUtils.defaultCreateProjectDto,
+        defaultCreateProjectDto,
       );
 
       expect(serviceSpy).toHaveBeenCalledTimes(1);
-      expect(serviceSpy).toHaveBeenCalledWith(
-        projectTestUtils.defaultCreateProjectDto,
-      );
-      expect(response).toBe(projectTestUtils.defaultProjectResponseDto);
+      expect(serviceSpy).toHaveBeenCalledWith(defaultCreateProjectDto);
+      expect(response).toBe(defaultProjectResponseDto);
     });
   });
 });

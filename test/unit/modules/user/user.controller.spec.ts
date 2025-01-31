@@ -4,7 +4,7 @@ import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
-import { defaultUserResponseDto } from './user.utils';
+import { defaultUserResponseDto } from '../../../utils/user.utils';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import prisma from '../../../../src/prisma/prisma.client';

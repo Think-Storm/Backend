@@ -2,13 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserModule } from '../../src/modules/user/user.module';
-import {
-  defaultCreateUserDto,
-  loginUserDto,
-} from '../unit/modules/user/user.utils';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { ServiceException } from '../../src/common/exception-filter/serviceException';
 import { PrismaModule } from '../../src/prisma/prisma.module';
+import { defaultLoginUserDto } from '../utils/auth.utils';
+import { defaultCreateUserDto } from '../utils/user.utils';
 import prisma from '../../src/prisma/prisma.client';
 import { ConfigService } from '@nestjs/config';
 import { AuthModule } from '../../src/modules/auth/auth.module';
@@ -144,7 +142,7 @@ describe('/', () => {
 
       const response = await request(app.getHttpServer())
         .post('/login')
-        .send(loginUserDto)
+        .send(defaultLoginUserDto)
         .expect(200);
 
       // contain bearer token and jwt token
@@ -155,7 +153,7 @@ describe('/', () => {
     it('should return a 400 if email field is missing', async () => {
       await request(app.getHttpServer())
         .post('/login')
-        .send({ password: loginUserDto.password })
+        .send({ password: defaultLoginUserDto.password })
         .expect(400)
         .expect({
           statusCode: 400,
@@ -166,7 +164,7 @@ describe('/', () => {
     it('should return a 400 if password field is missing', async () => {
       await request(app.getHttpServer())
         .post('/login')
-        .send({ email: loginUserDto.email })
+        .send({ email: defaultLoginUserDto.email })
         .expect(400)
         .expect({
           statusCode: 400,
@@ -179,7 +177,7 @@ describe('/', () => {
         .post('/login')
         .send({
           email: 'nonexistuser@email.com',
-          password: loginUserDto.password,
+          password: defaultLoginUserDto.password,
         })
         .expect(401)
         .expect({
@@ -191,7 +189,10 @@ describe('/', () => {
     it('should return a 401 if password is incorrect', async () => {
       await request(app.getHttpServer())
         .post('/login')
-        .send({ email: loginUserDto.email, password: 'incorrectPassword' })
+        .send({
+          email: defaultLoginUserDto.email,
+          password: 'incorrectPassword',
+        })
         .expect(401)
         .expect({
           statusCode: 401,
