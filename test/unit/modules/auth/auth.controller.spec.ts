@@ -6,7 +6,7 @@ import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import {
   defaultCreateUserDto,
   defaultUserResponseDto,
-} from '../user/user.utils';
+} from '../../../utils/user.utils';
 import { AuthController } from '../../../../src/modules/auth/auth.controller';
 import { AuthService } from '../../../../src/modules/auth/auth.service';
 import RequestWithUser from '../../../../src/modules/auth/local/requestWithUser.interface';

@@ -3,7 +3,7 @@ import { ExecutionContext } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
-import { defaultUser } from '../../user/user.utils';
+import { defaultUser } from '../../../../utils/user.utils';
 import { AuthService } from '../../../../../src/modules/auth/auth.service';
 import { UserRepository } from '../../../../../src/modules/user/user.repository';
 import { ServiceException } from '../../../../../src/common/exception-filter/serviceException';

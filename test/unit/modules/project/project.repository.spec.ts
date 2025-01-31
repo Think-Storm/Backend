@@ -1,11 +1,14 @@
 import { ProjectRepository } from '../../../../src/modules/project/project.repository';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ProjectTestUtils } from './project.utils';
-import { defaultCreateUserDto } from '../user/user.utils';
+import {
+  createProjectInDB,
+  defaultCreateProjectDto,
+} from '../../../utils/project.utils';
+import prisma from '../../../../src/prisma/prisma.client';
+import { defaultCreateUserDto } from '../../../utils/user.utils';
 import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
 import { Project } from '@prisma/client';
-import prisma from '../../../../src/prisma/prisma.client';
 import { ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
@@ -15,24 +18,17 @@ describe('ProjectRepository', () => {
   let prismaService: PrismaService;
   let projectRepository: ProjectRepository;
   let userRepository: UserRepository;
-  let projectTestUtils: ProjectTestUtils;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [PrismaModule.forTest(prisma)],
 
-      providers: [
-        ProjectRepository,
-        UserRepository,
-        ProjectTestUtils,
-        ConfigService,
-      ],
+      providers: [ProjectRepository, UserRepository, ConfigService],
     }).compile();
 
     prismaService = module.get<PrismaService>(PrismaService);
     projectRepository = module.get<ProjectRepository>(ProjectRepository);
     userRepository = module.get<UserRepository>(UserRepository);
-    projectTestUtils = module.get<ProjectTestUtils>(ProjectTestUtils);
 
     await prismaService.$connect();
     await refreshDatabase();
@@ -45,10 +41,22 @@ describe('ProjectRepository', () => {
 
   describe('findProjectById function', () => {
     it('should retrieve a project in DB with id', async () => {
+      // Create a founder User
+      const user = await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+
+      // Add founderId to the project DTO
+      const createProjectDto = {
+        ...defaultCreateProjectDto,
+        founderId: user.id,
+      };
+
       // Create a Project in DB
-      const insertedProject = await projectTestUtils.createProjectInDB(
+      const insertedProject = await createProjectInDB(
         prismaService,
-        userRepository,
+        createProjectDto,
       );
 
       // Retrieve the created Project by ID
@@ -60,10 +68,22 @@ describe('ProjectRepository', () => {
     });
 
     it('should not retrieve a project in DB if there is no project with id', async () => {
+      // Create a founder User
+      const user = await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+
+      // Add founderId to the project DTO
+      const createProjectDto = {
+        ...defaultCreateProjectDto,
+        founderId: user.id,
+      };
+
       // Create a Project in DB
-      const insertedProject = await projectTestUtils.createProjectInDB(
+      const insertedProject = await createProjectInDB(
         prismaService,
-        userRepository,
+        createProjectDto,
       );
 
       const findProjectByIdResponse: Project | null =
@@ -81,7 +101,7 @@ describe('ProjectRepository', () => {
       );
 
       // Add founderId
-      const createProjectDto = projectTestUtils.defaultCreateProjectDto;
+      const createProjectDto = defaultCreateProjectDto;
       createProjectDto.founderId = user.id;
       const createdProject =
         await projectRepository.createProject(createProjectDto);

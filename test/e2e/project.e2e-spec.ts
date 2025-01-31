@@ -2,7 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { ProjectTestUtils } from '../unit/modules/project/project.utils';
+import {
+  createProjectInDB,
+  defaultCreateProjectDto,
+  defaultUpdateProjectDto,
+} from '../utils/project.utils';
+import { createUserInDB } from '../utils/user.utils';
+import { defaultCreateUserDto } from '../utils/user.utils';
 import { ProjectModule } from '../../src/modules/project/project.module';
 import { ServiceException } from '../../src/common/exception-filter/serviceException';
 import { PrismaModule } from '../../src/prisma/prisma.module';
@@ -10,23 +16,18 @@ import prisma from '../../src/prisma/prisma.client';
 import { ConfigService } from '@nestjs/config';
 import { AuthModule } from '../../src/modules/auth/auth.module';
 import refreshDatabase from '../../src/prisma/prisma.dbreset';
-import { UserRepository } from '../../src/modules/user/user.repository';
 
 describe('/projects', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
-  let userRepository: UserRepository;
-  let projectTestUtils: ProjectTestUtils;
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [ProjectModule, AuthModule, PrismaModule.forTest(prisma)],
-      providers: [ProjectTestUtils, ConfigService],
+      providers: [ConfigService],
     }).compile();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
-    projectTestUtils = moduleFixture.get<ProjectTestUtils>(ProjectTestUtils);
-    userRepository = moduleFixture.get<UserRepository>(UserRepository);
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -58,12 +59,13 @@ describe('/projects', () => {
   describe('/ POST (Create Project)', () => {
     it('should return a 201 if everything is fine', async () => {
       // Create User and Language in DB
-      const createdProject = await projectTestUtils.createProjectInDB(
+      await createUserInDB(prismaService, defaultCreateUserDto);
+      const createdProject = await createProjectInDB(
         prismaService,
-        userRepository,
+        defaultCreateProjectDto,
       );
 
-      const createProjectRequest = projectTestUtils.defaultCreateProjectDto;
+      const createProjectRequest = defaultCreateProjectDto;
       createProjectRequest.founderId = createdProject.founderId;
       createProjectRequest.languageCode = createdProject.languageCode;
 
@@ -77,7 +79,7 @@ describe('/projects', () => {
       // No previous creation of User, so the project should be refused
       return request(app.getHttpServer())
         .post('/')
-        .send(projectTestUtils.defaultCreateProjectDto)
+        .send(defaultCreateProjectDto)
         .expect(404);
     });
   });
@@ -85,9 +87,10 @@ describe('/projects', () => {
   describe('/:id GET (Get Project By Id)', () => {
     it('should return a 200 if everything is fine', async () => {
       // Create Project in DB
-      const createdProject = await projectTestUtils.createProjectInDB(
+      await createUserInDB(prismaService, defaultCreateUserDto);
+      const createdProject = await createProjectInDB(
         prismaService,
-        userRepository,
+        defaultCreateProjectDto,
       );
 
       // fetch Project that has be created
