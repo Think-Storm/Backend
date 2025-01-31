@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   createProjectInDB,
   defaultCreateProjectDto,
+  defaultUpdateProjectDto,
 } from '../../../utils/project.utils';
 import prisma from '../../../../src/prisma/prisma.client';
 import { defaultCreateUserDto } from '../../../utils/user.utils';
@@ -13,6 +14,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import refreshDatabase from '../../../../src/prisma/prisma.dbreset';
+import { ProjectWithLabels } from '../../../../src/modules/project/types/project.types';
 
 describe('ProjectRepository', () => {
   let prismaService: PrismaService;
@@ -119,6 +121,51 @@ describe('ProjectRepository', () => {
       expect(createdProject.milestone).toStrictEqual(
         createProjectDto.milestone,
       );
+    });
+  });
+
+  describe('updateProject function', () => {
+    it('should update a project in DB', async () => {
+      // Create a founder User
+      await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+
+      // Create a Project in DB
+      await createProjectInDB(prismaService, defaultCreateProjectDto);
+
+      // Update the Project using a domain label from seed data
+      const updatedProject = (await projectRepository.updateProject(
+        defaultUpdateProjectDto,
+      )) as ProjectWithLabels;
+
+      expect(updatedProject).not.toBeNull();
+      expect(updatedProject).toHaveProperty('id');
+      expect(updatedProject.createdAt).toBeDefined();
+      expect(updatedProject.lastUpdatedAt).toBeDefined();
+      expect(updatedProject.founderId).toBe(defaultUpdateProjectDto.founderId);
+      expect(updatedProject.description).toBe(
+        defaultUpdateProjectDto.description,
+      );
+      expect(updatedProject.goal).toBe(defaultUpdateProjectDto.goal);
+      expect(updatedProject.language.code).toBe(
+        defaultUpdateProjectDto.languageCode,
+      );
+      expect(updatedProject.title).toBe(defaultUpdateProjectDto.title);
+      expect(updatedProject.status).toBe(defaultUpdateProjectDto.status);
+      expect(updatedProject.milestone).toStrictEqual(
+        defaultUpdateProjectDto.milestone,
+      );
+
+      expect(updatedProject.domainLabels).toBeDefined();
+      expect(updatedProject.technicalLabels).toBeDefined();
+      expect(
+        updatedProject.domainLabels.map((dl) => dl.label.name).sort(),
+      ).toStrictEqual(defaultUpdateProjectDto.domainLabels.sort());
+      expect(
+        updatedProject.technicalLabels.map((tl) => tl.label.name).sort(),
+      ).toStrictEqual(defaultUpdateProjectDto.technicalLabels.sort());
     });
   });
 });
