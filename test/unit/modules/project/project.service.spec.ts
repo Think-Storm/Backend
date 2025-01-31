@@ -7,6 +7,7 @@ import {
   defaultCreateProjectDto,
   defaultProject,
   defaultProjectResponseDto,
+  defaultUpdateProjectDto,
 } from '../../../utils/project.utils';
 import prisma from '../../../../src/prisma/prisma.client';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
@@ -18,6 +19,7 @@ import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
+import { LanguageName } from '@prisma/client';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
@@ -122,6 +124,106 @@ describe('ProjectService', () => {
 
       expect(dbSpy).toHaveBeenCalledTimes(1);
       expect(dbSpy).toHaveBeenCalledWith(defaultCreateProjectDto);
+    });
+  });
+
+  describe('updateProject', () => {
+    it('should throw an 404 exception if project with id is not found', async () => {
+      // Mock call to DB not to return a Project
+      const spy = jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(null);
+
+      try {
+        await projectService.updateProject(
+          defaultUpdateProjectDto,
+          defaultUser.id,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toContain(
+          errorMessages.ENTITY_NOT_FOUND(
+            'Project',
+            defaultUpdateProjectDto.id.toString(),
+          ),
+        );
+      }
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(defaultUpdateProjectDto.id);
+    });
+
+    it('should throw an 403 exception if the user is not the owner of the project', async () => {
+      // Mock call to DB to return a Project
+      const spy = jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultProject);
+
+      try {
+        await projectService.updateProject(defaultUpdateProjectDto, 999);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toContain(
+          errorMessages.FORBIDDEN('You are not the owner of this project'),
+        );
+      }
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(defaultUpdateProjectDto.id);
+    });
+
+    it('should update a project if the user is the owner of the project', async () => {
+      // Mock call to DB to return a Project
+      const mockProject = {
+        ...defaultProject,
+        language: {
+          code: defaultProject.languageCode,
+          name: LanguageName.English,
+          createdAt: new Date(),
+          lastUpdatedAt: new Date(),
+        },
+        users: [],
+        domainLabels: [],
+        technicalLabels: [],
+        founderId: defaultUpdateProjectDto.founderId,
+        founder: defaultUser,
+      };
+
+      const spy = jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(mockProject);
+
+      const dbSpy = jest
+        .spyOn(projectRepository, 'updateProject')
+        .mockResolvedValue(mockProject);
+
+      const expectedResponseDto = {
+        ...defaultProjectResponseDto,
+        domainLabels: [],
+        technicalLabels: [],
+        users: [],
+        language: {
+          code: defaultProject.languageCode,
+          name: LanguageName.English,
+          createdAt: expect.any(Date),
+          lastUpdatedAt: expect.any(Date),
+        },
+        founder: defaultUser,
+      };
+
+      const projectResponseDto = await projectService.updateProject(
+        defaultUpdateProjectDto,
+        defaultUser.id,
+      );
+
+      // Checking the mapper
+      expect(projectResponseDto).toEqual(expectedResponseDto);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(defaultUpdateProjectDto.id);
+
+      expect(dbSpy).toHaveBeenCalledTimes(1);
+      expect(dbSpy).toHaveBeenCalledWith(defaultUpdateProjectDto);
     });
   });
 });
