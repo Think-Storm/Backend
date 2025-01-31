@@ -6,7 +6,7 @@ import {
   defaultCreateUserDto,
   defaultUser,
   defaultUserResponseDto,
-} from '../user/user.utils';
+} from '../../../utils/user.utils';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';

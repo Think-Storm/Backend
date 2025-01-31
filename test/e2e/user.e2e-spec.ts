@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserModule } from '../../src/modules/user/user.module';
-import { defaultCreateUserDto } from '../unit/modules/user/user.utils';
+import { defaultCreateUserDto } from '../utils/user.utils';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { ServiceException } from '../../src/common/exception-filter/serviceException';
 import prisma from '../../src/prisma/prisma.client';
@@ -14,7 +14,6 @@ import { AuthModule } from '../../src/modules/auth/auth.module';
 describe('/users', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
-
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [UserModule, AuthModule, PrismaModule.forTest(prisma)],
@@ -22,7 +21,6 @@ describe('/users', () => {
     }).compile();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
-
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
       new ValidationPipe({
