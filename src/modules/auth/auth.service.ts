@@ -1,7 +1,7 @@
 import { Injectable, Res } from '@nestjs/common';
 import { Response } from 'express';
 import { PasswordEncryption } from '../../common/passwordEncryption';
-import { errorMessages } from '../../../src/common/enums/errorMessages';
+import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
 import { JwtService } from '@nestjs/jwt';
 import { UserResponseDto } from '../user/dtos/userResponse.dto';
