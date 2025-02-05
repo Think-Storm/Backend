@@ -6,6 +6,7 @@ import { ProjectModule } from './modules/project/project.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -34,5 +35,6 @@ import { JwtModule } from '@nestjs/jwt';
       },
     ]),
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
