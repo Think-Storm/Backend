@@ -7,28 +7,49 @@ import {
   defaultCreateProjectDto,
   defaultProject,
   defaultProjectResponseDto,
+  defaultSearchProjectDto,
   defaultUpdateProjectDto,
+  secondProject,
+  secondProjectResponseDto,
 } from '../../../utils/project.utils';
 import prisma from '../../../../src/prisma/prisma.client';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { defaultUser } from '../../../utils/user.utils';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
-import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
+import { PasswordEncryption } from '../../../../src/common/encryption/passwordEncryption';
 import { LanguageName } from '@prisma/client';
+import { ProjectResponseDto } from '../../../../src/modules/project/dtos/projectResponse.dto';
+import { RedisService } from '../../../../src/common/caching/redisCaching.service';
+import { CacheModule } from '@nestjs/cache-manager';
+import { cachingConfig } from '../../../../src/common/redis/redis.config';
+import * as redisStore from 'cache-manager-ioredis';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
   let projectRepository: ProjectRepository;
+  let projectMapper: ProjectMapper;
   let userService: UserService;
+  let redisService: RedisService;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prisma)],
+      imports: [
+        ConfigModule,
+        PrismaModule.forTest(prisma),
+        CacheModule.registerAsync({
+          imports: [ConfigModule],
+          useFactory: (config: ConfigService) => ({
+            store: redisStore,
+            ...cachingConfig(config),
+          }),
+          inject: [ConfigService],
+        }),
+      ],
       controllers: [ProjectController],
       providers: [
         ProjectService,
@@ -39,16 +60,90 @@ describe('ProjectService', () => {
         UserService,
         UserRepository,
         UserMapper,
+        RedisService,
       ],
     }).compile();
 
     projectService = module.get<ProjectService>(ProjectService);
     projectRepository = module.get<ProjectRepository>(ProjectRepository);
+    projectMapper = module.get<ProjectMapper>(ProjectMapper);
     userService = module.get<UserService>(UserService);
+    redisService = module.get<RedisService>(RedisService);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.clearAllMocks();
+    await redisService.flushDb();
+  });
+
+  afterAll(async () => {
+    await redisService.flushDb();
+  });
+
+  describe('searchProjects', () => {
+    it('should return a right project if searched projects with the queries exist', async () => {
+      const defaultSearchedResults: ProjectResponseDto[] = [
+        defaultProjectResponseDto,
+      ];
+      // Mock call to DB to return Projects
+      const spy = jest
+        .spyOn(projectRepository, 'searchProjects')
+        .mockResolvedValue([defaultProject]);
+
+      // Mock call to project mapper to return ProjectResponseDtos
+      const transformToDtoSpy = jest
+        .spyOn(projectMapper, 'projectsToProjectResponseDtos')
+        .mockReturnValue([defaultProjectResponseDto]);
+
+      const searchedProjects = await projectService.searchProjects(
+        defaultSearchProjectDto,
+      );
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(defaultSearchProjectDto, []);
+      expect(transformToDtoSpy).toHaveBeenCalledTimes(1);
+      // eslint-disable-next-line prettier/prettier
+      expect(transformToDtoSpy).toHaveBeenCalledWith([defaultProject]);
+      expect(searchedProjects).toStrictEqual(defaultSearchedResults);
+    });
+
+    it('should return right projects if searched projects with the queries exist', async () => {
+      const defaultSearchedResults: ProjectResponseDto[] = [
+        defaultProjectResponseDto,
+        secondProjectResponseDto,
+      ];
+      // Mock call to DB to return Projects
+      const spy = jest
+        .spyOn(projectRepository, 'searchProjects')
+        .mockResolvedValue([defaultProject, secondProject]);
+
+      // Mock call to project mapper to return ProjectResponseDtos
+      const transformToDtoSpy = jest
+        .spyOn(projectMapper, 'projectsToProjectResponseDtos')
+        .mockReturnValue([defaultProjectResponseDto, secondProjectResponseDto]);
+
+      const bothSearchProjectQuery = defaultSearchProjectDto;
+      bothSearchProjectQuery.technicalLabels = 'AWS,NestJS';
+      bothSearchProjectQuery.domainLabels = undefined;
+      bothSearchProjectQuery.title = undefined;
+      bothSearchProjectQuery.languageCode = undefined;
+      bothSearchProjectQuery.description = undefined;
+      bothSearchProjectQuery.status = undefined;
+      bothSearchProjectQuery.goal = undefined;
+      bothSearchProjectQuery.page = 1;
+      bothSearchProjectQuery.limit = 10;
+
+      const searchedProjects = await projectService.searchProjects(
+        bothSearchProjectQuery,
+      );
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(defaultSearchProjectDto, []);
+      expect(transformToDtoSpy).toHaveBeenCalledTimes(1);
+      // eslint-disable-next-line prettier/prettier
+      expect(transformToDtoSpy).toHaveBeenCalledWith([defaultProject, secondProject]);
+      expect(searchedProjects).toStrictEqual(defaultSearchedResults);
+    });
   });
 
   describe('getProjectById', () => {
