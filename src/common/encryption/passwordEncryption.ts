@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt';
-import { passwordSaltRounds } from './consts';
 import { User } from '@prisma/client';
+import { passwordSaltRounds } from '../consts';
 
 export class PasswordEncryption {
   async createSaltAndHashedPassword(password: string) {

@@ -1,6 +1,5 @@
 import { Injectable, Res } from '@nestjs/common';
 import { Response } from 'express';
-import { PasswordEncryption } from '../../common/passwordEncryption';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
 import { JwtService } from '@nestjs/jwt';
@@ -9,6 +8,7 @@ import { DAY_TO_MILISECONDS_RATIO } from '../../common/consts';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { UserMapper } from './../user/dtos/user.mapper';
 import { UserService } from './../user/user.service';
+import { PasswordEncryption } from '../../common/encryption/passwordEncryption';
 
 @Injectable()
 export class AuthService {
