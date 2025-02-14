@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { ProjectRepository } from './project.repository';
 import { ProjectMapper } from './dtos/project.mapper';
 import { ProjectResponseDto } from './dtos/projectResponse.dto';
@@ -7,6 +7,11 @@ import { ServiceException } from '../../common/exception-filter/serviceException
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { UserService } from '../user/user.service';
 import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
+import { SearchProjectDto } from './dtos/searchProject.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { ConfigService } from '@nestjs/config';
+import { RedisService } from '../../common/caching/redisCaching.service';
 
 @Injectable()
 export class ProjectService {
@@ -14,6 +19,9 @@ export class ProjectService {
     private projectRepository: ProjectRepository,
     private projectMapper: ProjectMapper,
     private readonly userService: UserService,
+    private readonly configService: ConfigService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    private redisService: RedisService,
   ) {}
 
   /**
@@ -44,6 +52,9 @@ export class ProjectService {
     const createdProject =
       await this.projectRepository.createProject(createProjectDto);
 
+    //cache invalidation
+    await this.redisService.flushDb();
+
     return this.projectMapper.projectToProjectResponseDto(createdProject);
   }
 
@@ -72,6 +83,63 @@ export class ProjectService {
     }
 
     const updatedProject = await this.projectRepository.updateProject(body);
+
+    //cache invalidation
+    await this.redisService.flushDb();
+
     return this.projectMapper.projectToProjectResponseDto(updatedProject);
+  }
+
+  /**
+   * Search projects by query
+   * @param searchProjectDto - The data transfer object for searching projects
+   * @returns A promise resolving to a ProjectResponseDto
+   */
+  async searchProjects(
+    searchProjectDto: SearchProjectDto,
+  ): Promise<ProjectResponseDto[]> {
+    let searchResult = undefined;
+    const cacheKey = JSON.stringify(searchProjectDto); // Key to uniquely identify the cached result
+
+    // Try to get the cached result
+    const cachedResult = await this.cacheManager.get(cacheKey);
+    if (cachedResult) {
+      searchResult = cachedResult; // If data is found in cache, save data in searchResult
+    } else {
+      // If not found in cache, perform the actual search
+      //extract sorting conditions from query string
+      const sortByArr = [];
+      if (searchProjectDto.sort) {
+        const sortByString = searchProjectDto.sort.split(',');
+        for (const sortCondition of sortByString) {
+          const sortByObject = {};
+          const condition = sortCondition.split('=')[0];
+          const value = sortCondition.split('=')[1];
+          sortByObject[condition] = value;
+          sortByArr.push(sortByObject);
+        }
+      }
+
+      //Get searched Projects from repository
+      const searchedProjects = await this.projectRepository.searchProjects(
+        searchProjectDto,
+        sortByArr,
+      );
+
+      // Store the search results in cache with a TTL of 3600 seconds (1 hour)
+      await this.cacheManager.set(
+        cacheKey,
+        searchedProjects,
+        Number(this.configService.get<number>('REDIS_CACHING_TTL')),
+      );
+      await this.redisService.set(
+        cacheKey,
+        searchedProjects,
+        Number(this.configService.get<number>('REDIS_CACHING_TTL')),
+      );
+      searchResult = searchedProjects;
+    }
+
+    return this.projectMapper.projectsToProjectResponseDtos(searchResult);
   }
 }

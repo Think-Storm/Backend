@@ -61,4 +61,18 @@ export class ProjectMapper {
       excludeExtraneousValues: true,
     });
   }
+
+  /**
+   * Maps a Project entity to a ProjectResponseDto[]
+   * @param project - The Project entity to be mapped
+   * @returns A ProjectResponseDto with the mapped data
+   */
+  @ApiProperty({ type: ProjectResponseDto })
+  projectsToProjectResponseDtos(projects: Project[]): ProjectResponseDto[] {
+    return projects.map((project) =>
+      plainToInstance(ProjectResponseDto, instanceToPlain(project), {
+        excludeExtraneousValues: true,
+      }),
+    );
+  }
 }

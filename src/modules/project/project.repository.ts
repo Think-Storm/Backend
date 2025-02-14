@@ -5,6 +5,7 @@ import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
+import { SearchProjectDto } from './dtos/searchProject.dto';
 
 @Injectable()
 export class ProjectRepository {
@@ -16,28 +17,35 @@ export class ProjectRepository {
    * @returns A promise resolving to a Project object or null
    */
   async findProjectById(id: number): Promise<Project> {
-    return this.prisma.project.findUnique({
-      where: {
-        id: id,
-      },
-      include: {
-        language: true,
-        users: {
-          omit: {
-            password: true,
-            passwordSalt: true,
-            passwordChangedAt: true,
+    try {
+      return await this.prisma.project.findUnique({
+        where: {
+          id: id,
+        },
+        include: {
+          language: true,
+          users: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
+          founder: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
           },
         },
-        founder: {
-          omit: {
-            password: true,
-            passwordSalt: true,
-            passwordChangedAt: true,
-          },
-        },
-      },
-    });
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_FINDING_PROJECTS,
+        error,
+      );
+    }
   }
 
   /**
@@ -50,7 +58,7 @@ export class ProjectRepository {
     createProjectRequestDto: CreateProjectRequestDto,
   ): Promise<Project> {
     try {
-      return this.prisma.project.create({
+      return await this.prisma.project.create({
         data: {
           founderId: createProjectRequestDto.founderId,
           title: createProjectRequestDto.title,
@@ -108,8 +116,9 @@ export class ProjectRepository {
         },
       });
     } catch (error) {
-      throw ServiceException.EntityNotFoundException(
+      throw ServiceException.ErrorException(
         errorMessages.ERROR_CREATING_PROJECT_IN_DB,
+        error,
       );
     }
   }
@@ -123,56 +132,143 @@ export class ProjectRepository {
   async updateProject(
     updateProjectRequestDto: UpdateProjectRequestDto,
   ): Promise<Project> {
-    return this.prisma.project.update({
-      where: { id: updateProjectRequestDto.id },
-      data: {
-        title: updateProjectRequestDto.title,
-        description: updateProjectRequestDto.description,
-        status: updateProjectRequestDto.status,
-        languageCode: updateProjectRequestDto.languageCode,
-        milestone: updateProjectRequestDto.milestone,
-        goal: updateProjectRequestDto.goal,
-        domainLabels: {
-          deleteMany: {},
-          create: updateProjectRequestDto.domainLabels.map((domainLabel) => ({
-            label: {
-              connect: {
-                name: domainLabel,
-              },
-            },
-          })),
-        },
-        technicalLabels: {
-          deleteMany: {},
-          create: updateProjectRequestDto.technicalLabels.map(
-            (technicalLabel) => ({
+    try {
+      return await this.prisma.project.update({
+        where: { id: updateProjectRequestDto.id },
+        data: {
+          title: updateProjectRequestDto.title,
+          description: updateProjectRequestDto.description,
+          status: updateProjectRequestDto.status,
+          languageCode: updateProjectRequestDto.languageCode,
+          milestone: updateProjectRequestDto.milestone,
+          goal: updateProjectRequestDto.goal,
+          domainLabels: {
+            deleteMany: {},
+            create: updateProjectRequestDto.domainLabels.map((domainLabel) => ({
               label: {
                 connect: {
-                  name: technicalLabel,
+                  name: domainLabel,
                 },
               },
-            }),
-          ),
-        },
-      },
-      include: {
-        language: true,
-        users: true,
-        founder: true,
-        domainLabels: {
-          include: {
-            label: true,
+            })),
+          },
+          technicalLabels: {
+            deleteMany: {},
+            create: updateProjectRequestDto.technicalLabels.map(
+              (technicalLabel) => ({
+                label: {
+                  connect: {
+                    name: technicalLabel,
+                  },
+                },
+              }),
+            ),
           },
         },
-        technicalLabels: {
-          include: {
-            label: true,
+        include: {
+          language: true,
+          users: true,
+          founder: true,
+          domainLabels: {
+            include: {
+              label: true,
+            },
+          },
+          technicalLabels: {
+            include: {
+              label: true,
+            },
+          },
+          like: true,
+          involvement: true,
+          joinRequest: true,
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_UPDATING_PROJECTS,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Search projects by query
+   * @param searchProjectDto - The data transfer object containing project query details
+   * @returns A promise resolving to the searched Project objects
+   */
+  async searchProjects(
+    searchProjectDto: SearchProjectDto,
+    sortByArr: Array<object>,
+  ): Promise<Project[]> {
+    try {
+      return await this.prisma.project.findMany({
+        skip: (searchProjectDto.page - 1) * searchProjectDto.limit,
+        take: searchProjectDto.limit,
+        where: {
+          title: {
+            contains: searchProjectDto.title,
+            mode: 'insensitive',
+          },
+          languageCode: searchProjectDto.languageCode,
+          description: {
+            contains: searchProjectDto.description,
+            mode: 'insensitive',
+          },
+          status: searchProjectDto.status,
+          goal: searchProjectDto.goal,
+          milestone: {
+            gte: searchProjectDto.mileStoneFrom,
+            lte: searchProjectDto.mileStoneTo,
+          },
+          createdAt: {
+            gte: searchProjectDto.createdAtFrom,
+            lte: searchProjectDto.createdAtTo,
+          },
+          lastUpdatedAt: {
+            gte: searchProjectDto.lastUpdatedAtFrom,
+            lte: searchProjectDto.lastUpdatedAtTo,
+          },
+          technicalLabels: {
+            some: {
+              OR: searchProjectDto.technicalLabels
+                ?.split(',')
+                .map((technicalLabel) => {
+                  return {
+                    labelName: technicalLabel,
+                  };
+                }),
+            },
+          },
+          domainLabels: {
+            some: {
+              OR: searchProjectDto.domainLabels
+                ?.split(',')
+                .map((domainLabel) => {
+                  return {
+                    labelName: domainLabel,
+                  };
+                }),
+            },
           },
         },
-        like: true,
-        involvement: true,
-        joinRequest: true,
-      },
-    });
+        include: {
+          language: true,
+          users: true,
+          founder: true,
+          domainLabels: true,
+          technicalLabels: true,
+          like: true,
+          involvement: true,
+          joinRequest: true,
+        },
+        orderBy: sortByArr,
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_SEARCHING_PROJECTS,
+        error,
+      );
+    }
   }
 }

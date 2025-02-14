@@ -33,16 +33,26 @@ export class ServiceException extends Error {
     return new ServiceException(message, 404);
   };
 
+  static ThrottlerException = (message: string): ServiceException => {
+    return new ServiceException(message, 429);
+  };
+
   static ErrorException = (message: string, error: Error): ServiceException => {
     if (error instanceof Prisma.PrismaClientValidationError) {
       return new ServiceException(
-        errorMessages.VALIDATION_ERROR + message,
+        errorMessages.VALIDATION_ERROR + ' ' + message,
+        400,
+        error,
+      );
+    } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return new ServiceException(
+        errorMessages.BAD_REQUEST + ' ' + message,
         400,
         error,
       );
     } else {
       return new ServiceException(
-        errorMessages.SERVER_ERROR + message,
+        errorMessages.SERVER_ERROR + ' ' + message,
         500,
         error,
       );

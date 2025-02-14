@@ -6,13 +6,26 @@ import { ProjectRepository } from './project.repository';
 import { ProjectMapper } from './dtos/project.mapper';
 import { UserModule } from '../user/user.module';
 import { ConfigService } from '@nestjs/config';
+import { CacheModule } from '@nestjs/cache-manager';
+import { cachingConfig } from '../../common/redis/redis.config';
+import * as redisStore from 'cache-manager-ioredis';
+import { RedisService } from '../../common/caching/redisCaching.service';
 
 /**
  * The ProjectModule is responsible for managing the project-related components
  * and services including controllers, services, repositories, and mappers.
  */
 @Module({
-  imports: [UserModule],
+  imports: [
+    UserModule,
+    CacheModule.registerAsync({
+      useFactory: (config: ConfigService) => ({
+        store: redisStore,
+        ...cachingConfig(config),
+      }),
+      inject: [ConfigService],
+    }),
+  ],
   controllers: [ProjectController],
   providers: [
     ProjectService,
@@ -20,6 +33,7 @@ import { ConfigService } from '@nestjs/config';
     PrismaService,
     ProjectMapper,
     ConfigService,
+    RedisService,
   ],
 })
 export class ProjectModule {}
