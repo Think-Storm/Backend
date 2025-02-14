@@ -1,9 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 
-@Controller('api')
+@Controller('')
 export class AppController {
-  @Get('health')
+  @Get('/api/health')
   @ApiOperation({ summary: 'Health check endpoint' })
   @ApiResponse({
     status: 200,

@@ -6,9 +6,9 @@ import { AuthService } from '../auth.service';
 import { Strategy } from 'passport-custom';
 import { Request } from 'express';
 import { UserRepository } from './../../user/user.repository';
-import { PasswordEncryption } from './../../../common/passwordEncryption';
 import { UserResponseDto } from '../../../modules/user/dtos/userResponse.dto';
 import { User } from '@prisma/client';
+import { PasswordEncryption } from '../../../common/encryption/passwordEncryption';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
