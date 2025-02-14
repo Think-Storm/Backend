@@ -5,14 +5,23 @@ import { ServiceExceptionToHttpExceptionFilter } from './common/exception-filter
 import { ServiceException } from './common/exception-filter/serviceException';
 import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { RedisThrottlerStorageService } from './common/throttler/redisThrottlerStorage.service';
+import { RedisService } from './common/throttler/redisThrottler.service';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  const redisService = new RedisService(configService);
+  const redisThrottlerStorageService = new RedisThrottlerStorageService(
+    redisService,
+  );
   app.useGlobalPipes(
     new ValidationPipe({
       exceptionFactory: (errors) => {
         const errMsg = errors
           .map((error) => Object.values(error.constraints).join(''))
+          .filter((error) => error)
           .join('. ');
 
         return new ServiceException(`${errMsg}.`, 400, errors);
@@ -23,7 +32,10 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  app.useGlobalFilters(new ServiceExceptionToHttpExceptionFilter());
+  app.useGlobalFilters(
+    new ServiceExceptionToHttpExceptionFilter(redisThrottlerStorageService),
+  );
+
   app.use(cookieParser());
 
   const config = new DocumentBuilder()

@@ -8,6 +8,7 @@ import {
   Put,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { GetProjectRequestDto } from './dtos/getProjectRequest.dto';
@@ -22,10 +23,33 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
+import { SearchProjectDto } from './dtos/searchProject.dto';
 @ApiTags('projects')
 @Controller()
 export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
+
+  @HttpCode(200)
+  @Get('search')
+  @ApiOperation({ summary: 'Get projects filtered by query string' })
+  @ApiResponse({
+    status: 200,
+    description: 'Get projects filtered by query success',
+    type: ProjectResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'An error occurred due to the format of your queries',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'An error occurred while searching projects for your queries',
+  })
+  async searchProjects(
+    @Query() searchProjectDto: SearchProjectDto,
+  ): Promise<ProjectResponseDto[]> {
+    return this.projectService.searchProjects(searchProjectDto);
+  }
 
   @HttpCode(200)
   @Get(':id')
@@ -60,13 +84,12 @@ export class ProjectController {
     description: 'Founder of the project not found',
   })
   async createProject(@Body() body: CreateProjectRequestDto) {
-    return this.projectService.createProject(body);
+    return await this.projectService.createProject(body);
   }
 
-  @HttpCode(204)
-  @Put(':id')
+  @HttpCode(200)
+  @Put()
   @ApiOperation({ summary: 'Update project details' })
-  @ApiParam({ name: 'id', required: true, description: 'Project ID' })
   @ApiBody({ type: UpdateProjectRequestDto })
   @ApiResponse({
     status: 204,
@@ -86,6 +109,6 @@ export class ProjectController {
     @Body() body: UpdateProjectRequestDto,
     @Request() req,
   ): Promise<ProjectResponseDto> {
-    return this.projectService.updateProject(body, req.user.id);
+    return await this.projectService.updateProject(body, req.user.id);
   }
 }
