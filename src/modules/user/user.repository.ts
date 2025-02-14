@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { User } from '@prisma/client';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
+import { errorMessages } from '../../common/enums/errorMessages';
 
 @Injectable()
 export class UserRepository {
@@ -13,13 +14,20 @@ export class UserRepository {
    * @returns A promise resolving to a User object or null
    */
   async getUserByEmail(email: string) {
-    return this.prisma.user.findFirst({
-      where: {
-        email: {
-          equals: email.toLowerCase(),
+    try {
+      return await this.prisma.user.findFirst({
+        where: {
+          email: {
+            equals: email.toLowerCase(),
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_GETTING_USER_BY_EMAIL,
+        error,
+      );
+    }
   }
   /**
    *
@@ -34,7 +42,10 @@ export class UserRepository {
         },
       });
     } catch (error) {
-      throw ServiceException.ErrorException(error.message, error);
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_GETTING_USER_BY_ID,
+        error,
+      );
     }
   }
 
@@ -49,7 +60,7 @@ export class UserRepository {
     passwordSalt: string,
   ): Promise<User> {
     try {
-      return this.prisma.user.create({
+      return await this.prisma.user.create({
         data: {
           username: createUserDto.username,
           email: createUserDto.email.toLowerCase(),
@@ -68,7 +79,10 @@ export class UserRepository {
         },
       });
     } catch (error) {
-      throw ServiceException.ErrorException(error.message, error);
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_CREATING_USER,
+        error,
+      );
     }
   }
 }

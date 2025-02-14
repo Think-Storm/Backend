@@ -1,9 +1,13 @@
-import { ArgumentsHost } from '@nestjs/common';
+import { ExecutionContext } from '@nestjs/common';
 import { ServiceExceptionToHttpExceptionFilter } from '../../../../src/common/exception-filter/serviceExceptionFilter';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { createMock } from '@golevelup/ts-jest';
 import { Request, Response } from 'express';
+import { RedisThrottlerStorageService } from '../../../../src/common/throttler/redisThrottlerStorage.service';
+import { RedisService } from '../../../../src/common/throttler/redisThrottler.service';
+import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 
 describe('ServiceExceptionToHttpExceptionFilter', () => {
   let filter: ServiceExceptionToHttpExceptionFilter;
@@ -11,8 +15,9 @@ describe('ServiceExceptionToHttpExceptionFilter', () => {
   let mockRequest: Request;
   let mockJson: jest.Mock;
   let mockStatus: jest.Mock;
+  let redisService: RedisService;
 
-  beforeEach(() => {
+  beforeAll(async () => {
     mockJson = jest.fn().mockReturnThis();
     mockStatus = jest.fn().mockReturnThis();
     mockResponse = {
@@ -24,11 +29,27 @@ describe('ServiceExceptionToHttpExceptionFilter', () => {
       url: '/test-url',
     } as any;
 
-    filter = new ServiceExceptionToHttpExceptionFilter();
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [RedisService, ConfigService],
+    }).compile();
+
+    redisService = module.get<RedisService>(RedisService);
+
+    filter = new ServiceExceptionToHttpExceptionFilter(
+      new RedisThrottlerStorageService(redisService),
+    );
   });
 
-  const mockHost = (req = mockRequest, res = mockResponse): ArgumentsHost => {
-    return createMock<ArgumentsHost>({
+  afterAll(async () => {
+    // Close Redis connection when tests are done
+    await redisService.OnModuleDestroy();
+  });
+
+  const mockHost = (
+    req = mockRequest,
+    res = mockResponse,
+  ): ExecutionContext => {
+    return createMock<ExecutionContext>({
       switchToHttp: () => ({
         getRequest: () => req,
         getResponse: () => res,

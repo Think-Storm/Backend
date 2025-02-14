@@ -42,5 +42,8 @@ export const createUserInDB = async (
   defaultCreateUserDto: CreateUserDto,
 ): Promise<User> => {
   const userRepository = new UserRepository(prismaService);
-  return userRepository.createUser(defaultCreateUserDto, defaultPasswordSalt);
+  return await userRepository.createUser(
+    defaultCreateUserDto,
+    defaultPasswordSalt,
+  );
 };

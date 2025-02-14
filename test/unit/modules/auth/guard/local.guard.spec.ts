@@ -9,7 +9,7 @@ import { AuthService } from '../../../../../src/modules/auth/auth.service';
 import { UserRepository } from '../../../../../src/modules/user/user.repository';
 import { ServiceException } from '../../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../../src/common/enums/errorMessages';
-import { PasswordEncryption } from '../../../../../src/common/passwordEncryption';
+import { PasswordEncryption } from '../../../../../src/common/encryption/passwordEncryption';
 import { JwtStrategy } from '../../../../../src/modules/auth/jwt/jwt.strategy';
 import { LocalStrategy } from '../../../../../src/modules/auth/local/local.strategy';
 import { UserMapper } from '../../../../../src/modules/user/dtos/user.mapper';
@@ -25,7 +25,7 @@ describe('LocalAuthGuard', () => {
   let passwordEncryption: PasswordEncryption;
   let guard: LocalAuthGuard;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     guard = new LocalAuthGuard();
 
     const app: TestingModule = await Test.createTestingModule({

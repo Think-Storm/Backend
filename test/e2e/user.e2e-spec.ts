@@ -10,15 +10,28 @@ import { PrismaModule } from '../../src/prisma/prisma.module';
 import { ConfigService } from '@nestjs/config';
 import refreshDatabase from '../../src/prisma/prisma.dbreset';
 import { AuthModule } from '../../src/modules/auth/auth.module';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { RedisThrottlerStorageService } from '../../src/common/throttler/redisThrottlerStorage.service';
 
 describe('/users', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
-  beforeEach(async () => {
+
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [UserModule, AuthModule, PrismaModule.forTest(prisma)],
       providers: [ConfigService],
-    }).compile();
+    })
+      .overrideProvider(ThrottlerGuard) // Override the ThrottlerGuard
+      .useValue({
+        canActivate: () => true, // Disable throttling by always allowing the request
+      })
+      .overrideProvider(RedisThrottlerStorageService) // Override the RedisThrottlerStorageService
+      .useValue({
+        get: jest.fn().mockResolvedValue(null), // Mock get method to always return null
+        set: jest.fn(), // Mock set method
+      })
+      .compile();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
     app = moduleFixture.createNestApplication();
@@ -27,6 +40,7 @@ describe('/users', () => {
         exceptionFactory: (errors) => {
           const errMsg = errors
             .map((error) => Object.values(error.constraints).join(''))
+            .filter((error) => error)
             .join('. ');
 
           return new ServiceException(`${errMsg}.`, 400, errors);
@@ -43,9 +57,14 @@ describe('/users', () => {
     await refreshDatabase();
   });
 
+  afterEach(async () => {
+    await refreshDatabase();
+  });
+
   afterAll(async () => {
     await prismaService.$disconnect();
     await refreshDatabase();
+    await app.close();
   });
 
   describe('/:id GET (Get User)', () => {
