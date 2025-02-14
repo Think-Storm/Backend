@@ -1,0 +1,69 @@
+name: Database Verification Job
+on:
+  workflow_call:
+    inputs:
+      test-command:
+        required: true
+        type: string
+      db-name:
+        required: true
+        type: string
+    secrets:
+      JWT_SECRET:
+        required: true
+      JWT_EXPIRES_IN:
+        required: true
+      JWT_COOKIE_EXPIRES_IN:
+        required: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        env:
+          POSTGRES_DB: ${{ inputs.db-name }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ inputs.db-name }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
+      JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      REDIS_THROTTLER_DB: 0
+      REDIS_CACHING_DB: 1
+      REDIS_CACHING_TTL: 3600
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm install
+      - name: Set up Prisma
+        run: npx prisma migrate dev
+      - name: Seed the database
+        run: npm run db:seed
+      - name: Run test command
+        run: ${{ inputs.test-command }} 

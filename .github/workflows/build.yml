@@ -1,0 +1,56 @@
+name: Build Workflow
+
+on:
+  workflow_call:
+    inputs:
+      db-name:
+        required: true
+        type: string
+      run-lint:
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        env:
+          POSTGRES_DB: ${{ inputs.db-name }}
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ inputs.db-name }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Run linter
+        if: inputs.run-lint
+        run: npm run lint
+      
+      - name: Set up Prisma
+        run: npx prisma migrate dev
+      
+      - name: Seed the database
+        run: npm run db:seed
+      
+      - name: Build application
+        run: npm run build 
