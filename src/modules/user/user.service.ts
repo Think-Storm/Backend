@@ -20,7 +20,7 @@ export class UserService {
    * @returns A promise resolving to a User object or null
    */
   doesUserWithEmailExist = async (email: string): Promise<User> => {
-    return this.userRepository.getUserByEmail(email);
+    return await this.userRepository.getUserByEmail(email);
   };
 
   /**
@@ -48,6 +48,6 @@ export class UserService {
     createUserDto: CreateUserDto,
     passwordSalt: string,
   ): Promise<User> => {
-    return this.userRepository.createUser(createUserDto, passwordSalt);
+    return await this.userRepository.createUser(createUserDto, passwordSalt);
   };
 }

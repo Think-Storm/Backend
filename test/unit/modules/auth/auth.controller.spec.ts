@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const httpMocks = require('node-mocks-http');
 import { JwtModule } from '@nestjs/jwt';
-import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
+import { PasswordEncryption } from '../../../../src/common/encryption/passwordEncryption';
 import {
   defaultCreateUserDto,
   defaultUserResponseDto,
@@ -23,7 +23,7 @@ describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [
         PrismaModule.forTest(prisma),

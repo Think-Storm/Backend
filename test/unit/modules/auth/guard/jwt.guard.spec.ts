@@ -8,7 +8,7 @@ import { AuthService } from '../../../../../src/modules/auth/auth.service';
 import { UserRepository } from '../../../../../src/modules/user/user.repository';
 import { ServiceException } from '../../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../../src/common/enums/errorMessages';
-import { PasswordEncryption } from '../../../../../src/common/passwordEncryption';
+import { PasswordEncryption } from '../../../../../src/common/encryption/passwordEncryption';
 import { JwtStrategy } from '../../../../../src/modules/auth/jwt/jwt.strategy';
 import { LocalStrategy } from '../../../../../src/modules/auth/local/local.strategy';
 import { UserController } from '../../../../../src/modules/user/user.controller';
@@ -62,6 +62,7 @@ describe('JwtAuthGuard', () => {
   });
 
   afterEach(() => {
+    jest.clearAllTimers();
     jest.clearAllMocks();
   });
 

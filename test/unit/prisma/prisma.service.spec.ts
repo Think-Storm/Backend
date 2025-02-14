@@ -10,7 +10,7 @@ describe('PrismaService', () => {
     get: jest.fn().mockReturnValue('mock-database-url'),
   };
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         PrismaService,

@@ -3,7 +3,7 @@ import { UserController } from '../../../../src/modules/user/user.controller';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
-import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
+import { PasswordEncryption } from '../../../../src/common/encryption/passwordEncryption';
 import { defaultUserResponseDto } from '../../../utils/user.utils';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -14,7 +14,7 @@ describe('UserController', () => {
   let userController: UserController;
   let userService: UserService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const app: TestingModule = await Test.createTestingModule({
       imports: [PrismaModule.forTest(prisma)],
       controllers: [UserController],
