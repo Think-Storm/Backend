@@ -3,237 +3,70 @@ name: Integration and Deployment Pipeline
 on:
   push:
     branches:
-      - master  # Change this to the branch you want to trigger deployment
+      - master
 
 jobs:
   setup:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - name: Cache Node.js modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-      - name: Install dependencies
-        run: npm install
-
-  lint:
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - name: Install dependencies
-        run: npm install
-      - name: Run linter
-        run: npm run lint
+    uses: ./.github/workflows/setup.yml
 
   build:
-    runs-on: ubuntu-latest
-    needs: [setup, lint]
-    services:
-      postgres:
-        image: postgres:latest
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        env:
-          POSTGRES_DB: build_db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-    env: 
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/build_db
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - name: Install dependencies
-        run: npm install
-      - name: Set up Prisma
-        run: npx prisma migrate dev
-      - name: Seed the database
-        run: npm run db:seed
-      - name: Build application
-        run: npm run build
+    needs: setup
+    uses: ./.github/workflows/build.yml
+    with:
+      db-name: build_db
+      run-lint: true
 
   verify-start-prod:
-      runs-on: ubuntu-latest
-      needs: build
-      services:
-        postgres:
-          image: postgres:latest
-          ports:
-            - 5432:5432
-          options: >-
-            --health-cmd "pg_isready -U postgres"
-            --health-interval 10s
-            --health-timeout 5s
-            --health-retries 5
-          env:
-            POSTGRES_DB: test_db_verify
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db_verify
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
-        JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v4
-        - name: Set up Node.js
-          uses: actions/setup-node@v4
-          with:
-            node-version: 18
-        - name: Install dependencies
-          run: npm install
-        - name: Set up Prisma
-          run: npx prisma migrate dev
-        - name: Seed the database
-          run: npm run db:seed
-        - name: Start application in production mode
-          run: |
-            npm run start:prod & 
-            echo "Waiting for application to start..."
-            sleep 15
-            if ! curl -f http://localhost:3000/api/health; then
-              echo "Production server failed to start or health check failed"
-              exit 1
-            fi
-            echo "Production server started successfully and health check passed"
+    uses: ./.github/workflows/deploy-databases-and-run.yml
+    needs: build
+    with:
+      test-command: |
+        npm run start:prod & 
+        echo "Waiting for application to start..."
+        sleep 15
+        if ! curl -f http://localhost:3000/api/health; then
+          echo "Production server failed to start or health check failed"
+          exit 1
+        fi
+        echo "Production server started successfully and health check passed"
+      db-name: test_db_verify
+    secrets:
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
+      JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
 
   unit-test:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/deploy-databases-and-run.yml
     needs: verify-start-prod
-    services:
-      postgres:
-        image: postgres:latest
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        env:
-          POSTGRES_DB: unit_test_db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/unit_test_db
+    with:
+      test-command: npm run test:unit
+      db-name: unit_test_db
+    secrets:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
       JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - name: Install dependencies
-        run: npm install
-      - name: Set up Prisma
-        run: npx prisma migrate dev
-      - name: Seed the database
-        run: npm run db:seed
-      - name: Run unit tests
-        run: npm run test:unit
 
   e2e-test:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/deploy-databases-and-run.yml
     needs: verify-start-prod
-    services:
-      postgres:
-        image: postgres:latest
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        env:
-          POSTGRES_DB: e2e_test_db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/e2e_test_db
+    with:
+      test-command: npm run test:e2e
+      db-name: e2e_test_db
+    secrets:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
       JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - name: Install dependencies
-        run: npm install
-      - name: Set up Prisma
-        run: npx prisma migrate dev
-      - name: Seed the database
-        run: npm run db:seed
-      - name: Run e2e tests
-        run: npm run test:e2e
 
   coverage-test:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/deploy-databases-and-run.yml
     needs: verify-start-prod
-    services:
-      postgres:
-        image: postgres:latest
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        env:
-          POSTGRES_DB: coverage_test_db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-    env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/coverage_test_db
+    with:
+      test-command: npm run test:cov
+      db-name: coverage_test_db
+    secrets:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
       JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - name: Install dependencies
-        run: npm install
-      - name: Set up Prisma
-        run: npx prisma migrate dev
-      - name: Seed the database
-        run: npm run db:seed
-      - name: Run coverage tests
-        run: npm run test:cov
 
   deploy:
     runs-on: ubuntu-latest
