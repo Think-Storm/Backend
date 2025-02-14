@@ -28,6 +28,6 @@ export class UserController {
   })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getUserById(@Param('id') userId: number): Promise<UserResponseDto> {
-    return this.userService.getUserById(userId);
+    return await this.userService.getUserById(userId);
   }
 }

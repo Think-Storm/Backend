@@ -1,6 +1,6 @@
-import { PasswordEncryption } from '../../../src/common/passwordEncryption';
 import * as bcrypt from 'bcrypt';
 import { User } from '@prisma/client';
+import { PasswordEncryption } from '../../../src/common/encryption/passwordEncryption';
 
 jest.mock('bcrypt', () => ({
   genSalt: jest.fn(),
@@ -11,7 +11,7 @@ jest.mock('bcrypt', () => ({
 describe('PasswordEncryption', () => {
   let passwordEncryption: PasswordEncryption;
 
-  beforeEach(() => {
+  beforeAll(() => {
     passwordEncryption = new PasswordEncryption();
     jest.clearAllMocks();
   });
