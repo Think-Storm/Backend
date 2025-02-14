@@ -4,7 +4,9 @@ import * as request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import {
   createProjectInDB,
+  createProjectInDBWithUser,
   defaultCreateProjectDto,
+  defaultCreateProjectRequestDto,
   defaultUpdateProjectDto,
 } from '../utils/project.utils';
 import { createUserInDB } from '../utils/user.utils';
@@ -16,18 +18,36 @@ import prisma from '../../src/prisma/prisma.client';
 import { ConfigService } from '@nestjs/config';
 import { AuthModule } from '../../src/modules/auth/auth.module';
 import refreshDatabase from '../../src/prisma/prisma.dbreset';
+import { UserRepository } from '../../src/modules/user/user.repository';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { RedisThrottlerStorageService } from '../../src/common/throttler/redisThrottlerStorage.service';
+import { RedisService } from '../../src/common/caching/redisCaching.service';
 
 describe('/projects', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
+  let userRepository: UserRepository;
+  let redisService: RedisService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [ProjectModule, AuthModule, PrismaModule.forTest(prisma)],
       providers: [ConfigService],
-    }).compile();
+    })
+      .overrideProvider(ThrottlerGuard) // Override the ThrottlerGuard
+      .useValue({
+        canActivate: () => true, // Disable throttling by always allowing the request
+      })
+      .overrideProvider(RedisThrottlerStorageService) // Override the RedisThrottlerStorageService
+      .useValue({
+        get: jest.fn().mockResolvedValue(null), // Mock get method to always return null
+        set: jest.fn(), // Mock set method
+      })
+      .compile();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
+    userRepository = moduleFixture.get<UserRepository>(UserRepository);
+    redisService = moduleFixture.get<RedisService>(RedisService);
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
@@ -35,6 +55,7 @@ describe('/projects', () => {
         exceptionFactory: (errors) => {
           const errMsg = errors
             .map((error) => Object.values(error.constraints).join(''))
+            .filter((error) => error)
             .join('. ');
 
           return new ServiceException(`${errMsg}.`, 400, errors);
@@ -51,9 +72,16 @@ describe('/projects', () => {
     await refreshDatabase();
   });
 
+  afterEach(async () => {
+    await redisService.flushDb();
+    await refreshDatabase();
+  });
+
   afterAll(async () => {
+    await redisService.flushDb();
     await prismaService.$disconnect();
     await refreshDatabase();
+    await app.close();
   });
 
   describe('/ POST (Create Project)', () => {
@@ -69,7 +97,7 @@ describe('/projects', () => {
       createProjectRequest.founderId = createdProject.founderId;
       createProjectRequest.languageCode = createdProject.languageCode;
 
-      return request(app.getHttpServer())
+      return await request(app.getHttpServer())
         .post('/')
         .send(createProjectRequest)
         .expect(201);
@@ -77,7 +105,7 @@ describe('/projects', () => {
 
     it('should return a 404 if user is not found', async () => {
       // No previous creation of User, so the project should be refused
-      return request(app.getHttpServer())
+      return await request(app.getHttpServer())
         .post('/')
         .send(defaultCreateProjectDto)
         .expect(404);
@@ -101,17 +129,19 @@ describe('/projects', () => {
 
     it('should return a 404 if user does not exist', async () => {
       const fakeId = 0;
-      return request(app.getHttpServer()).get(`/${fakeId}`).expect(404);
+      return await request(app.getHttpServer()).get(`/${fakeId}`).expect(404);
     });
 
     it('should return a 400 if id format is invalid', async () => {
       const invalidId = 'invalid-id';
-      return request(app.getHttpServer()).get(`/${invalidId}`).expect(400);
+      return await request(app.getHttpServer())
+        .get(`/${invalidId}`)
+        .expect(400);
     });
   });
 
-  describe('/:id PUT (Update Project)', () => {
-    it('should return a 204 if everything is fine', async () => {
+  describe('/ PUT (Update Project)', () => {
+    it('should return a 200 if everything is fine', async () => {
       // First create a user
       await request(app.getHttpServer())
         .post('/register')
@@ -138,10 +168,10 @@ describe('/projects', () => {
       const token = loginResponse.headers.authorization;
 
       await request(app.getHttpServer())
-        .put(`/${createdProject.id}`)
+        .put('/')
         .set('Authorization', token)
         .send(validUpdateRequest)
-        .expect(204);
+        .expect(200);
 
       const updatedProject = await prismaService.project.findUnique({
         where: { id: createdProject.id },
@@ -198,8 +228,8 @@ describe('/projects', () => {
       const nonExistentProjectUpdateRequest = { ...defaultUpdateProjectDto };
       nonExistentProjectUpdateRequest.id = fakeId;
 
-      return request(app.getHttpServer())
-        .put(`/${fakeId}`)
+      return await request(app.getHttpServer())
+        .put('/')
         .send(nonExistentProjectUpdateRequest)
         .set('Authorization', token)
         .expect(404);
@@ -238,13 +268,80 @@ describe('/projects', () => {
       // Get the token from response headers
       const token = loginResponse.headers.authorization;
 
-      const unauthorizedUpdateRequest = { ...defaultUpdateProjectDto };
+      const unauthorizedUpdateRequest = {
+        ...defaultUpdateProjectDto,
+        id: originalProject.id,
+      };
 
-      return request(app.getHttpServer())
-        .put(`/${originalProject.id}`)
+      return await request(app.getHttpServer())
+        .put('/')
         .set('Authorization', token)
         .send(unauthorizedUpdateRequest)
         .expect(403);
+    });
+  });
+
+  describe('/ GET (Search Projects)', () => {
+    it('should return a 200 if everything is fine', async () => {
+      // Create User and Language in DB
+      await createProjectInDBWithUser(
+        prismaService,
+        userRepository,
+        defaultCreateProjectRequestDto,
+      );
+
+      const searchProjectRequest = 'goal=Education&status=InProgress';
+
+      return await request(app.getHttpServer())
+        .get(`/search?${searchProjectRequest}`)
+        .expect(200);
+    });
+
+    it('should return a 400 if request format is wrong', async () => {
+      const searchProjectRequest = 'goal=education&status=inprogress';
+
+      return await request(app.getHttpServer())
+        .get(`/search?${searchProjectRequest}`)
+        .expect(400);
+    });
+
+    it('should return a 400 if request format either one of date from and to is not requested', async () => {
+      const searchProjectRequest = 'createdAtFrom=2025-02-13';
+
+      const response = await request(app.getHttpServer())
+        .get(`/search?${searchProjectRequest}`)
+        .expect(400);
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toBe(
+        'createdAtFrom and createdAtTo must both be provided.',
+      );
+    });
+
+    it('should return a 400 if request format date from and to is reversed', async () => {
+      const searchProjectRequest =
+        'createdAtFrom=2025-02-13&&createdAtTo=2024-02-13';
+
+      const response = await request(app.getHttpServer())
+        .get(`/search?${searchProjectRequest}`)
+        .expect(400);
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toBe(
+        'createdAtFrom date should be before createdAtTo date. createdAtTo date should be after createdAtFrom date.',
+      );
+    });
+
+    it('should return a 400 if request format date from and to is wrong', async () => {
+      const searchProjectRequest =
+        'createdAtFrom=2025-02-13s&&createdAtTo=2024-02-13';
+
+      const response = await request(app.getHttpServer())
+        .get(`/search?${searchProjectRequest}`)
+        .expect(400);
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.message).toBe('createdAtFrom must be valid date.');
     });
   });
 });
