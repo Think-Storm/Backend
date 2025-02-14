@@ -2,9 +2,16 @@ import { ProjectRepository } from '../../../../src/modules/project/project.repos
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
+  createProject,
   createProjectInDB,
+  createProjectInDBWithUser,
   defaultCreateProjectDto,
+  defaultCreateProjectRequestDto,
+  defaultSearchProjectDto,
+  defaultSortBy,
   defaultUpdateProjectDto,
+  secondCreateProjectRequestDto,
+  secondSearchProjectDto,
 } from '../../../utils/project.utils';
 import prisma from '../../../../src/prisma/prisma.client';
 import { defaultCreateUserDto } from '../../../utils/user.utils';
@@ -15,6 +22,8 @@ import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import refreshDatabase from '../../../../src/prisma/prisma.dbreset';
 import { ProjectWithLabels } from '../../../../src/modules/project/types/project.types';
+import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
+import { errorMessages } from '../../../../src/common/enums/errorMessages';
 
 describe('ProjectRepository', () => {
   let prismaService: PrismaService;
@@ -39,6 +48,61 @@ describe('ProjectRepository', () => {
   afterEach(async () => {
     jest.clearAllMocks();
     await refreshDatabase();
+  });
+
+  describe('searchProjects function', () => {
+    it('should retrieve searched projects in DB with request queries', async () => {
+      const createdProject = await createProjectInDBWithUser(
+        prismaService,
+        userRepository,
+        defaultCreateProjectRequestDto,
+      );
+
+      // Get Projects in DB
+      const defaultSearchedResults = [createdProject];
+      let searchedProjectsByQuery = undefined;
+      try {
+        searchedProjectsByQuery = await projectRepository.searchProjects(
+          defaultSearchProjectDto,
+          defaultSortBy,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toContain(errorMessages.ERROR_SEARCHING_PROJECTS);
+      }
+
+      expect(defaultSearchedResults).toBeDefined();
+      expect(defaultSearchedResults).toStrictEqual(searchedProjectsByQuery);
+    });
+
+    it('should retrieve searched projects in DB with request queries', async () => {
+      await createProjectInDBWithUser(
+        prismaService,
+        userRepository,
+        defaultCreateProjectRequestDto,
+      );
+
+      const createdProject2 = await createProject(
+        prismaService,
+        secondCreateProjectRequestDto,
+      );
+
+      // Get Projects in DB
+      const defaultSearchedResults = [createdProject2];
+      let searchedProjectsByQuery = undefined;
+      try {
+        searchedProjectsByQuery = await projectRepository.searchProjects(
+          secondSearchProjectDto,
+          defaultSortBy,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toContain(errorMessages.ERROR_SEARCHING_PROJECTS);
+      }
+
+      expect(defaultSearchedResults).toBeDefined();
+      expect(defaultSearchedResults).toStrictEqual(searchedProjectsByQuery);
+    });
   });
 
   describe('findProjectById function', () => {

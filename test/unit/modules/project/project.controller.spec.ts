@@ -6,15 +6,17 @@ import { ProjectMapper } from '../../../../src/modules/project/dtos/project.mapp
 import {
   defaultCreateProjectDto,
   defaultProjectResponseDto,
+  defaultSearchProjectDto,
   defaultUpdateProjectDto,
+  secondProjectResponseDto,
 } from '../../../utils/project.utils';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import prisma from '../../../../src/prisma/prisma.client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserService } from '../../../../src/modules/user/user.service';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
-import { PasswordEncryption } from '../../../../src/common/passwordEncryption';
+import { PasswordEncryption } from '../../../../src/common/encryption/passwordEncryption';
 import { mockJwtToken } from '../../../utils/jwt.utils';
 import { defaultUserResponseDto } from '../../../utils/user.utils';
 import { createMockRequestWithUser } from '../../../utils/jwt.utils';
@@ -22,14 +24,31 @@ import { JwtAuthGuard } from '../../../../src/modules/auth/jwt/jwt.guard';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { ExecutionContext } from '@nestjs/common';
 import { createAuthHeader, mockGuardContext } from '../../../utils/auth.utils';
+import refreshDatabase from '../../../../src/prisma/prisma.dbreset';
+import { RedisService } from '../../../../src/common/caching/redisCaching.service';
+import { CacheModule } from '@nestjs/cache-manager';
+import { cachingConfig } from '../../../../src/common/redis/redis.config';
+import * as redisStore from 'cache-manager-ioredis';
 
 describe('ProjectController', () => {
   let projectController: ProjectController;
   let projectService: ProjectService;
+  let prismaService: PrismaService;
 
-  const setupTestModule = async () => {
+  beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prisma)],
+      imports: [
+        ConfigModule,
+        PrismaModule.forTest(prisma),
+        CacheModule.registerAsync({
+          imports: [ConfigModule],
+          useFactory: (config: ConfigService) => ({
+            store: redisStore,
+            ...cachingConfig(config),
+          }),
+          inject: [ConfigService],
+        }),
+      ],
       controllers: [ProjectController],
       providers: [
         ProjectService,
@@ -41,6 +60,7 @@ describe('ProjectController', () => {
         UserService,
         UserRepository,
         UserMapper,
+        RedisService,
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -54,17 +74,38 @@ describe('ProjectController', () => {
       })
       .compile();
 
-    return module;
-  };
+    projectController = module.get<ProjectController>(ProjectController);
+    projectService = module.get<ProjectService>(ProjectService);
+    prismaService = module.get<PrismaService>(PrismaService);
 
-  beforeEach(async () => {
-    const app = await setupTestModule();
-    projectController = app.get<ProjectController>(ProjectController);
-    projectService = app.get<ProjectService>(ProjectService);
+    await prismaService.$connect();
+    await refreshDatabase();
   });
 
-  afterEach(() => {
+  afterEach(async () => {
     jest.clearAllMocks();
+    await refreshDatabase();
+  });
+
+  describe('searchProjects function', () => {
+    it('should return searched project responseDtos', async () => {
+      const defaultSearchedResults = [
+        defaultProjectResponseDto,
+        secondProjectResponseDto,
+      ];
+      // Mock service function
+      const serviceSpy = jest
+        .spyOn(projectService, 'searchProjects')
+        .mockResolvedValue(defaultSearchedResults);
+
+      const response = await projectController.searchProjects(
+        defaultSearchProjectDto,
+      );
+
+      expect(serviceSpy).toHaveBeenCalledTimes(1);
+      expect(serviceSpy).toHaveBeenCalledWith(defaultSearchProjectDto);
+      expect(response).toBe(defaultSearchedResults);
+    });
   });
 
   describe('getProjectById function', () => {
