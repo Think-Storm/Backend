@@ -42,6 +42,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/${{ inputs.db-name }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
@@ -52,9 +53,29 @@ jobs:
       REDIS_THROTTLER_DB: 0
       REDIS_CACHING_DB: 1
       REDIS_CACHING_TTL: 3600
+      REDIS_USER: redis_user
+      REDIS_PASSWORD: redis_password
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Install Redis CLI
+        run: sudo apt-get update && sudo apt-get install -y redis-tools
+      - name: Configure Redis
+        run: |
+          # First, create a redis user with a password
+          redis-cli -h localhost ACL SETUSER redis_user on ">redis_password" "~*" "+@all"
+          
+          # Then set the password for the Redis server
+          redis-cli -h localhost CONFIG SET requirepass redis_password
+          
+          # Test the connection with the new user (using AUTH command instead of -u)
+          redis-cli -h localhost -a redis_password PING
+          
+          # Use AUTH command with username parameter (Redis 6.0+ syntax)
+          redis-cli -h localhost AUTH redis_user redis_password
+          
+          # Disable the default user (for extra security)
+          redis-cli -h localhost -a redis_password ACL SETUSER default off
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
