@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import { cachingConfig } from '../redis/redis.config';
 import { ConfigService } from '@nestjs/config';
-import { ServiceException } from '../exception-filter/serviceException';
 
 @Injectable()
 export class RedisService {
@@ -28,14 +27,13 @@ export class RedisService {
 
   async set(key: string, value: any, ttl: number): Promise<void> {
     try {
+      let ttlNum = ttl;
       // Validate TTL
       if (!Number.isInteger(ttl) || ttl <= 0) {
-        throw ServiceException.BadRequestException(
-          'TTL must be a valid positive integer',
-        );
+        ttlNum = Number(ttl);
       }
       // Set data with TTL (expires in seconds)
-      await this.redis.set(key, JSON.stringify(value), 'EX', ttl);
+      await this.redis.set(key, JSON.stringify(value), 'EX', ttlNum);
     } catch (error) {
       console.error('Error setting data in Redis:', error);
     }
