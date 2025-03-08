@@ -10,13 +10,17 @@ export class CommonDataRepository {
    * @returns A promise resolving to a Language array or null
    */
   async getAllLanguages(): Promise<{ code: string; name: string }[]> {
-    const languages = await this.prisma.language.findMany({
-      orderBy: { name: 'asc' },
-      select: {
-        code: true,
-        name: true,
-      },
-    });
-    return languages;
+    try {
+      const languages = await this.prisma.language.findMany({
+        orderBy: { name: 'asc' },
+        select: {
+          code: true,
+          name: true,
+        },
+      });
+      return languages;
+    } catch (error) {
+      throw new Error('Failed to fetch languages');
+    }
   }
 }
