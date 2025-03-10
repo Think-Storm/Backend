@@ -14,6 +14,7 @@ import { UpdateProjectRequestDto } from '../../src/modules/project/dtos/updatePr
 import { UserRepository } from '../../src/modules/user/user.repository';
 import { defaultPasswordSalt } from '../../test/unit/common/passwordEncryption.utils';
 import { SearchProjectDto } from '../../src/modules/project/dtos/searchProject.dto';
+import { GetProjectRequestDto } from '../../src/modules/project/dtos/getProjectRequest.dto';
 
 export const createProjectInDB = async (
   prismaService: PrismaService,
@@ -241,6 +242,10 @@ export const defaultUpdateProjectDto: UpdateProjectRequestDto = {
   milestone: new Date('2021-01-01'),
   domainLabels: ['Science', 'Technology'],
   technicalLabels: ['TypeScript', 'GraphQL'],
+};
+
+export const defaultDeleteProjectDto: GetProjectRequestDto = {
+  id: 1,
 };
 
 export const defaultSearchProjectDto: SearchProjectDto = {

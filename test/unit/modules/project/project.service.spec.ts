@@ -5,6 +5,7 @@ import { ProjectMapper } from '../../../../src/modules/project/dtos/project.mapp
 import { ProjectController } from '../../../../src/modules/project/project.controller';
 import {
   defaultCreateProjectDto,
+  defaultDeleteProjectDto,
   defaultProject,
   defaultProjectResponseDto,
   defaultSearchProjectDto,
@@ -319,6 +320,106 @@ describe('ProjectService', () => {
 
       expect(dbSpy).toHaveBeenCalledTimes(1);
       expect(dbSpy).toHaveBeenCalledWith(defaultUpdateProjectDto);
+    });
+  });
+
+  describe('deleteProject', () => {
+    it('should throw an 404 exception if project with id is not found', async () => {
+      // Mock call to DB not to return a Project
+      const spy = jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(null);
+
+      try {
+        await projectService.deleteProject(
+          defaultDeleteProjectDto,
+          defaultUser.id,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toContain(
+          errorMessages.ENTITY_NOT_FOUND(
+            'Project',
+            defaultDeleteProjectDto.id.toString(),
+          ),
+        );
+      }
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(defaultDeleteProjectDto.id);
+    });
+
+    it('should throw an 403 exception if the user is not the owner of the project', async () => {
+      // Mock call to DB to return a Project
+      const spy = jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultProject);
+
+      try {
+        await projectService.deleteProject(defaultDeleteProjectDto, 999);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toContain(
+          errorMessages.FORBIDDEN('You are not the owner of this project'),
+        );
+      }
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(defaultDeleteProjectDto.id);
+    });
+
+    it('should delete a project if the user is the owner of the project', async () => {
+      const currentDate = new Date();
+      // Mock call to DB to return a Project
+      const mockProject = {
+        ...defaultProject,
+        language: {
+          code: defaultProject.languageCode,
+          name: LanguageName.English,
+          createdAt: currentDate,
+          lastUpdatedAt: currentDate,
+        },
+        users: [],
+        domainLabels: [],
+        technicalLabels: [],
+        founder: defaultUser,
+      };
+
+      const spy = jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(mockProject);
+
+      const dbSpy = jest
+        .spyOn(projectRepository, 'deleteProjectById')
+        .mockResolvedValue(mockProject);
+
+      const expectedResponseDto = {
+        ...defaultProjectResponseDto,
+        language: {
+          code: defaultProject.languageCode,
+          name: LanguageName.English,
+          createdAt: currentDate,
+          lastUpdatedAt: currentDate,
+        },
+        users: [],
+        domainLabels: [],
+        technicalLabels: [],
+        founder: defaultUser,
+      };
+
+      const projectResponseDto = await projectService.deleteProject(
+        defaultDeleteProjectDto,
+        defaultUser.id,
+      );
+
+      // Checking the mapper
+      expect(projectResponseDto).toEqual(expectedResponseDto);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(spy).toHaveBeenCalledWith(defaultDeleteProjectDto.id);
+
+      expect(dbSpy).toHaveBeenCalledTimes(1);
+      expect(dbSpy).toHaveBeenCalledWith(defaultDeleteProjectDto.id);
     });
   });
 });
