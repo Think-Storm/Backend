@@ -12,6 +12,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../../common/caching/redisCaching.service';
+import { GetProjectRequestDto } from './dtos/getProjectRequest.dto';
 
 @Injectable()
 export class ProjectService {
@@ -141,5 +142,44 @@ export class ProjectService {
     }
 
     return this.projectMapper.projectsToProjectResponseDtos(searchResult);
+  }
+
+  /**
+   * Deletes a project
+   * @param deleteProjectDto - The data transfer object for deleting a project
+   * @returns A promise resolving to a DeleteProjectResponseDto
+   */
+  async deleteProject(
+    deleteProjectDto: GetProjectRequestDto,
+    userId: number,
+  ): Promise<ProjectResponseDto> {
+    const deltingProject = await this.projectRepository.findProjectById(
+      deleteProjectDto.id,
+    );
+
+    if (!deltingProject) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND(
+          'Project',
+          deleteProjectDto.id.toString(),
+        ),
+      );
+    }
+
+    // Authorization check in service layer
+    if (deltingProject.founderId !== userId) {
+      throw ServiceException.ForbiddenException(
+        errorMessages.FORBIDDEN('You are not the owner of this project'),
+      );
+    }
+
+    const deletedProject = await this.projectRepository.deleteProjectById(
+      deleteProjectDto.id,
+    );
+
+    //cache invalidation
+    await this.redisService.flushDb();
+
+    return this.projectMapper.projectToProjectResponseDto(deletedProject);
   }
 }

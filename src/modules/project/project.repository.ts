@@ -155,8 +155,20 @@ export class ProjectRepository {
         },
         include: {
           language: true,
-          users: true,
-          founder: true,
+          users: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
+          founder: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
           domainLabels: {
             include: {
               label: true,
@@ -255,6 +267,56 @@ export class ProjectRepository {
     } catch (error) {
       throw ServiceException.ErrorException(
         errorMessages.ERROR_SEARCHING_PROJECTS,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Deletes a Project by id
+   * @param id - The id of the Project to delete
+   * @returns A promise resolving to a Project object or null
+   */
+  async deleteProjectById(id: number): Promise<Project> {
+    try {
+      return await this.prisma.project.delete({
+        where: {
+          id: id,
+        },
+        include: {
+          language: true,
+          users: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
+          founder: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
+          domainLabels: {
+            include: {
+              label: true,
+            },
+          },
+          technicalLabels: {
+            include: {
+              label: true,
+            },
+          },
+          like: true,
+          involvement: true,
+          joinRequest: true,
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_DELETING_PROJECTS,
         error,
       );
     }

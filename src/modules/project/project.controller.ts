@@ -9,6 +9,7 @@ import {
   UseGuards,
   Request,
   Query,
+  Delete,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { GetProjectRequestDto } from './dtos/getProjectRequest.dto';
@@ -110,5 +111,30 @@ export class ProjectController {
     @Request() req,
   ): Promise<ProjectResponseDto> {
     return await this.projectService.updateProject(body, req.user.id);
+  }
+
+  @HttpCode(200)
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete project by ID' })
+  @ApiParam({ name: 'id', required: true, description: 'Project ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Delete project success',
+    type: ProjectResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Only the project owner can delete the project',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Target project for deletion was not found',
+  })
+  @UseGuards(JwtAuthGuard)
+  async deleteProject(
+    @Param() deleteProjectDto: GetProjectRequestDto,
+    @Request() req,
+  ) {
+    return this.projectService.deleteProject(deleteProjectDto, req.user.id);
   }
 }
