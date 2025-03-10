@@ -5,6 +5,7 @@ import { ProjectRepository } from '../../../../src/modules/project/project.repos
 import { ProjectMapper } from '../../../../src/modules/project/dtos/project.mapper';
 import {
   defaultCreateProjectDto,
+  defaultDeleteProjectDto,
   defaultProjectResponseDto,
   defaultSearchProjectDto,
   defaultUpdateProjectDto,
@@ -163,6 +164,32 @@ describe('ProjectController', () => {
       // Verify correct parameters are passed
       expect(serviceSpy).toHaveBeenCalledWith(
         defaultUpdateProjectDto, // Body parameter
+        mockRequest.user.id, // User ID from request
+      );
+    });
+  });
+
+  describe('deleteProject function', () => {
+    it('should pass correct parameters to service when authenticated', async () => {
+      // Setup
+      const mockRequest = createMockRequestWithUser(
+        defaultUserResponseDto,
+      ) as any;
+      mockRequest.headers = createAuthHeader(mockJwtToken);
+
+      const serviceSpy = jest
+        .spyOn(projectService, 'deleteProject')
+        .mockResolvedValue(defaultProjectResponseDto);
+
+      // Execute
+      await projectController.deleteProject(
+        defaultDeleteProjectDto,
+        mockRequest,
+      );
+
+      // Verify correct parameters are passed
+      expect(serviceSpy).toHaveBeenCalledWith(
+        defaultDeleteProjectDto, // Body parameter
         mockRequest.user.id, // User ID from request
       );
     });
