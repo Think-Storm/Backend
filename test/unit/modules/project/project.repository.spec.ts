@@ -7,6 +7,7 @@ import {
   createProjectInDBWithUser,
   defaultCreateProjectDto,
   defaultCreateProjectRequestDto,
+  defaultDeleteProjectDto,
   defaultSearchProjectDto,
   defaultSortBy,
   defaultUpdateProjectDto,
@@ -230,6 +231,56 @@ describe('ProjectRepository', () => {
       expect(
         updatedProject.technicalLabels.map((tl) => tl.label.name).sort(),
       ).toStrictEqual(defaultUpdateProjectDto.technicalLabels.sort());
+    });
+  });
+
+  describe('deleteProject function', () => {
+    it('should delete a project in DB', async () => {
+      // Create a founder User
+      const createdUser = await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+
+      // Create a Project in DB
+      const projectTobeDeleted = (await createProjectInDB(
+        prismaService,
+        defaultCreateProjectDto,
+      )) as ProjectWithLabels;
+
+      // Delete the Project
+      const deletedProject = (await projectRepository.deleteProjectById(
+        defaultDeleteProjectDto.id,
+      )) as ProjectWithLabels;
+
+      expect(deletedProject).not.toBeNull();
+      expect(deletedProject).toHaveProperty('id');
+      expect(deletedProject.createdAt).toBeDefined();
+      expect(deletedProject.lastUpdatedAt).toBeDefined();
+      expect(deletedProject.founderId).toBe(createdUser.id);
+      expect(deletedProject.description).toBe(projectTobeDeleted.description);
+      expect(deletedProject.goal).toBe(projectTobeDeleted.goal);
+      expect(deletedProject.language.code).toBe(
+        projectTobeDeleted.languageCode,
+      );
+      expect(deletedProject.title).toBe(projectTobeDeleted.title);
+      expect(deletedProject.status).toBe(projectTobeDeleted.status);
+      expect(deletedProject.milestone).toStrictEqual(
+        projectTobeDeleted.milestone,
+      );
+
+      expect(deletedProject.domainLabels).toBeDefined();
+      expect(deletedProject.technicalLabels).toBeDefined();
+      expect(
+        deletedProject.domainLabels.map((dl) => dl.labelName).sort(),
+      ).toStrictEqual(
+        projectTobeDeleted.domainLabels.map((dl) => dl.labelName).sort(),
+      );
+      expect(
+        deletedProject.technicalLabels.map((tl) => tl.labelName).sort(),
+      ).toStrictEqual(
+        projectTobeDeleted.technicalLabels.map((dl) => dl.labelName).sort(),
+      );
     });
   });
 });
