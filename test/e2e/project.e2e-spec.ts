@@ -7,6 +7,7 @@ import {
   createProjectInDBWithUser,
   defaultCreateProjectDto,
   defaultCreateProjectRequestDto,
+  defaultDeleteProjectDto,
   defaultUpdateProjectDto,
 } from '../utils/project.utils';
 import { createUserInDB } from '../utils/user.utils';
@@ -248,9 +249,12 @@ describe('/projects', () => {
       );
 
       // Create another user who will try to update the project
-      const newUserDto = defaultCreateUserDto;
-      newUserDto.email = 'newUser@email.com';
-      newUserDto.password = 'newUserPassword';
+      const newUserDto = {
+        ...defaultCreateUserDto,
+        email: 'newUser@email.com',
+        password: 'newUserPassword',
+      };
+
       await request(app.getHttpServer())
         .post('/register')
         .send(newUserDto)
@@ -261,7 +265,7 @@ describe('/projects', () => {
         .post('/login')
         .send({
           email: newUserDto.email,
-          password: 'newUserPassword',
+          password: newUserDto.password,
         })
         .expect(200);
 
@@ -342,6 +346,146 @@ describe('/projects', () => {
 
       expect(response.statusCode).toBe(400);
       expect(response.body.message).toBe('createdAtFrom must be valid date.');
+    });
+  });
+
+  describe('/:id DELETE (Delete Project)', () => {
+    it('should return a 200 if everything is fine', async () => {
+      // First create a user
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      // Then create a project with that user as a founder
+      const projectTobeDeleted = await createProjectInDB(
+        prismaService,
+        defaultCreateProjectDto,
+      );
+
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: defaultCreateUserDto.email,
+          password: defaultCreateUserDto.password,
+        })
+        .expect(200);
+
+      const validDeleteRequest = defaultDeleteProjectDto;
+
+      const token = loginResponse.headers.authorization;
+
+      const domainLabelsTobeDeleted = await prismaService.projectDomainLabel
+        .findMany({
+          where: { projectId: projectTobeDeleted.id },
+        })
+        .then((labels) => labels.map((label) => label.labelName).sort());
+
+      const technicalLabelsTobeDeleted =
+        await prismaService.projectTechnicalLabel
+          .findMany({
+            where: { projectId: projectTobeDeleted.id },
+          })
+          .then((labels) => labels.map((label) => label.labelName).sort());
+
+      const { body: deletedProject } = await request(app.getHttpServer())
+        .delete(`/${validDeleteRequest.id}`)
+        .set('Authorization', token)
+        .expect(200);
+
+      expect(deletedProject).not.toBeNull();
+      expect(deletedProject.title).toBe(projectTobeDeleted.title);
+      expect(deletedProject.description).toBe(projectTobeDeleted.description);
+      expect(deletedProject.language.code).toBe(
+        projectTobeDeleted.languageCode,
+      );
+      expect(deletedProject.founder.id).toBe(projectTobeDeleted.founderId);
+      expect(deletedProject.status).toBe(projectTobeDeleted.status);
+      expect(new Date(deletedProject.milestone)).toEqual(
+        projectTobeDeleted.milestone,
+      );
+      expect(deletedProject.goal).toBe(projectTobeDeleted.goal);
+      expect(deletedProject.domainLabels.sort()).toStrictEqual(
+        domainLabelsTobeDeleted,
+      );
+      expect(deletedProject.technicalLabels.sort()).toStrictEqual(
+        technicalLabelsTobeDeleted,
+      );
+    });
+
+    it('should return a 404 if project does not exist', async () => {
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      await createProjectInDB(prismaService, defaultCreateProjectDto);
+
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: defaultCreateUserDto.email,
+          password: defaultCreateUserDto.password,
+        })
+        .expect(200);
+
+      const token = loginResponse.headers.authorization;
+      const fakeId = 999;
+      const nonExistentProjectDeleteRequest = { ...defaultDeleteProjectDto };
+      nonExistentProjectDeleteRequest.id = fakeId;
+
+      return await request(app.getHttpServer())
+        .put(`/${nonExistentProjectDeleteRequest.id}`)
+        .set('Authorization', token)
+        .expect(404);
+    });
+
+    it('should return a 403 if user is not the owner of the project', async () => {
+      // Create original project with its owner
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      const originalProject = await createProjectInDB(
+        prismaService,
+        defaultCreateProjectDto,
+      );
+
+      // Create another user who will try to update the project
+      const newUserDto = {
+        ...defaultCreateUserDto,
+        email: 'newUser@email.com',
+        password: 'newUserPassword',
+      };
+
+      // Create another user who will try to delete the project
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(newUserDto)
+        .expect(201);
+
+      // Login with the new user
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: newUserDto.email,
+          password: newUserDto.password,
+        })
+        .expect(200);
+
+      // Get the token from response headers
+      const token = loginResponse.headers.authorization;
+
+      const unauthorizedDeleteRequest = {
+        ...defaultDeleteProjectDto,
+        id: originalProject.id,
+      };
+
+      return await request(app.getHttpServer())
+        .delete(`/${unauthorizedDeleteRequest.id}`)
+        .set('Authorization', token)
+        .expect(403);
     });
   });
 });
