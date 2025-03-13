@@ -4,6 +4,12 @@ import { UserResponseDto } from '../../src/modules/user/dtos/userResponse.dto';
 import { CreateUserDto } from '../../src/modules/user/dtos/createUser.dto';
 import { UserRepository } from '../../src/modules/user/user.repository';
 import { defaultPasswordSalt } from '../unit/common/passwordEncryption.utils';
+import { UpdateUserDto } from '../../src/modules/user/dtos/updateUser.dto';
+
+export const loginUserDto = {
+  email: 'email@email.com',
+  password: 'hashedPassword',
+};
 
 export const defaultCreateUserDto: CreateUserDto = {
   username: 'username',
@@ -46,4 +52,22 @@ export const createUserInDB = async (
     defaultCreateUserDto,
     defaultPasswordSalt,
   );
+};
+
+export const defaultUpdateUser1Dto: UpdateUserDto = {
+  id: 1,
+  username: 'username1',
+  fullName: 'Full Name 1',
+  email: 'email@email.com',
+  password: 'hashedPassword',
+  birthdate: new Date('2000-01-01'),
+};
+
+export const defaultUpdateUser2Dto: UpdateUserDto = {
+  id: 2,
+  username: 'username2',
+  fullName: 'Full Name 2',
+  email: 'email2@email.com',
+  password: 'hashedPassword',
+  birthdate: new Date('2000-01-01'),
 };
