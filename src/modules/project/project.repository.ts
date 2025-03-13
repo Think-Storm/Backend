@@ -24,13 +24,7 @@ export class ProjectRepository {
         },
         include: {
           language: true,
-          users: {
-            omit: {
-              password: true,
-              passwordSalt: true,
-              passwordChangedAt: true,
-            },
-          },
+          users: true,
           founder: {
             omit: {
               password: true,
@@ -94,13 +88,7 @@ export class ProjectRepository {
         },
         include: {
           language: true,
-          users: {
-            omit: {
-              password: true,
-              passwordSalt: true,
-              passwordChangedAt: true,
-            },
-          },
+          users: true,
           founder: {
             omit: {
               password: true,
