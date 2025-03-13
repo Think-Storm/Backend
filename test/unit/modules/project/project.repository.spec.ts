@@ -51,7 +51,7 @@ describe('ProjectRepository', () => {
   });
 
   describe('searchProjects function', () => {
-    it('should retrieve searched projects in DB with request queries', async () => {
+    it('should retrieve 1 searched project in DB with request queries', async () => {
       const createdProject = await createProjectInDBWithUser(
         prismaService,
         userRepository,
@@ -75,7 +75,7 @@ describe('ProjectRepository', () => {
       expect(defaultSearchedResults).toStrictEqual(searchedProjectsByQuery);
     });
 
-    it('should retrieve searched projects in DB with request queries', async () => {
+    it('should retrieve 2 searched projects in DB with request queries', async () => {
       await createProjectInDBWithUser(
         prismaService,
         userRepository,
