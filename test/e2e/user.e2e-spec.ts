@@ -2,7 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { UserModule } from '../../src/modules/user/user.module';
-import { defaultCreateUserDto } from '../utils/user.utils';
+import * as cookieParser from 'cookie-parser';
+import {
+  defaultCreateUserDto,
+  defaultUpdateUser1Dto,
+  defaultUpdateUser2Dto,
+} from '../utils/user.utils';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { ServiceException } from '../../src/common/exception-filter/serviceException';
 import prisma from '../../src/prisma/prisma.client';
@@ -35,6 +40,10 @@ describe('/users', () => {
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
     app = moduleFixture.createNestApplication();
+
+    // Add cookie-parser middleware
+    app.use(cookieParser());
+
     app.useGlobalPipes(
       new ValidationPipe({
         exceptionFactory: (errors) => {
@@ -114,6 +123,150 @@ describe('/users', () => {
       // userid is not a number
       const { body } = await request(app.getHttpServer()).get(`/abc`);
       expect(body.statusCode).toBe(400);
+    });
+  });
+
+  describe('/ PUT (Modify User Data)', () => {
+    it('should return a 200 if it successfully modify the data and return the modified user data', async () => {
+      // Create User in DB
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      // Get the cookies and authorization header
+      const cookies = registerResponse.headers['set-cookie'];
+      const authHeader = registerResponse.headers.authorization;
+
+      expect(registerResponse.body.message).toBe('register success');
+      expect(registerResponse.body.data.id).toBe(1);
+      expect(registerResponse.body.data.email).toBe(defaultCreateUserDto.email);
+      expect(registerResponse.body.data.username).toBe(
+        defaultCreateUserDto.username,
+      );
+      expect(registerResponse.body.data.birthdate).toBe(
+        defaultCreateUserDto.birthdate.toISOString(),
+      );
+      expect(registerResponse.body.data.fullName).toBe(
+        defaultCreateUserDto.fullName,
+      );
+      expect(registerResponse.body.data.createdAt).toBeDefined();
+      expect(registerResponse.body.data.lastUpdatedAt).toBeDefined();
+
+      const updateResponse = await request(app.getHttpServer())
+        .put(`/`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader)
+        .send(defaultUpdateUser1Dto);
+
+      expect(updateResponse.body.message).toBe('Update User Success');
+      expect(updateResponse.body.data.id).toBe(1);
+      expect(updateResponse.body.data.email).toBe(defaultUpdateUser1Dto.email);
+      expect(updateResponse.body.data.username).toBe(
+        defaultUpdateUser1Dto.username,
+      );
+      expect(updateResponse.body.data.birthdate).toBe(
+        defaultUpdateUser1Dto.birthdate.toISOString(),
+      );
+      expect(updateResponse.body.data.fullName).toBe(
+        defaultUpdateUser1Dto.fullName,
+      );
+      expect(updateResponse.body.data.createdAt).toBeDefined();
+      expect(updateResponse.body.data.lastUpdatedAt).toBeDefined();
+    });
+
+    it('should return a 400 if email is change but the new email is used already', async () => {
+      // Register first user
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      const cookies = registerResponse.headers['set-cookie'];
+      const authHeader = registerResponse.headers.authorization;
+
+      // Register second user with different email
+      await request(app.getHttpServer())
+        .post('/register')
+        .send({
+          ...defaultCreateUserDto,
+          email: defaultUpdateUser2Dto.email, // Use the email we'll try to update to
+          username: 'differentusername', // Need a different username too
+        });
+
+      // Try to update first user with email that's already taken
+      const updateResponse = await request(app.getHttpServer())
+        .put(`/`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader)
+        .send({
+          ...defaultUpdateUser1Dto,
+          email: defaultUpdateUser2Dto.email, // Use the email that's already taken
+        });
+
+      // The response should be a 400 Bad Request
+      expect(updateResponse.status).toBe(400);
+    });
+
+    it('should return a 403 if user is not authorized to update the account', async () => {
+      // Register first user
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      // Register second user
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send({
+          ...defaultCreateUserDto,
+          email: defaultUpdateUser2Dto.email,
+          username: defaultUpdateUser2Dto.username,
+          fullName: defaultUpdateUser2Dto.fullName,
+          password: defaultUpdateUser2Dto.password,
+          birthdate: defaultUpdateUser2Dto.birthdate,
+        });
+
+      const cookies = registerResponse.headers['set-cookie'];
+      const authHeader = registerResponse.headers.authorization;
+
+      // Login as a second user
+      await request(app.getHttpServer()).post('/login').send({
+        email: defaultUpdateUser2Dto.email,
+        password: defaultUpdateUser2Dto.password,
+      });
+
+      // Try to update first user when logged in as a second user
+      const updateResponse = await request(app.getHttpServer())
+        .put(`/`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader)
+        .send({
+          ...defaultUpdateUser1Dto,
+        });
+
+      // The response should be a 403 Forbidden
+      expect(updateResponse.status).toBe(403);
+    });
+
+    it('should return a 404 if updated user is not found', async () => {
+      // Register a user to get a valid JWT
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      const cookies = registerResponse.headers['set-cookie'];
+      const authHeader = registerResponse.headers.authorization;
+
+      // Try to update a non-existent user
+      const updateResponse = await request(app.getHttpServer())
+        .put(`/`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader)
+        .send({
+          ...defaultUpdateUser1Dto,
+          id: 999, // Use a non-existent user ID
+        });
+
+      // The response should be a 404 Not Found
+      expect(updateResponse.status).toBe(404);
     });
   });
 });
