@@ -31,10 +31,17 @@ export class ServiceExceptionToHttpExceptionFilter implements ExceptionFilter {
           if (statusCode === 429) {
             const realIp = generateIp(context);
             const blockedIpData = await this.throttlerGuardService.get(realIp);
-            response.setHeader(
-              'retry-after',
-              String(Number(blockedIpData.blockDuration) / 1000),
-            );
+            if (blockedIpData) {
+              response.setHeader(
+                'retry-after',
+                String(Number(blockedIpData.blockDuration) / 1000),
+              );
+            } else {
+              response.setHeader(
+                'retry-after',
+                String(Number(BLOCK_REQUEST_TIME) / 1000),
+              );
+            }
           }
           response.status(statusCode).json({
             statusCode,
