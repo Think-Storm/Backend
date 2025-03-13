@@ -30,7 +30,6 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
     );
 
     user.password = undefined;
-    user.passwordSalt = undefined;
     user.passwordChangedAt = undefined;
 
     return user;
