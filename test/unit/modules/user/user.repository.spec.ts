@@ -1,7 +1,10 @@
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
-import { defaultCreateUserDto } from '../../../utils/user.utils';
+import {
+  defaultCreateUserDto,
+  defaultUpdateUser1Dto,
+} from '../../../utils/user.utils';
 import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
@@ -139,6 +142,34 @@ describe('UserRepository', () => {
       expect(user.password).toBe(defaultCreateUserDto.password);
       expect(user.birthdate.toDateString()).toBe(
         defaultCreateUserDto.birthdate.toDateString(),
+      );
+      expect(user.passwordSalt).toBe(defaultPasswordSalt);
+    });
+  });
+
+  describe('updateUser function', () => {
+    it('should update an existing user in DB', async () => {
+      // create a user
+      const createdUser = await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+
+      const user = await userRepository.updateUser(
+        defaultUpdateUser1Dto,
+        defaultPasswordSalt,
+      );
+
+      expect(user).toBeDefined();
+      expect(user.id).toBe(createdUser.id);
+      expect(user.createdAt).toBeDefined();
+      expect(user.lastUpdatedAt).toBeDefined();
+      expect(user.username).toBe(defaultUpdateUser1Dto.username);
+      expect(user.fullName).toBe(defaultUpdateUser1Dto.fullName);
+      expect(user.email).toBe(defaultUpdateUser1Dto.email);
+      expect(user.password).toBe(defaultUpdateUser1Dto.password);
+      expect(user.birthdate.toDateString()).toBe(
+        defaultUpdateUser1Dto.birthdate.toDateString(),
       );
       expect(user.passwordSalt).toBe(defaultPasswordSalt);
     });
