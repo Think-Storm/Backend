@@ -22,8 +22,8 @@ export const generateIp = (context: Partial<ExecutionContext>): string => {
   const request = context.switchToHttp().getRequest();
   // Use IP address as the key
   return (
-    request.headers['x-forwarded-for']?.split(',')[0] ||
-    request.connection.remoteAddress
+    request.headers?.['x-forwarded-for']?.split(',')[0] ||
+    request.connection?.remoteAddress
   );
 };
 
