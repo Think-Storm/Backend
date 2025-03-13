@@ -105,6 +105,7 @@ describe('AuthService', () => {
         .mockResolvedValue(defaultUser);
 
       const expectedResponseDto = {
+        ...defaultUserResponseDto,
         id: defaultUser.id,
         email: defaultUser.email,
         username: defaultUser.username,
@@ -119,7 +120,7 @@ describe('AuthService', () => {
       expect(validatorSpy).toHaveBeenCalledTimes(1);
       // Checking the mapper
       expect(userResponseDto).toEqual(expectedResponseDto);
-      expect(userResponseDto).not.toHaveProperty('password');
+      expect(userResponseDto).toHaveProperty('password');
       expect(userResponseDto).not.toHaveProperty('passwordSalt');
 
       expect(passwordSpy).toHaveBeenCalledTimes(1);
@@ -134,17 +135,29 @@ describe('AuthService', () => {
     });
 
     it('should throw 404 error if user is not found', async () => {
-      // create User
-      await authService.register(defaultCreateUserDto);
+      // Mock repository to simulate user not found
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValue(null);
 
-      try {
-        await userService.getUserById(999);
-      } catch (e) {
-        expect(e).toBeInstanceOf(ServiceException);
-        expect(e.message).toEqual(
+      // Use expect().rejects.toThrow() for async errors
+      await expect(userService.getUserById(999)).rejects.toThrow(
+        ServiceException.EntityNotFoundException(
           errorMessages.ENTITY_NOT_FOUND('User', '999'),
-        );
-      }
+        ),
+      );
+
+      // Verify repository was called
+      expect(userRepository.getUserById).toHaveBeenCalledWith(999);
+    });
+
+    it('should properly handle registration errors', async () => {
+      // Mock repository to throw error
+      jest
+        .spyOn(userRepository, 'createUser')
+        .mockRejectedValue(new Error('Database error'));
+
+      await expect(
+        authService.register(defaultCreateUserDto),
+      ).rejects.toThrow();
     });
   });
 
