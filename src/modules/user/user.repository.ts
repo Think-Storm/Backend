@@ -4,6 +4,7 @@ import { User } from '@prisma/client';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
+import { UpdateUserDto } from '../user/dtos/updateUser.dto';
 
 @Injectable()
 export class UserRepository {
@@ -13,13 +14,17 @@ export class UserRepository {
    * @param email - The email of the user to find
    * @returns A promise resolving to a User object or null
    */
-  async getUserByEmail(email: string) {
+  async getUserByEmail(email: string): Promise<User> {
     try {
       return await this.prisma.user.findFirst({
         where: {
           email: {
             equals: email.toLowerCase(),
           },
+        },
+        omit: {
+          password: false,
+          passwordChangedAt: false,
         },
       });
     } catch (error) {
@@ -83,6 +88,40 @@ export class UserRepository {
         errorMessages.ERROR_CREATING_USER,
         error,
       );
+    }
+  }
+
+  /**
+   * Update an existing user
+   * @param UpdateUserDto - The data transfer object containing user updating details
+   * @param passwordSalt - The password salt for hashing
+   * @returns A promise resolving to the updated User object
+   */
+  async updateUser(
+    updateUserDto: UpdateUserDto,
+    passwordSalt: string,
+  ): Promise<User> {
+    try {
+      return await this.prisma.user.update({
+        data: {
+          username: updateUserDto.username,
+          email: updateUserDto.email.toLowerCase(),
+          password: updateUserDto.password,
+          passwordSalt: passwordSalt,
+          fullName: updateUserDto.fullName,
+          birthdate: updateUserDto.birthdate,
+          lastUpdatedAt: new Date(),
+          passwordChangedAt: new Date(),
+        },
+        omit: {
+          password: false,
+        },
+        where: {
+          id: updateUserDto.id,
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(error.message, error);
     }
   }
 }

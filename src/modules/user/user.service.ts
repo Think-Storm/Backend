@@ -6,12 +6,15 @@ import { UserResponseDto } from '../user/dtos/userResponse.dto';
 import { UserMapper } from '../user/dtos/user.mapper';
 import { User } from '@prisma/client';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
+import { UpdateUserDto } from './dtos/updateUser.dto';
+import { PasswordEncryption } from '../../common/encryption/passwordEncryption';
 
 @Injectable()
 export class UserService {
   constructor(
     private userRepository: UserRepository,
     private userMapper: UserMapper,
+    private passwordEncryption: PasswordEncryption,
   ) {}
 
   /**
@@ -49,5 +52,53 @@ export class UserService {
     passwordSalt: string,
   ): Promise<User> => {
     return await this.userRepository.createUser(createUserDto, passwordSalt);
+  };
+
+  /**
+   * update user
+   * @param updateUserDto - UpdateUserDto that has updated user information
+   * @returns A promise resolving to the updated User object or null
+   */
+  updateUserById = async (
+    updateUser: UpdateUserDto,
+    userId: number,
+  ): Promise<UserResponseDto> => {
+    // check if the user exists
+    const foundUser = await this.userRepository.getUserById(updateUser.id);
+    if (!foundUser) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('User', updateUser.id.toString()),
+      );
+    }
+
+    // Authorization check in service layer
+    if (foundUser.id !== userId) {
+      throw ServiceException.ForbiddenException(
+        errorMessages.FORBIDDEN('You are not the owner of this account'),
+      );
+    }
+
+    // check for duplicated emails
+    if (foundUser.email !== updateUser.email) {
+      const isExist = await this.doesUserWithEmailExist(updateUser.email);
+      if (isExist) {
+        throw ServiceException.BadRequestException(
+          errorMessages.USER_WITH_EMAIL_ALREADY_EXISTS,
+        );
+      }
+    }
+
+    const passwordInformation =
+      await this.passwordEncryption.createSaltAndHashedPassword(
+        updateUser.password,
+      );
+    updateUser.password = passwordInformation.hashedPassword;
+
+    const updatedUserFromRepo = await this.userRepository.updateUser(
+      updateUser,
+      passwordInformation.passwordSalt,
+    );
+
+    return this.userMapper.userToUserResponseDTO(updatedUserFromRepo);
   };
 }
