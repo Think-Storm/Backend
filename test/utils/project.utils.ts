@@ -282,3 +282,42 @@ export const defaultSortBy: Array<object> = [
     createdAt: 'desc',
   },
 ];
+
+// Define the necessary structure for testing the mapper
+export type MockProjectDomainLabel = {
+  projectId?: number;
+  labelName?: string;
+  label: { name: string };
+};
+
+export type MockProjectTechnicalLabel = {
+  projectId?: number;
+  labelName?: string;
+  label: { name: string };
+};
+
+export type MockProjectWithLabels = {
+  id: number;
+  founderId: number;
+  title: string;
+  description: string | null;
+  goal: Goal;
+  status: ProjectStatus;
+  languageCode: LanguageCode;
+  milestone: Date | null;
+  createdAt: Date;
+  lastUpdatedAt: Date;
+  domainLabels?: MockProjectDomainLabel[];
+  technicalLabels?: MockProjectTechnicalLabel[];
+  language?: {
+    code: LanguageCode;
+    name: LanguageName;
+    createdAt: Date;
+    lastUpdatedAt: Date;
+  } | null;
+  founder?: typeof defaultUser;
+  users?: any[];
+  like?: any[];
+  involvement?: any[];
+  joinRequest?: any[];
+};
