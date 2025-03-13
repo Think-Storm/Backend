@@ -14,6 +14,13 @@ export class PrismaService
           url: config.get('DATABASE_URL'),
         },
       },
+      omit: {
+        user: {
+          password: true,
+          passwordChangedAt: true,
+          passwordSalt: true,
+        },
+      },
     });
   }
 
