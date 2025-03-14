@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import { throttlerConfig } from '../redis/redis.config';
 import { ConfigService } from '@nestjs/config';
+import { ServiceException } from '../exception-filter/serviceException';
+import { errorMessages } from '../enums/errorMessages';
 
 @Injectable()
 export class RedisService {
@@ -20,8 +22,10 @@ export class RedisService {
       const response = await this.redis.call('PING');
       return response;
     } catch (error) {
-      console.error('Error pinging Redis:', error);
-      throw new Error('Redis connection issue');
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Error pinging Redis'),
+        500,
+      );
     }
   }
 
@@ -40,28 +44,56 @@ export class RedisService {
       this.redis = new Redis(throttlerConfig(configService));
     }
 
-    try {
-      await this.ping();
-    } catch (error) {
-      throw error;
-    }
+    await this.ping();
 
     //Event listeners for connection status
-    this.redis.on('connect', () => {
-      console.log('Redis client connected');
-    });
+    try {
+      this.redis.on('connect', () => {
+        console.log('Redis client connected');
+      });
+    } catch (error) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Redis client connected'),
+        500,
+        error,
+      );
+    }
 
-    this.redis.on('error', (error) => {
-      console.error('Redis client error:', error);
-    });
+    try {
+      this.redis.on('error', () => {
+        console.log('Redis client error');
+      });
+    } catch (error) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Redis client error'),
+        500,
+        error,
+      );
+    }
 
-    this.redis.on('reconnecting', () => {
-      console.log('Redis client reconnecting...');
-    });
+    try {
+      this.redis.on('reconnecting', () => {
+        console.log('Redis client reconnecting...');
+      });
+    } catch (error) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Redis client reconnecting...'),
+        500,
+        error,
+      );
+    }
 
-    this.redis.on('close', () => {
-      console.log('Redis client closed');
-    });
+    try {
+      this.redis.on('close', () => {
+        console.log('Redis client closed');
+      });
+    } catch (error) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Redis client closed'),
+        500,
+        error,
+      );
+    }
   }
 
   async OnModuleDestroy() {
