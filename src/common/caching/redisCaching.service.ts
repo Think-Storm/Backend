@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import { cachingConfig } from '../redis/redis.config';
 import { ConfigService } from '@nestjs/config';
+import { ServiceException } from '../exception-filter/serviceException';
+import { errorMessages } from '../enums/errorMessages';
 
 @Injectable()
 export class RedisService {
@@ -20,22 +22,29 @@ export class RedisService {
       const response = await this.redis.call('PING');
       return response;
     } catch (error) {
-      console.error('Error pinging Redis:', error);
-      throw new Error('Redis connection issue');
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Error pinging Redis'),
+        500,
+      );
     }
   }
 
   async set(key: string, value: any, ttl: number): Promise<void> {
     try {
-      let ttlNum = ttl;
+      const ttlNum = ttl;
       // Validate TTL
       if (!Number.isInteger(ttl) || ttl <= 0) {
-        ttlNum = Number(ttl);
+        throw ServiceException.BadRequestException(
+          errorMessages.CACHING_TTL_ERROR,
+        );
       }
       // Set data with TTL (expires in seconds)
       await this.redis.set(key, JSON.stringify(value), 'EX', ttlNum);
     } catch (error) {
-      console.error('Error setting data in Redis:', error);
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Error setting data in Redis'),
+        500,
+      );
     }
   }
 
@@ -45,7 +54,6 @@ export class RedisService {
 
   async delete(key: string) {
     await this.redis.del(key);
-    console.log(`Cache invalidated for key: ${key}`);
   }
 
   async flushDb() {
@@ -63,28 +71,68 @@ export class RedisService {
       this.redis = new Redis(cachingConfig(configService));
     }
 
-    try {
-      await this.ping();
-    } catch (error) {
-      throw error;
-    }
+    await this.ping();
 
     //Event listeners for connection status
-    this.redis.on('connect', () => {
-      console.log('Redis client connected');
-    });
+    try {
+      this.redis.on('connect', () => {
+        console.log('Redis client connected');
+      });
+    } catch (error) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Redis client connected'),
+        500,
+        error,
+      );
+    }
 
-    this.redis.on('error', (error) => {
-      console.error('Redis client error:', error);
-    });
+    try {
+      this.redis.on('connect', () => {
+        console.log('Redis client connected');
+      });
+    } catch (error) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Redis client connected'),
+        500,
+        error,
+      );
+    }
 
-    this.redis.on('reconnecting', () => {
-      console.log('Redis client reconnecting...');
-    });
+    try {
+      this.redis.on('error', () => {
+        console.log('Redis client error');
+      });
+    } catch (error) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Redis client error'),
+        500,
+        error,
+      );
+    }
 
-    this.redis.on('close', () => {
-      console.log('Redis client closed');
-    });
+    try {
+      this.redis.on('reconnecting', () => {
+        console.log('Redis client reconnecting...');
+      });
+    } catch (error) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Redis client reconnecting...'),
+        500,
+        error,
+      );
+    }
+
+    try {
+      this.redis.on('close', () => {
+        console.log('Redis client closed');
+      });
+    } catch (error) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Redis client closed'),
+        500,
+        error,
+      );
+    }
   }
 
   async OnModuleDestroy() {

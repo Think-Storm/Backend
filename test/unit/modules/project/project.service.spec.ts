@@ -145,6 +145,37 @@ describe('ProjectService', () => {
       expect(transformToDtoSpy).toHaveBeenCalledWith([defaultProject, secondProject]);
       expect(searchedProjects).toStrictEqual(defaultSearchedResults);
     });
+
+    it('should return cached results if they exist', async () => {
+      const cachedResults = [defaultProjectResponseDto];
+
+      // Mock cache manager and mapper
+      jest
+        .spyOn(projectService['cacheManager'], 'get')
+        .mockResolvedValue(cachedResults);
+      jest
+        .spyOn(projectMapper, 'projectsToProjectResponseDtos')
+        .mockReturnValue(cachedResults);
+
+      const result = await projectService.searchProjects(
+        defaultSearchProjectDto,
+      );
+
+      expect(result).toEqual(cachedResults);
+      expect(projectRepository.searchProjects).not.toHaveBeenCalled();
+    });
+
+    it('should handle repository errors gracefully', async () => {
+      const error = new Error('Database error');
+      jest.spyOn(projectRepository, 'searchProjects').mockRejectedValue(error);
+
+      try {
+        await projectService.searchProjects(defaultSearchProjectDto);
+      } catch (error) {
+        expect(error).toBeInstanceOf(ServiceException);
+        expect(error.message).toContain(error.message);
+      }
+    });
   });
 
   describe('getProjectById', () => {
