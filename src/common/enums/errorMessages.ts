@@ -32,4 +32,7 @@ export const errorMessages = {
     'Too many requests. You have been blocked. Try again in 1 hour.',
   FOREIGN_KEY_CONSTRAINT_VIOLATION:
     'Please check with foreign key constraint before you perform.',
+  CACHING_TTL_ERROR: 'TTL must be a valid positive integer',
+  REDIS_CONNECTION_ISSUE: (message: string) =>
+    `Redis connection issue. ${message}`,
 };
