@@ -1,19 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RedisService } from '../../../../src/common/throttler/redisThrottler.service';
 import { ConfigService } from '@nestjs/config';
+import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 
 jest.mock('ioredis', () => {
   const Redis = jest.fn().mockImplementation(() => ({
-    call: jest.fn().mockImplementation(() => Promise.resolve('PONG')),
-    flushdb: jest.fn().mockImplementation(() => Promise.resolve('OK')),
+    call: jest.fn().mockResolvedValue('PONG'),
+    flushdb: jest.fn().mockResolvedValue('OK'),
     disconnect: jest.fn(),
-    quit: jest.fn(),
+    quit: jest.fn().mockResolvedValue('OK'),
     on: jest.fn(),
-    set: jest.fn().mockImplementation(() => Promise.resolve('OK')),
-    get: jest.fn(),
-    del: jest.fn(),
   }));
-
   return { Redis, default: Redis };
 });
 
@@ -26,18 +23,12 @@ describe('RedisService', () => {
     jest.clearAllMocks();
 
     mockRedisInstance = {
-      call: jest.fn().mockImplementation(() => Promise.resolve('PONG')),
-      flushdb: jest.fn().mockImplementation(() => Promise.resolve('OK')),
+      call: jest.fn().mockResolvedValue('PONG'),
+      flushdb: jest.fn().mockResolvedValue('OK'),
       disconnect: jest.fn(),
-      quit: jest.fn(),
+      quit: jest.fn().mockResolvedValue('OK'),
       on: jest.fn(),
-      set: jest.fn().mockImplementation(() => Promise.resolve('OK')),
-      get: jest.fn(),
-      del: jest.fn(),
     };
-
-    const { Redis } = jest.requireMock('ioredis');
-    Redis.mockImplementation(() => mockRedisInstance);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -61,51 +52,69 @@ describe('RedisService', () => {
 
     service = module.get<RedisService>(RedisService);
     configService = module.get<ConfigService>(ConfigService);
+    Object.defineProperty(service, 'redis', { value: mockRedisInstance });
   });
 
-  describe('Redis Operations', () => {
-    describe('Redis Client Operations', () => {
-      it('should get Redis client', () => {
-        const client = service.getClient();
-        expect(client).toBeDefined();
-        expect(client).toBe(mockRedisInstance);
-      });
-
-      it('should ping Redis server', async () => {
-        const result = await service.ping();
-        expect(result).toBe('PONG');
-        expect(mockRedisInstance.call).toHaveBeenCalledWith('PING');
-      });
-
-      it('should handle ping failure', async () => {
-        mockRedisInstance.call.mockRejectedValue(
-          new Error('Connection failed'),
-        );
-        await expect(service.ping()).rejects.toThrow('Redis connection issue');
-      });
+  describe('Constructor', () => {
+    it('should initialize Redis with proper config', () => {
+      const newService = new RedisService(configService);
+      expect(newService).toBeDefined();
     });
 
-    describe('Database Management', () => {
-      it('should flush database', async () => {
-        await service.flushDb();
-        expect(mockRedisInstance.flushdb).toHaveBeenCalled();
+    it('should handle initialization errors', () => {
+      jest.spyOn(configService, 'get').mockImplementation(() => {
+        throw new Error();
       });
+      expect(() => new RedisService(configService)).toThrow();
+    });
+  });
 
-      it('should handle disconnect', () => {
-        service.disconnect();
-        expect(mockRedisInstance.disconnect).toHaveBeenCalled();
-      });
-
-      it('should not call disconnect if Redis client is undefined', () => {
-        Object.defineProperty(service, 'redis', { value: undefined });
-        service.disconnect();
-        expect(mockRedisInstance.disconnect).not.toHaveBeenCalled();
-      });
+  describe('Redis Client Operations', () => {
+    it('should get Redis client', () => {
+      const client = service.getClient();
+      expect(client).toBeDefined();
+      expect(client).toBe(mockRedisInstance);
     });
 
-    describe('Module Lifecycle', () => {
-      it('should initialize Redis connection', async () => {
+    it('should ping Redis server successfully', async () => {
+      const result = await service.ping();
+      expect(result).toBe('PONG');
+      expect(mockRedisInstance.call).toHaveBeenCalledWith('PING');
+    });
+
+    it('should handle ping failure', async () => {
+      mockRedisInstance.call.mockRejectedValue(new Error('Connection failed'));
+      await expect(service.ping()).rejects.toThrow(ServiceException);
+    });
+  });
+
+  describe('Database Management', () => {
+    it('should flush database', async () => {
+      await service.flushDb();
+      expect(mockRedisInstance.flushdb).toHaveBeenCalled();
+    });
+
+    it('should handle flush database errors', async () => {
+      mockRedisInstance.flushdb.mockRejectedValue(new Error('Flush failed'));
+      await expect(service.flushDb()).rejects.toThrow();
+    });
+
+    it('should disconnect Redis client', () => {
+      service.disconnect();
+      expect(mockRedisInstance.disconnect).toHaveBeenCalled();
+    });
+
+    it('should handle undefined Redis client during disconnect', () => {
+      Object.defineProperty(service, 'redis', { value: undefined });
+      expect(() => service.disconnect()).not.toThrow();
+    });
+  });
+
+  describe('Module Lifecycle', () => {
+    describe('OnModuleInit', () => {
+      it('should setup all event listeners', async () => {
         await service.OnModuleInit(configService);
+
         expect(mockRedisInstance.on).toHaveBeenCalledWith(
           'connect',
           expect.any(Function),
@@ -124,36 +133,84 @@ describe('RedisService', () => {
         );
       });
 
-      it('should cleanup on module destroy', async () => {
+      it('should handle event setup errors', async () => {
+        mockRedisInstance.on.mockImplementation(() => {
+          throw new Error('Event setup failed');
+        });
+
+        await expect(service.OnModuleInit(configService)).rejects.toThrow(
+          ServiceException,
+        );
+      });
+
+      describe('Event Handlers', () => {
+        let consoleSpy: jest.SpyInstance;
+
+        beforeEach(() => {
+          consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+        });
+
+        afterEach(() => {
+          consoleSpy.mockRestore();
+        });
+
+        it('should handle connect event', async () => {
+          await service.OnModuleInit(configService);
+
+          const connectHandler = mockRedisInstance.on.mock.calls.find(
+            (call) => call[0] === 'connect',
+          )[1];
+          connectHandler();
+
+          expect(consoleSpy).toHaveBeenCalledWith('Redis client connected');
+        });
+
+        it('should handle error event', async () => {
+          await service.OnModuleInit(configService);
+
+          const errorHandler = mockRedisInstance.on.mock.calls.find(
+            (call) => call[0] === 'error',
+          )[1];
+          errorHandler(new Error('Redis error'));
+
+          expect(consoleSpy).toHaveBeenCalledWith('Redis client error');
+        });
+
+        it('should handle reconnecting event', async () => {
+          await service.OnModuleInit(configService);
+
+          const reconnectHandler = mockRedisInstance.on.mock.calls.find(
+            (call) => call[0] === 'reconnecting',
+          )[1];
+          reconnectHandler();
+
+          expect(consoleSpy).toHaveBeenCalledWith(
+            'Redis client reconnecting...',
+          );
+        });
+
+        it('should handle close event', async () => {
+          await service.OnModuleInit(configService);
+
+          const closeHandler = mockRedisInstance.on.mock.calls.find(
+            (call) => call[0] === 'close',
+          )[1];
+          closeHandler();
+
+          expect(consoleSpy).toHaveBeenCalledWith('Redis client closed');
+        });
+      });
+    });
+
+    describe('OnModuleDestroy', () => {
+      it('should quit Redis client', async () => {
         await service.OnModuleDestroy();
         expect(mockRedisInstance.quit).toHaveBeenCalled();
       });
 
-      it('should handle connection events', async () => {
-        const consoleSpy = jest.spyOn(console, 'log');
-        await service.OnModuleInit(configService);
-
-        const connectHandler = mockRedisInstance.on.mock.calls.find(
-          (call) => call[0] === 'connect',
-        )[1];
-        connectHandler();
-
-        expect(consoleSpy).toHaveBeenCalledWith('Redis client connected');
-      });
-
-      it('should handle error events', async () => {
-        const consoleSpy = jest.spyOn(console, 'error');
-        await service.OnModuleInit(configService);
-
-        const errorHandler = mockRedisInstance.on.mock.calls.find(
-          (call) => call[0] === 'error',
-        )[1];
-        const testError = new Error('Test error');
-        errorHandler(testError);
-        expect(consoleSpy).toHaveBeenCalledWith(
-          'Redis client error:',
-          testError,
-        );
+      it('should handle quit errors', async () => {
+        mockRedisInstance.quit.mockRejectedValue(new Error('Quit failed'));
+        await expect(service.OnModuleDestroy()).rejects.toThrow();
       });
     });
   });
