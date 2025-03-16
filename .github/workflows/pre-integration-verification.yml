@@ -22,4 +22,12 @@ jobs:
         uses: ./.github/actions/build
 
       - name: Tests
+        id: run-tests
         uses: ./.github/actions/run-tests
+
+      - name: Check Test Results
+        if: steps.run-tests.outputs.test-success != 'true'
+        run: |
+          echo "Tests failed"
+          echo "Failed tests: ${{ steps.run-tests.outputs.failed_tests }}"
+          exit 1

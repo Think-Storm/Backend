@@ -3,10 +3,14 @@ description: 'Runs Docker Compose tests and captures logs from containers'
 
 # Define inputs to customize the test process
 inputs:
-  compose-file-base:
+  compose-file-app:
     description: 'Path to the base Docker Compose file'
     required: false
-    default: 'docker/docker-compose.base.yml'
+    default: 'docker/docker-compose.app.yml'
+  compose-file-db:
+    description: 'Path to the database Docker Compose file'
+    required: false
+    default: 'docker/docker-compose.db.yml'
   compose-file-test:
     description: 'Path to the test Docker Compose file'
     required: false
@@ -41,6 +45,9 @@ outputs:
   test-success:
     description: 'Whether the tests completed successfully'
     value: ${{ steps.check-tests.outputs.success }}
+  failed_tests:
+    description: 'Whether the tests failed'
+    value: ${{ steps.check-tests.outputs.failed_tests }}
 
 # Define how the action runs
 runs:
@@ -59,10 +66,11 @@ runs:
       shell: bash
       run: |
         # Use the --build flag only if build-image is true
+        docker compose -f ${{ inputs.compose-file-app }} build app > /dev/null 2>&1
         if [ "${{ inputs.build-image }}" == "true" ]; then
-          docker-compose -f ${{ inputs.compose-file-base }} -f ${{ inputs.compose-file-test }} up --build --abort-on-container-exit || true
+          docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up --build -d --force-recreate|| true
         else
-          docker-compose -f ${{ inputs.compose-file-base }} -f ${{ inputs.compose-file-test }} up --abort-on-container-exit || true
+          docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up -d --force-recreate || true
         fi
 
     # Step 3: Create logs directory
@@ -81,7 +89,7 @@ runs:
         # Capture logs for each service
         for service in "${SERVICES[@]}"; do
           echo "Capturing logs for $service"
-          docker-compose -f ${{ inputs.compose-file-base }} -f ${{ inputs.compose-file-test }} logs $service > ${{ inputs.logs-directory }}/${service}.log
+          docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} logs $service -f -t --no-color --no-log-prefix> ${{ inputs.logs-directory }}/${service}.log &
         done
 
     # Step 5: Check test container exit codes
@@ -95,23 +103,29 @@ runs:
         # Initialize as successful
         ALL_TESTS_PASSED=true
 
-        # Check exit code for test containers (excluding database containers)
+        # Filter out database services
+        TEST_SERVICES=()
         for service in "${SERVICES[@]}"; do
-          # Skip database containers when checking exit codes
           if [[ "$service" != *"db"* ]]; then
-            EXIT_CODE=$(docker-compose -f ${{ inputs.compose-file-base }} -f ${{ inputs.compose-file-test }} ps -q $service | xargs docker inspect -f '{{.State.ExitCode}}' 2>/dev/null || echo "")
-            
-            if [[ -z "$EXIT_CODE" ]]; then
-              echo "⚠️ Warning: Could not get exit code for $service"
-              continue
-            fi
-            
-            if [[ "$EXIT_CODE" != "0" ]]; then
-              echo "❌ Tests in $service failed with exit code $EXIT_CODE"
-              ALL_TESTS_PASSED=false
-            else
-              echo "✅ Tests in $service passed"
-            fi
+            TEST_SERVICES+=("$service")
+          fi
+        done
+
+        # Wait for all test services to complete
+        if ! docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} wait "${TEST_SERVICES[@]}" > /dev/null 2>&1; then
+          echo "⚠️ Warning: Error waiting for services to complete"
+          ALL_TESTS_PASSED=false
+        fi
+
+        # Check exit codes for all test services
+        for service in "${TEST_SERVICES[@]}"; do
+          EXIT_CODE=$(docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} ps -q $service | xargs docker inspect $service -f '{{.State.ExitCode}}')
+          if [ "$EXIT_CODE" -eq 0 ]; then
+            echo "✅ Tests in $service passed"
+          else
+            echo "❌ Tests in $service failed with exit code $EXIT_CODE"
+            ALL_TESTS_PASSED=false
+            echo "failed_tests=$service" >> $GITHUB_OUTPUT
           fi
         done
 
@@ -129,4 +143,4 @@ runs:
     - name: Cleanup Docker resources
       shell: bash
       run: |
-        docker-compose -f ${{ inputs.compose-file-base }} -f ${{ inputs.compose-file-test }} down
+        docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} down
