@@ -6,6 +6,9 @@
 app = 'ts-backend'
 primary_region = 'cdg'
 
+[build]
+  dockerfile = "docker/Dockerfile"
+
 [http_service]
   internal_port = 3000
   force_https = true

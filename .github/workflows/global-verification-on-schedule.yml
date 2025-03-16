@@ -6,63 +6,15 @@ on:
 
 jobs:
   setup:
-    uses: ./.github/workflows/setup.yml
-
-  build:
-    needs: setup
-    uses: ./.github/workflows/build.yml
-    with:
-      db-name: test_db_build
-      run-lint: true
-
-  verify-start-prod:
-    uses: ./.github/workflows/deploy-databases-and-run.yml
-    needs: build
-    with:
-      test-command: |
-        npm run start:prod & 
-        echo "Waiting for application to start..."
-        sleep 15
-        if ! curl -f http://localhost:3000/api/health; then
-          echo "Production server failed to start or health check failed"
-          exit 1
-        fi
-        echo "Production server started successfully and health check passed"
-      db-name: test_db_verify
-    secrets:
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
-      JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
-
-  unit-test:
-    uses: ./.github/workflows/deploy-databases-and-run.yml
-    needs: verify-start-prod
-    with:
-      test-command: npm run test:unit
-      db-name: test_db_unit
-    secrets:
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
-      JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
-
-  e2e-test:
-    uses: ./.github/workflows/deploy-databases-and-run.yml
-    needs: verify-start-prod
-    with:
-      test-command: npm run test:e2e
-      db-name: test_db_e2e
-    secrets:
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
-      JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
-
-  coverage-test:
-    uses: ./.github/workflows/deploy-databases-and-run.yml
-    needs: verify-start-prod
-    with:
-      test-command: npm run test:cov
-      db-name: test_db_coverage
-    secrets:
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      JWT_EXPIRES_IN: ${{ secrets.JWT_EXPIRES_IN }}
-      JWT_COOKIE_EXPIRES_IN: ${{ secrets.JWT_COOKIE_EXPIRES_IN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup
+        uses: ./.github/actions/setup
+      - name: Lint
+        uses: ./.github/actions/lint
+      - name: Build
+        uses: ./.github/actions/build
+      - name: Tests
+        uses: ./.github/actions/run-tests
