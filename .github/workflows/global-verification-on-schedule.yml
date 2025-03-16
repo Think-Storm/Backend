@@ -5,16 +5,56 @@ on:
     - cron: '0 8 * * *'
 
 jobs:
-  setup:
+  global-verification:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup
         uses: ./.github/actions/setup
+
       - name: Lint
         uses: ./.github/actions/lint
+
       - name: Build
         uses: ./.github/actions/build
+
       - name: Tests
+        id: run-tests
         uses: ./.github/actions/run-tests
+
+      - name: Check Test Results
+        if: steps.run-tests.outputs.test-success != 'true'
+        run: |
+          echo "Tests failed"
+          echo "Failed tests: ${{ steps.run-tests.outputs.failed_tests }}"
+          exit 1
+  
+  dependencies-check:
+    needs: global-verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Audit
+        run: |
+          npm audit
+          if [ $? -ne 0 ]; then
+            echo "Running npm audit fix..."
+            npm audit fix
+            if [ -n "$(git status --porcelain)" ]; then
+              git config --global user.name 'GitHub Actions Bot'
+              git config --global user.email 'actions@github.com'
+              git checkout develop
+              git add package.json package-lock.json
+              git commit -m "fix: npm audit automatic fixes"
+              git push origin develop
+              echo "Changes from npm audit fix have been committed to develop branch"
+            else
+              echo "No fixes were applied by npm audit fix"
+            fi
+            exit 1
+          fi
+
