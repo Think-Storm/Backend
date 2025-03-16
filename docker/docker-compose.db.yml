@@ -38,10 +38,3 @@ services:
       retries: 5
     networks:
       - backend-network
-
-  app:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-    image: thinkstorm-backend:latest
-    entrypoint: './entrypoint.sh'
