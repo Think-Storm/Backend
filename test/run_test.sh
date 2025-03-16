@@ -9,7 +9,9 @@ fi
 echo "Docker daemon is running. Proceeding with the script..."
 # Continue with the rest of your script here
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export COMPOSE_FILE=${ROOT_DIR}/docker/docker-compose.base.yml
 # Display help message
 show_help() {
   echo "Usage: ./run_tests.sh [OPTIONS] [SERVICE...]"
@@ -34,7 +36,7 @@ show_help() {
 check_image_exists() {
   if [[ "$(docker images -q thinkstorm-env:test 2> /dev/null)" == "" ]]; then
     echo "Building the image..."
-    docker-compose -f "${TEST_DIR}"/docker/docker-compose.yml build app
+    docker-compose build app
   else
     echo "Image already exists. Skipping build."
   fi
@@ -65,18 +67,19 @@ fi
 # Build the image if it doesn’t already exist
 check_image_exists
 
+export COMPOSE_FILE=${COMPOSE_FILE}:docker/docker-compose.test.yml
 # Run the specified services without aborting on exit
-docker compose -f "${TEST_DIR}"/docker/docker-compose.yml up ${TEST_SERVICES[@]} -d --force-recreate
+docker compose up ${TEST_SERVICES[@]} -d --force-recreate
 # Capture logs for each service in separate files
 mkdir -p "${TEST_DIR}"/logs
-docker compose -f "${TEST_DIR}"/docker/docker-compose.yml logs unit -f -t --no-color --no-log-prefix > "${TEST_DIR}"/logs/unit.log &
-docker compose -f "${TEST_DIR}"/docker/docker-compose.yml logs e2e -f -t --no-color --no-log-prefix > "${TEST_DIR}"/logs/e2e.log &
-docker compose -f "${TEST_DIR}"/docker/docker-compose.yml logs cov -f -t --no-color --no-log-prefix > "${TEST_DIR}"/logs/cov.log &
-docker compose -f "${TEST_DIR}"/docker/docker-compose.yml logs db -f -t --no-color --no-log-prefix > "${TEST_DIR}"/logs/db.log &
-
-docker compose -f "${TEST_DIR}"/docker/docker-compose.yml wait ${TEST_SERVICES[@]} > /dev/null 2>&1
+docker compose logs unit -f -t --no-color --no-log-prefix > "${TEST_DIR}"/logs/unit.log &
+docker compose logs e2e -f -t --no-color --no-log-prefix > "${TEST_DIR}"/logs/e2e.log &
+docker compose logs cov -f -t --no-color --no-log-prefix > "${TEST_DIR}"/logs/cov.log &
+docker compose logs postgres_db -f -t --no-color --no-log-prefix > "${TEST_DIR}"/logs/postgres_db.log &
+docker compose logs redis_db -f -t --no-color --no-log-prefix > "${TEST_DIR}"/logs/redis_db.log &
+docker compose wait ${TEST_SERVICES[@]} > /dev/null 2>&1
 for service in "${TEST_SERVICES[@]}"; do
-  exit_code=$(docker compose -f "${TEST_DIR}"/docker/docker-compose.yml ps -q $service | xargs docker inspect $service -f '{{.State.ExitCode}}')
+  exit_code=$(docker compose ps -q $service | xargs docker inspect $service -f '{{.State.ExitCode}}')
     # Inform the user about the status
   if [ "$exit_code" -eq 0 ]; then
     echo "$service completed successfully."
@@ -85,6 +88,6 @@ for service in "${TEST_SERVICES[@]}"; do
   fi
   echo "You can watch the log of test in the ${TEST_DIR}/logs/$service.log file"
 done
-docker compose -f "${TEST_DIR}"/docker/docker-compose.yml down
+docker compose down
 
 exit 0
