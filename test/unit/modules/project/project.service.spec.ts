@@ -142,7 +142,10 @@ describe('ProjectService', () => {
       expect(spy).toHaveBeenCalledWith(defaultSearchProjectDto, []);
       expect(transformToDtoSpy).toHaveBeenCalledTimes(1);
       // eslint-disable-next-line prettier/prettier
-      expect(transformToDtoSpy).toHaveBeenCalledWith([defaultProject, secondProject]);
+      expect(transformToDtoSpy).toHaveBeenCalledWith([
+        defaultProject,
+        secondProject,
+      ]);
       expect(searchedProjects).toStrictEqual(defaultSearchedResults);
     });
 

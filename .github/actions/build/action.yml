@@ -1,60 +1,60 @@
-name: "Build Application Image"
-description: "Builds the Docker image for the application and tags it for later use"
+name: 'Build Application Image'
+description: 'Builds the Docker image for the application and tags it for later use'
 
 # Define inputs to customize the build process
 inputs:
   dockerfile-path:
-    description: "Path to the Dockerfile"
+    description: 'Path to the Dockerfile'
     required: false
-    default: "docker/Dockerfile"
+    default: 'docker/Dockerfile'
   docker-context:
-    description: "Docker build context path"
+    description: 'Docker build context path'
     required: false
-    default: ".."
+    default: '..'
   image-name:
-    description: "Name to use for the built Docker image"
+    description: 'Name to use for the built Docker image'
     required: false
-    default: "thinkstorm-backend"
+    default: 'thinkstorm-backend'
   image-tag:
-    description: "Tag to use for the built Docker image"
+    description: 'Tag to use for the built Docker image'
     required: false
-    default: "latest"
+    default: 'latest'
   build-args:
-    description: "Additional build arguments for Docker build command"
+    description: 'Additional build arguments for Docker build command'
     required: false
-    default: ""
+    default: ''
   cache-from:
-    description: "Cache sources for Docker build"
+    description: 'Cache sources for Docker build'
     required: false
-    default: ""
+    default: ''
   push-to-registry:
-    description: "Whether to push the image to a registry"
+    description: 'Whether to push the image to a registry'
     required: false
-    default: "false"
+    default: 'false'
   registry:
-    description: "Docker registry to push to if push-to-registry is true"
+    description: 'Docker registry to push to if push-to-registry is true'
     required: false
-    default: "ghcr.io"
+    default: 'ghcr.io'
   run-build:
-    description: "Whether to run npm build before Docker build"
+    description: 'Whether to run npm build before Docker build'
     required: false
-    default: "true"
+    default: 'true'
 
 # Define outputs from the build process
 outputs:
   image-name:
-    description: "The full name of the built Docker image"
+    description: 'The full name of the built Docker image'
     value: ${{ steps.build-image.outputs.image-name }}
   build-time:
-    description: "Time taken for the build in seconds"
+    description: 'Time taken for the build in seconds'
     value: ${{ steps.build-image.outputs.build-duration }}
   build-success:
-    description: "Whether the build succeeded"
+    description: 'Whether the build succeeded'
     value: ${{ steps.build-image.outputs.build-success }}
 
 # Define how the action runs
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     # Step 1: Run npm build if requested
     - name: Run npm build
@@ -83,20 +83,20 @@ runs:
       shell: bash
       run: |
         echo "Starting Docker image build process..."
-        
+
         # Record start time
         BUILD_START=$(date +%s)
-        
+
         # Prepare the image name
         FULL_IMAGE_NAME="${{ inputs.image-name }}:${{ inputs.image-tag }}"
         echo "Building image: $FULL_IMAGE_NAME"
-        
+
         # Prepare cache-from arguments if provided
         CACHE_FROM_ARGS=""
         if [ -n "${{ inputs.cache-from }}" ]; then
           CACHE_FROM_ARGS="--cache-from ${{ inputs.cache-from }}"
         fi
-        
+
         # Build the Docker image
         if docker build \
           -f ${{ inputs.dockerfile-path }} \
@@ -111,30 +111,30 @@ runs:
           BUILD_SUCCESS="false"
           echo "❌ Docker image build failed"
         fi
-        
+
         # Record end time and calculate duration
         BUILD_END=$(date +%s)
         BUILD_DURATION=$((BUILD_END - BUILD_START))
-        
+
         # Export variables
         echo "image-name=$FULL_IMAGE_NAME" >> $GITHUB_OUTPUT
         echo "build-success=$BUILD_SUCCESS" >> $GITHUB_OUTPUT
         echo "build-duration=$BUILD_DURATION" >> $GITHUB_OUTPUT
-        
+
         if [ "$BUILD_SUCCESS" = "true" ]; then
           echo "✅ Build completed in ${BUILD_DURATION} seconds"
         else
           echo "❌ Build failed after ${BUILD_DURATION} seconds"
           exit 1
         fi
-    
+
     # Step 3: Push to registry if requested
     - name: Push Docker image to registry
       if: inputs.push-to-registry == 'true' && steps.build-image.outputs.build-success == 'true'
       shell: bash
       run: |
         echo "Pushing image to registry: ${{ inputs.registry }}"
-        
+
         # Tag with registry if provided
         if [ -n "${{ inputs.registry }}" ]; then
           REGISTRY_IMAGE="${{ inputs.registry }}/${{ inputs.image-name }}:${{ inputs.image-tag }}"

@@ -41,5 +41,5 @@ export const roles = [
   { name: 'Marketing' },
   { name: 'Sales' },
   { name: 'Customer Support' },
-  { name: 'Other' }
+  { name: 'Other' },
 ];
