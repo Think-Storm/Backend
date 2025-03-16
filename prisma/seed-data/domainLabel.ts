@@ -107,5 +107,5 @@ export const domainLabel = [
   { name: 'Public Health' },
   { name: 'Research' },
   { name: 'Development' },
-  { name: 'Design' }
+  { name: 'Design' },
 ];
