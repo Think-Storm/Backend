@@ -3,7 +3,7 @@ services:
     image: thinkstorm-backend:latest
     environment:
       TYPE: production
-      DATABASE_URL: "postgresql://postgres:postgres@thinkstorm-postgres-db:5432/postgres"
+      DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/postgres'
       REDIS_HOST: thinkstorm-redis-db
       REDIS_PORT: 6379
       REDIS_THROTTLER_DB: 0
@@ -12,7 +12,7 @@ services:
       REDIS_USER: redis_user
       REDIS_PASSWORD: redis_password
     ports:
-      - "3000:3000"
+      - '3000:3000'
     depends_on:
       postgres_db:
         condition: service_healthy

@@ -1,51 +1,50 @@
-name: "Run Tests and Upload Logs"
-description: "Runs Docker Compose tests and captures logs from containers"
-author: "Your Name"
+name: 'Run Tests and Upload Logs'
+description: 'Runs Docker Compose tests and captures logs from containers'
 
 # Define inputs to customize the test process
 inputs:
   compose-file-base:
-    description: "Path to the base Docker Compose file"
+    description: 'Path to the base Docker Compose file'
     required: false
-    default: "docker/docker-compose.base.yml"
+    default: 'docker/docker-compose.base.yml'
   compose-file-test:
-    description: "Path to the test Docker Compose file"
+    description: 'Path to the test Docker Compose file'
     required: false
-    default: "docker/docker-compose.test.yml"
+    default: 'docker/docker-compose.test.yml'
   image-name:
-    description: "Name of the pre-built Docker image to use for tests"
+    description: 'Name of the pre-built Docker image to use for tests'
     required: false
-    default: "thinkstorm-backend:latest"
+    default: 'thinkstorm-backend:latest'
   logs-directory:
-    description: "Directory where logs should be stored"
+    description: 'Directory where logs should be stored'
     required: false
-    default: "logs"
+    default: 'logs'
   artifact-name:
-    description: "Name for the uploaded artifact"
+    description: 'Name for the uploaded artifact'
     required: false
-    default: "docker-logs"
+    default: 'docker-logs'
   retention-days:
-    description: "Number of days to retain the artifact"
+    description: 'Number of days to retain the artifact'
     required: false
-    default: "2"
+    default: '2'
   services:
-    description: "Services to collect logs from (comma-separated)"
+    description: 'Services to collect logs from (comma-separated)'
     required: false
-    default: "postgres_db,redis_db,unit,e2e,cov"
+    default: 'postgres_db,redis_db,unit,e2e,cov'
   build-image:
-    description: "Whether to build the image during test (set to false if using pre-built image)"
+    description: 'Whether to build the image during test (set to false if using pre-built image)'
     required: false
-    default: "false"
+    default: 'false'
 
 # Define outputs from the test process
 outputs:
   test-success:
-    description: "Whether the tests completed successfully"
+    description: 'Whether the tests completed successfully'
     value: ${{ steps.check-tests.outputs.success }}
 
 # Define how the action runs
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     # Step 1: Set image name environment variable
     - name: Configure image name
@@ -54,7 +53,7 @@ runs:
         # This will be used by Docker Compose
         echo "DOCKER_IMAGE=${{ inputs.image-name }}" >> $GITHUB_ENV
         echo "Using Docker image: ${{ inputs.image-name }}"
-    
+
     # Step 2: Run Docker Compose
     - name: Run Docker Compose Tests
       shell: bash
@@ -65,26 +64,26 @@ runs:
         else
           docker-compose -f ${{ inputs.compose-file-base }} -f ${{ inputs.compose-file-test }} up --abort-on-container-exit || true
         fi
-    
+
     # Step 3: Create logs directory
     - name: Create logs directory
       shell: bash
       run: |
         mkdir -p ${{ inputs.logs-directory }}
-    
+
     # Step 4: Capture logs from all services
     - name: Capture Container Logs
       shell: bash
       run: |
         # Parse the services input
         IFS=',' read -ra SERVICES <<< "${{ inputs.services }}"
-        
+
         # Capture logs for each service
         for service in "${SERVICES[@]}"; do
           echo "Capturing logs for $service"
           docker-compose -f ${{ inputs.compose-file-base }} -f ${{ inputs.compose-file-test }} logs $service > ${{ inputs.logs-directory }}/${service}.log
         done
-    
+
     # Step 5: Check test container exit codes
     - name: Check test container exit codes
       id: check-tests
@@ -92,10 +91,10 @@ runs:
       run: |
         # Parse the services input to find test containers
         IFS=',' read -ra SERVICES <<< "${{ inputs.services }}"
-        
+
         # Initialize as successful
         ALL_TESTS_PASSED=true
-        
+
         # Check exit code for test containers (excluding database containers)
         for service in "${SERVICES[@]}"; do
           # Skip database containers when checking exit codes
@@ -115,9 +114,9 @@ runs:
             fi
           fi
         done
-        
+
         echo "success=$ALL_TESTS_PASSED" >> $GITHUB_OUTPUT
-    
+
     # Step 6: Upload logs as artifacts
     - name: Upload Docker Logs
       uses: actions/upload-artifact@v4
@@ -125,7 +124,7 @@ runs:
         name: ${{ inputs.artifact-name }}
         path: ${{ inputs.logs-directory }}/
         retention-days: ${{ inputs.retention-days }}
-    
+
     # Step 7: Cleanup Docker resources
     - name: Cleanup Docker resources
       shell: bash
