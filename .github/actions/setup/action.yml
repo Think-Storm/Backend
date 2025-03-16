@@ -1,36 +1,36 @@
-name: "Setup Environment"
-description: "Sets up Node.js and caches dependencies"
+name: 'Setup Environment'
+description: 'Sets up Node.js and caches dependencies'
 
 # Define inputs (optional parameters)
 inputs:
   node-version:
-    description: "Node.js version to use"
+    description: 'Node.js version to use'
     required: false
-    default: "18"
+    default: '18'
   cache-key-suffix:
-    description: "Optional suffix for cache key customization"
+    description: 'Optional suffix for cache key customization'
     required: false
-    default: ""
+    default: ''
   prisma-generate:
-    description: "Whether to generate Prisma client"
+    description: 'Whether to generate Prisma client'
     required: false
-    default: "true"
+    default: 'true'
 
 # Define outputs that can be used by workflows
 outputs:
   cache-hit:
-    description: "Whether there was a cache hit for node_modules"
+    description: 'Whether there was a cache hit for node_modules'
     value: ${{ steps.cache-modules.outputs.cache-hit }}
 
 # Define how the action runs
 runs:
-  using: "composite"  # Composite action combines multiple steps
+  using: 'composite' # Composite action combines multiple steps
   steps:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-    
+
     - name: Cache Node.js modules
       id: cache-modules
       uses: actions/cache@v4
@@ -39,11 +39,11 @@ runs:
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}${{ inputs.cache-key-suffix }}
         restore-keys: |
           ${{ runner.os }}-node-
-    
+
     - name: Install dependencies
       if: steps.cache-modules.outputs.cache-hit != 'true'
-      shell: bash  # Must specify shell for each step in composite actions
-      run: npm install 
+      shell: bash # Must specify shell for each step in composite actions
+      run: npm install
 
     - name: Generate Prisma client
       if: inputs.prisma-generate == 'true'
