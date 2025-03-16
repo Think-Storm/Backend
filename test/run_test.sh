@@ -11,7 +11,8 @@ echo "Docker daemon is running. Proceeding with the script..."
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export COMPOSE_FILE=${ROOT_DIR}/docker/docker-compose.base.yml
+export COMPOSE_FILE=${ROOT_DIR}/docker/docker-compose.db.yml
+export COMPOSE_FILE=${COMPOSE_FILE}:${ROOT_DIR}/docker/docker-compose.app.yml
 # Display help message
 show_help() {
   echo "Usage: ./run_tests.sh [OPTIONS] [SERVICE...]"
@@ -34,7 +35,7 @@ show_help() {
 
 # Check if the image already exists
 check_image_exists() {
-  if [[ "$(docker images -q thinkstorm-env:test 2> /dev/null)" == "" ]]; then
+  if [[ "$(docker images -q thinkstorm-backend:latest 2> /dev/null)" == "" ]]; then
     echo "Building the image..."
     docker-compose build app
   else
