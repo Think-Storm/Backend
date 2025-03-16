@@ -73,6 +73,7 @@ runs:
 
     # Step 2: Login to GitHub Container Registry
     - name: Login to GitHub Container Registry
+      if: inputs.push-to-registry == 'true'
       shell: bash
       run: |
         echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -80,6 +81,7 @@ runs:
     # Step 3: Build the Docker image
     - name: Build Docker image
       id: build-image
+      if: inputs.push-to-registry == 'true'
       shell: bash
       run: |
         echo "Starting Docker image build process..."
