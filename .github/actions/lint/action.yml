@@ -1,0 +1,148 @@
+name: "Code Linting"
+description: "Runs ESLint, Prettier, and TypeScript type checking"
+
+# Define inputs to make your action configurable
+inputs:
+  working-directory:
+    description: "Directory to run linting in"
+    required: false
+    default: "."
+  eslint-args:
+    description: "Additional arguments for ESLint"
+    required: false
+    default: ""
+  prettier-args:
+    description: "Additional arguments for Prettier"
+    required: false
+    default: ""
+  typescript:
+    description: "Whether to run TypeScript type checking"
+    required: false
+    default: "true"
+  fail-on-warning:
+    description: "Whether to fail on ESLint warnings"
+    required: false 
+    default: "false"
+
+# Define outputs that workflows can use
+outputs:
+  eslint-result:
+    description: "Result of ESLint checks"
+    value: ${{ steps.eslint-summary.outputs.result }}
+  prettier-result:
+    description: "Result of Prettier checks"
+    value: ${{ steps.prettier-summary.outputs.result }}
+  type-check-result:
+    description: "Result of TypeScript type checking"
+    value: ${{ steps.typescript-summary.outputs.result }}
+
+# Define how the action runs
+runs:
+  using: "composite"
+  steps:
+    # Step 1: Check for lint configuration files
+    - name: Check for lint config files
+      id: check-files
+      shell: bash
+      run: |
+        cd ${{ inputs.working-directory }}
+        echo "HAS_ESLINT=$([ -f .eslintrc.js ] || [ -f .eslintrc.json ] || [ -f .eslintrc.yml ] || [ -f .eslintrc.yaml ] && echo true || echo false)" >> $GITHUB_OUTPUT
+        echo "HAS_PRETTIER=$([ -f .prettierrc ] || [ -f .prettierrc.js ] || [ -f .prettierrc.json ] || [ -f prettier.config.js ] && echo true || echo false)" >> $GITHUB_OUTPUT
+        echo "HAS_TSCONFIG=$([ -f tsconfig.json ] && echo true || echo false)" >> $GITHUB_OUTPUT
+    
+    # Step 2: ESLint
+    - name: Run ESLint
+      id: eslint
+      if: steps.check-files.outputs.HAS_ESLINT == 'true'
+      shell: bash
+      run: |
+        cd ${{ inputs.working-directory }}
+        # Create an error flag if needed
+        ERROR_FLAG=""
+        if [ "${{ inputs.fail-on-warning }}" == "true" ]; then
+          ERROR_FLAG="--max-warnings=0"
+        fi
+        
+        # Run ESLint with optional arguments
+        npm run lint -- $ERROR_FLAG ${{ inputs.eslint-args }} || echo "ESLINT_FAILED=true" >> $GITHUB_OUTPUT
+    
+    # Step 3: Prettier
+    - name: Run Prettier check
+      id: prettier
+      if: steps.check-files.outputs.HAS_PRETTIER == 'true'
+      shell: bash
+      run: |
+        cd ${{ inputs.working-directory }}
+        # Run Prettier in check mode
+        npx prettier --check . ${{ inputs.prettier-args }} || echo "PRETTIER_FAILED=true" >> $GITHUB_OUTPUT
+    
+    # Step 4: TypeScript type checking
+    - name: Run TypeScript type check
+      id: typescript
+      if: inputs.typescript == 'true' && steps.check-files.outputs.HAS_TSCONFIG == 'true'
+      shell: bash
+      run: |
+        cd ${{ inputs.working-directory }}
+        npx tsc --noEmit || echo "TYPESCRIPT_FAILED=true" >> $GITHUB_OUTPUT
+    
+    # Step 5: Generate summaries for outputs
+    - name: Generate ESLint summary
+      id: eslint-summary
+      shell: bash
+      run: |
+        if [ "${{ steps.eslint.outputs.ESLINT_FAILED }}" == "true" ]; then
+          echo "result=failed" >> $GITHUB_OUTPUT
+        else
+          echo "result=passed" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Generate Prettier summary
+      id: prettier-summary
+      shell: bash
+      run: |
+        if [ "${{ steps.prettier.outputs.PRETTIER_FAILED }}" == "true" ]; then
+          echo "result=failed" >> $GITHUB_OUTPUT
+        else
+          echo "result=passed" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Generate TypeScript summary
+      id: typescript-summary
+      shell: bash
+      run: |
+        if [ "${{ steps.typescript.outputs.TYPESCRIPT_FAILED }}" == "true" ]; then
+          echo "result=failed" >> $GITHUB_OUTPUT
+        else
+          echo "result=passed" >> $GITHUB_OUTPUT
+        fi
+        
+    # Step 6: Check overall status and fail if needed
+    - name: Check linting status
+      shell: bash
+      run: |
+        FAILED=false
+        
+        if [ "${{ steps.eslint.outputs.ESLINT_FAILED }}" == "true" ]; then
+          echo "❌ ESLint checks failed"
+          FAILED=true
+        else
+          echo "✅ ESLint checks passed"
+        fi
+        
+        if [ "${{ steps.prettier.outputs.PRETTIER_FAILED }}" == "true" ]; then
+          echo "❌ Prettier checks failed"
+          FAILED=true
+        else
+          echo "✅ Prettier checks passed"
+        fi
+        
+        if [ "${{ steps.typescript.outputs.TYPESCRIPT_FAILED }}" == "true" ]; then
+          echo "❌ TypeScript type checking failed"
+          FAILED=true
+        else
+          echo "✅ TypeScript type checking passed"
+        fi
+        
+        if [ "$FAILED" == "true" ]; then
+          exit 1
+        fi
