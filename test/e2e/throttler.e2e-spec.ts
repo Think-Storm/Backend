@@ -47,7 +47,7 @@ const mockExecutionContext: Partial<ExecutionContext> = {
 
 const mockThrottlerOptions = {
   limit: RATE_LIMITING_LIMIT, // Resolves limit based on context (ex. user role)
-  ttl: 1000, // 1s TTL (Time-to-Live) for rate-limiting
+  ttl: 2000, // 1s TTL (Time-to-Live) for rate-limiting
   blockDuration: BLOCK_REQUEST_TIME * 1000, // 1 hour block duration if the limit is exceeded
   ignoreUserAgents: [/bot/i], // Ignore requests from user agents matching this pattern
   skipIf: shouldSkip, // Skip throttling for specific conditions
