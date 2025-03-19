@@ -7,6 +7,7 @@ show_help() {
     echo "  start    Start the production environment containers"
     echo "  stop     Stop and remove the production environment containers"
     echo "  help     Display this help message"
+    echo "  clean    Remove the Docker image"
 }
 
 # Check if an argument is provided
