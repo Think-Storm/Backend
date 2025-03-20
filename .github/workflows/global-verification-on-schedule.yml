@@ -30,7 +30,7 @@ jobs:
           echo "Tests failed"
           echo "Failed tests: ${{ steps.run-tests.outputs.failed_tests }}"
           exit 1
-  
+
   dependencies-check:
     needs: global-verification
     runs-on: ubuntu-latest
@@ -57,4 +57,3 @@ jobs:
             fi
             exit 1
           fi
-
