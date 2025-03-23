@@ -9,7 +9,7 @@ import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, LanguageCode, UserProfile } from '@prisma/client';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import refreshDatabase from '../../../../src/prisma/prisma.dbreset';
 
@@ -172,6 +172,102 @@ describe('UserRepository', () => {
         defaultUpdateUser1Dto.birthdate.toDateString(),
       );
       expect(user.passwordSalt).toBe(defaultPasswordSalt);
+    });
+  });
+
+  describe('createUserProfile', () => {
+    const mockCreateProfileDto = {
+      avatar: 'https://example.com/avatar.jpg',
+      bio: 'Test bio',
+      preferred_role: 'Backend Developer',
+      location: 'Test Location',
+      website: 'https://example.com',
+      domain_labels: ['Web Development'],
+      languages: [LanguageCode.EN],
+      technical_labels: ['Node.js'],
+    };
+
+    const mockUserProfile: UserProfile = {
+      id: 1,
+      userId: 1,
+      avatar: mockCreateProfileDto.avatar,
+      bio: mockCreateProfileDto.bio,
+      preferedRole: mockCreateProfileDto.preferred_role,
+      location: mockCreateProfileDto.location,
+      website: mockCreateProfileDto.website,
+    };
+
+    it('should create a user profile with all associations', async () => {
+      const userId = 1;
+      const expectedResult = {
+        ...mockUserProfile,
+        interests: [{ label: { name: 'Web Development' } }],
+        languages: [{ language: { code: LanguageCode.EN } }],
+        skills: [{ label: { name: 'Node.js' } }],
+      };
+
+      jest
+        .spyOn(prismaService.userProfile, 'create')
+        .mockResolvedValue(expectedResult);
+
+      const result = await userRepository.createUserProfile(
+        userId,
+        mockCreateProfileDto,
+      );
+
+      expect(result).toEqual(expectedResult);
+      expect(prismaService.userProfile.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          userId,
+          avatar: mockCreateProfileDto.avatar,
+          bio: mockCreateProfileDto.bio,
+          preferedRole: mockCreateProfileDto.preferred_role,
+          location: mockCreateProfileDto.location,
+          website: mockCreateProfileDto.website,
+        }),
+        include: expect.any(Object),
+      });
+    });
+  });
+
+  describe('getUserProfileByUserId', () => {
+    it('should return user profile when it exists', async () => {
+      const userId = 1;
+      const expectedProfile: UserProfile = {
+        id: 1,
+        userId,
+        avatar: 'https://example.com/avatar.jpg',
+        bio: 'Test bio',
+        preferedRole: 'Backend Developer',
+        location: 'Test Location',
+        website: 'https://example.com',
+      };
+
+      jest
+        .spyOn(prismaService.userProfile, 'findUnique')
+        .mockResolvedValue(expectedProfile);
+
+      const result = await userRepository.getUserProfileByUserId(userId);
+
+      expect(result).toEqual(expectedProfile);
+      expect(prismaService.userProfile.findUnique).toHaveBeenCalledWith({
+        where: { userId },
+      });
+    });
+
+    it('should return null when profile does not exist', async () => {
+      const userId = 1;
+
+      jest
+        .spyOn(prismaService.userProfile, 'findUnique')
+        .mockResolvedValue(null);
+
+      const result = await userRepository.getUserProfileByUserId(userId);
+
+      expect(result).toBeNull();
+      expect(prismaService.userProfile.findUnique).toHaveBeenCalledWith({
+        where: { userId },
+      });
     });
   });
 });

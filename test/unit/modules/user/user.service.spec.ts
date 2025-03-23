@@ -22,6 +22,7 @@ import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { defaultPasswordSalt } from '../../../../test/unit/common/passwordEncryption.utils';
+import { LanguageCode, User, UserProfile } from '@prisma/client';
 
 describe('UserService', () => {
   let authService: AuthService;
@@ -197,5 +198,109 @@ describe('UserService', () => {
 
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(defaultUpdateUser1Dto.id);
+  });
+
+  describe('createUserProfile', () => {
+    const mockCreateProfileDto = {
+      avatar: 'https://example.com/avatar.jpg',
+      bio: 'Test bio',
+      preferred_role: 'Backend Developer',
+      location: 'Test Location',
+      website: 'https://example.com',
+      domain_labels: ['Web Development'],
+      languages: [LanguageCode.EN],
+      technical_labels: ['Node.js'],
+    };
+
+    const mockUser: User = {
+      id: 1,
+      email: 'test@example.com',
+      username: 'testuser',
+      password: 'hashedpassword',
+      passwordSalt: 'salt',
+      passwordChangedAt: new Date(),
+      fullName: 'Test User',
+      birthdate: new Date(),
+      createdAt: new Date(),
+      lastUpdatedAt: new Date(),
+    };
+
+    const mockUserProfile: UserProfile = {
+      id: 1,
+      userId: 1,
+      avatar: mockCreateProfileDto.avatar,
+      bio: mockCreateProfileDto.bio,
+      preferedRole: mockCreateProfileDto.preferred_role,
+      location: mockCreateProfileDto.location,
+      website: mockCreateProfileDto.website,
+    };
+
+    it('should create a user profile successfully', async () => {
+      const userId = 1;
+
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValue(mockUser);
+      jest
+        .spyOn(userRepository, 'getUserProfileByUserId')
+        .mockResolvedValue(null);
+      jest
+        .spyOn(userRepository, 'createUserProfile')
+        .mockResolvedValue(mockUserProfile);
+
+      const result = await userService.createUserProfile(
+        userId,
+        mockCreateProfileDto,
+        userId,
+      );
+
+      expect(result).toEqual(mockUserProfile);
+      expect(userRepository.getUserById).toHaveBeenCalledWith(userId);
+      expect(userRepository.getUserProfileByUserId).toHaveBeenCalledWith(
+        userId,
+      );
+      expect(userRepository.createUserProfile).toHaveBeenCalledWith(
+        userId,
+        mockCreateProfileDto,
+      );
+    });
+
+    it('should throw forbidden exception when user tries to create profile for another user', async () => {
+      const userId = 1;
+      const requestUserId = 2;
+
+      await expect(
+        userService.createUserProfile(
+          userId,
+          mockCreateProfileDto,
+          requestUserId,
+        ),
+      ).rejects.toThrow(
+        'You can only create a profile for your own user account',
+      );
+    });
+
+    it('should throw not found exception when user does not exist', async () => {
+      const userId = 1;
+
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValue(null);
+
+      await expect(
+        userService.createUserProfile(userId, mockCreateProfileDto, userId),
+      ).rejects.toThrow(`User with id ${userId} was not found.`);
+    });
+
+    it('should throw bad request exception when profile already exists', async () => {
+      const userId = 1;
+
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValue(mockUser);
+      jest
+        .spyOn(userRepository, 'getUserProfileByUserId')
+        .mockResolvedValue(mockUserProfile);
+
+      await expect(
+        userService.createUserProfile(userId, mockCreateProfileDto, userId),
+      ).rejects.toThrow(
+        'User profile already exists. Use update endpoint instead.',
+      );
+    });
   });
 });
