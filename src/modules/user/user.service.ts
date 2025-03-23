@@ -8,6 +8,7 @@ import { User } from '@prisma/client';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { UpdateUserDto } from './dtos/updateUser.dto';
 import { PasswordEncryption } from '../../common/encryption/passwordEncryption';
+import { CreateUserProfileDto } from './dtos/createUserProfile.dto';
 
 @Injectable()
 export class UserService {
@@ -101,4 +102,41 @@ export class UserService {
 
     return this.userMapper.userToUserResponseDTO(updatedUserFromRepo);
   };
+
+  async createUserProfile(
+    profileUserId: number,
+    createProfileDto: CreateUserProfileDto,
+    requestUserId: number,
+  ) {
+    // Authorization check - can only create profile for own user
+    if (profileUserId !== requestUserId) {
+      throw ServiceException.ForbiddenException(
+        errorMessages.FORBIDDEN(
+          'You can only create a profile for your own user account',
+        ),
+      );
+    }
+
+    // Check if user exists
+    const user = await this.userRepository.getUserById(profileUserId);
+    if (!user) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('User', profileUserId.toString()),
+      );
+    }
+
+    // Check if profile already exists
+    const existingProfile =
+      await this.userRepository.getUserProfileByUserId(profileUserId);
+    if (existingProfile) {
+      throw ServiceException.BadRequestException(
+        'User profile already exists. Use update endpoint instead.',
+      );
+    }
+
+    return await this.userRepository.createUserProfile(
+      profileUserId,
+      createProfileDto,
+    );
+  }
 }

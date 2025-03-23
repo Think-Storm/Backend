@@ -19,11 +19,13 @@ import {
   UseGuards,
   Put,
   Request,
+  Post,
 } from '@nestjs/common';
 import { UpdateUserDto } from './dtos/updateUser.dto';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 import { AuthService } from '../auth/auth.service';
+import { CreateUserProfileDto } from './dtos/createUserProfile.dto';
 
 @ApiTags('users')
 @Controller()
@@ -85,5 +87,34 @@ export class UserController {
       message: 'Update User Success',
       data: updatedUserWithJwt,
     });
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('/:id/profile')
+  @ApiOperation({ summary: 'Create user profile' })
+  @ApiParam({ name: 'id', type: Number, description: 'User ID' })
+  @ApiBody({ type: CreateUserProfileDto })
+  @ApiResponse({
+    status: 201,
+    description: 'User profile created successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request - validation error or profile already exists',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - can only create profile for own user',
+  })
+  async createUserProfile(
+    @Param('id') userId: number,
+    @Body() createProfileDto: CreateUserProfileDto,
+    @Request() req,
+  ) {
+    return await this.userService.createUserProfile(
+      +userId,
+      createProfileDto,
+      req.user.id,
+    );
   }
 }

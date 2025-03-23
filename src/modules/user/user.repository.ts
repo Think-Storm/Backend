@@ -5,6 +5,8 @@ import { ServiceException } from '../../common/exception-filter/serviceException
 import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { UpdateUserDto } from '../user/dtos/updateUser.dto';
+import { CreateUserProfileDto } from '../user/dtos/createUserProfile.dto';
+import { UserProfile } from '@prisma/client';
 
 @Injectable()
 export class UserRepository {
@@ -123,5 +125,90 @@ export class UserRepository {
     } catch (error) {
       throw ServiceException.ErrorException(error.message, error);
     }
+  }
+
+  async createUserProfile(
+    userId: number,
+    createProfileDto: CreateUserProfileDto,
+  ): Promise<UserProfile> {
+    const {
+      domain_labels,
+      languages,
+      technical_labels,
+      preferred_role,
+      ...profileData
+    } = createProfileDto;
+
+    return await this.prisma.userProfile.create({
+      data: {
+        ...profileData,
+        preferedRole: preferred_role,
+        userId,
+        interests: domain_labels
+          ? {
+              create: domain_labels.map((label) => ({
+                label: {
+                  connectOrCreate: {
+                    where: { name: label },
+                    create: { name: label },
+                  },
+                },
+              })),
+            }
+          : undefined,
+        languages: languages
+          ? {
+              create: languages.map((code) => ({
+                language: {
+                  connect: { code },
+                },
+              })),
+            }
+          : undefined,
+        skills: technical_labels
+          ? {
+              create: technical_labels.map((label) => ({
+                label: {
+                  connectOrCreate: {
+                    where: { name: label },
+                    create: { name: label },
+                  },
+                },
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        interests: {
+          include: {
+            label: true,
+          },
+        },
+        languages: {
+          include: {
+            language: true,
+          },
+        },
+        skills: {
+          include: {
+            label: true,
+          },
+        },
+        role: true,
+      },
+    });
+  }
+
+  /**
+   * Get user profile by user ID
+   * @param userId - ID of the user
+   * @returns User profile if exists, null otherwise
+   */
+  async getUserProfileByUserId(userId: number): Promise<UserProfile | null> {
+    return await this.prisma.userProfile.findUnique({
+      where: {
+        userId: userId,
+      },
+    });
   }
 }
