@@ -1,24 +1,33 @@
+// External imports
 import { Module } from '@nestjs/common';
-import { UserModule } from './modules/user/user.module';
 import { APP_GUARD, RouterModule } from '@nestjs/core';
-import { AuthModule } from './modules/auth/auth.module';
-import { ProjectModule } from './modules/project/project.module';
-import { CommonDataModule } from './modules/common-data/common-data.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { AppController } from './app.controller';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { RATE_LIMITING_LIMIT, RATE_LIMITING_TTL } from './common/consts';
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-ioredis';
+
+// Module imports
+import { UserModule } from './modules/user/user.module';
+import { ProfileModule } from './modules/profile/profile.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { ProjectModule } from './modules/project/project.module';
+import { CommonDataModule } from './modules/common-data/common-data.module';
+import { NewsletterModule } from './modules/newsletter/newsletter.module';
+
+// Service imports
 import { RedisThrottlerStorageService } from './common/throttler/redisThrottlerStorage.service';
 import { RedisService } from './common/throttler/redisThrottler.service';
 import { ThrottlerAbusingGuard } from './common/throttler/throttlerAbusingGuard';
-import { CacheModule } from '@nestjs/cache-manager';
-import * as redisStore from 'cache-manager-ioredis';
+
+// Config & Constants
+import { RATE_LIMITING_LIMIT, RATE_LIMITING_TTL } from './common/consts';
 import { cachingConfig } from './common/redis/redis.config';
 import { NotificationModule } from './modules/notification/notification.module';
 
-import { NewsletterModule } from './modules/newsletter/newsletter.module';
+// Controllers
+import { AppController } from './app.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -46,6 +55,7 @@ import { NewsletterModule } from './modules/newsletter/newsletter.module';
       inject: [ConfigService],
     }),
     UserModule,
+    ProfileModule,
     ProjectModule,
     CommonDataModule,
     AuthModule,
@@ -55,6 +65,10 @@ import { NewsletterModule } from './modules/newsletter/newsletter.module';
       {
         path: 'users',
         module: UserModule,
+      },
+      {
+        path: 'profiles',
+        module: ProfileModule,
       },
       {
         path: 'projects',

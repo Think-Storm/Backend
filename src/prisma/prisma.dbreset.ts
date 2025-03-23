@@ -15,6 +15,7 @@ export default async function refreshDatabase() {
         table['table_name'] !== 'languages' &&
         table['table_name'] !== 'technical_labels' &&
         table['table_name'] !== 'domain_labels' &&
+        table['table_name'] !== 'roles' &&
         !table['table_name'].startsWith('_'),
     )
     .map((table) => `"${table['table_name']}"`);
