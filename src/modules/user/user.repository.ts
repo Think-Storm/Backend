@@ -45,6 +45,9 @@ export class UserRepository {
         where: {
           id: userId,
         },
+        omit: {
+          passwordChangedAt: false,
+        },
       });
     } catch (error) {
       throw ServiceException.ErrorException(
@@ -115,6 +118,7 @@ export class UserRepository {
         },
         omit: {
           password: false,
+          passwordChangedAt: false,
         },
         where: {
           id: updateUserDto.id,
