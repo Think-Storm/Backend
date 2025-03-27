@@ -135,4 +135,13 @@ export class AuthService {
 
     return user;
   }
+
+  async logout() {
+    return {
+      token: '',
+      path: '/',
+      httpOnly: true,
+      maxAge: 0,
+    };
+  }
 }

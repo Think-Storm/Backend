@@ -14,6 +14,7 @@ import RequestWithUser from './local/requestWithUser.interface';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { loginUserDto } from '../auth/dtos/loginUser.dto';
+import { JwtAuthGuard } from './jwt/jwt.guard';
 
 @ApiTags('auth')
 @Controller()
@@ -60,6 +61,24 @@ export class AuthController {
     return res.send({
       message: 'register success',
       data: loggedInNewUser,
+    });
+  }
+
+  @HttpCode(200)
+  @Post('/logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'User log out' })
+  @ApiResponse({ status: 200, description: 'Logout success' })
+  @ApiResponse({
+    status: 401,
+    description: 'Logout is possible only when the user is logged in',
+  })
+  async logout(@Res() res: Response): Promise<any> {
+    const { token, ...cookieOption } = await this.authService.logout();
+    res.cookie('jwt', token, cookieOption);
+
+    return res.send({
+      message: 'logout success',
     });
   }
 }
