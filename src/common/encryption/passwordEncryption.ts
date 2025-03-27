@@ -17,9 +17,10 @@ export class PasswordEncryption {
   }
 
   async changedPasswordAfter(user: User, JWTTimestamp: number) {
-    if (user.passwordChangedAt) {
-      const changedTimeStamp = user.passwordChangedAt.getTime() / 1000;
-
+    if (user?.passwordChangedAt) {
+      const changedTimeStamp = Math.floor(
+        user.passwordChangedAt.getTime() / 1000,
+      );
       return JWTTimestamp < changedTimeStamp;
     }
 
