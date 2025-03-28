@@ -276,4 +276,17 @@ describe('AuthService', () => {
       expect(res.cookies.jwt.value).toBeDefined();
     });
   });
+
+  describe('logout function', () => {
+    it('should return logout options object', async () => {
+      const logoutOptions = await authService.logout();
+
+      expect(logoutOptions).toEqual({
+        token: '',
+        path: '/',
+        httpOnly: true,
+        maxAge: 0,
+      });
+    });
+  });
 });
