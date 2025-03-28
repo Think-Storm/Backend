@@ -15,10 +15,14 @@ import refreshDatabase from '../../src/prisma/prisma.dbreset';
 import { AppModule } from './../../src/app.module';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { RedisThrottlerStorageService } from '../../src/common/throttler/redisThrottlerStorage.service';
+import { PasswordEncryption } from '../../src/common/encryption/passwordEncryption';
+import { JwtStrategy } from '../../src/modules/auth/jwt/jwt.strategy';
 
 describe('/', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
+  let passwordEncryption: PasswordEncryption;
+  let jwtStrategy: JwtStrategy;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -42,6 +46,9 @@ describe('/', () => {
       .compile();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
+    passwordEncryption =
+      moduleFixture.get<PasswordEncryption>(PasswordEncryption);
+    jwtStrategy = moduleFixture.get<JwtStrategy>(JwtStrategy);
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
       new ValidationPipe({
@@ -215,5 +222,143 @@ describe('/', () => {
           message: errorMessages.INCORRECT_EMAIL_OR_PASSWORD,
         });
     });
+  });
+
+  describe('/logout POST (logout)', () => {
+    afterEach(async () => {
+      process.env.JWT_EXPIRES_IN = '90d'; // Reset to default expiration
+    });
+
+    it('should return a 200 if everything is fine', async () => {
+      // First register and login to get valid tokens
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      const token = registerResponse.headers.authorization.split(' ')[1];
+
+      await request(app.getHttpServer())
+        .post('/logout')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(200)
+        .expect({
+          message: 'logout success',
+        });
+    });
+
+    it('should return 401 if user is not logged in', async () => {
+      // Direct logout attempt without login
+      await request(app.getHttpServer()).post('/logout').expect(401).expect({
+        statusCode: 401,
+        message: errorMessages.PROTECT_ROUTES,
+      });
+    });
+
+    it('should return 401 if JWT token is invalid', async () => {
+      await request(app.getHttpServer())
+        .post('/logout')
+        .set('Authorization', 'Bearer invalid-token')
+        .expect(401)
+        .expect({
+          statusCode: 401,
+          message: errorMessages.INVALID_TOKEN,
+        });
+    });
+
+    it('should return 401 if JWT token is expired', async () => {
+      // Store original expiration
+      const originalExpiration = process.env.JWT_EXPIRES_IN;
+
+      // Set very short expiration
+      process.env.JWT_EXPIRES_IN = '1s';
+
+      // Create new app instance with updated JWT config
+      const moduleFixture: TestingModule = await Test.createTestingModule({
+        imports: [
+          AppModule,
+          AuthModule,
+          UserModule,
+          PrismaModule.forTest(prisma),
+        ],
+        providers: [ConfigService],
+      })
+        .overrideProvider(ThrottlerGuard)
+        .useValue({ canActivate: () => true })
+        .overrideProvider(RedisThrottlerStorageService)
+        .useValue({
+          get: jest.fn().mockResolvedValue(null),
+          set: jest.fn(),
+        })
+        .compile();
+
+      const newApp = moduleFixture.createNestApplication();
+      await newApp.init();
+
+      // Register to get a token
+      const registerResponse = await request(newApp.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      const token = registerResponse.headers.authorization.split(' ')[1];
+
+      // Wait for token to expire
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // Try logout with expired token
+      const response = await request(newApp.getHttpServer())
+        .post('/logout')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(401);
+
+      expect(response.body).toEqual({
+        statusCode: 401,
+        message: errorMessages.TOKEN_EXPIRED,
+      });
+
+      // Cleanup
+      process.env.JWT_EXPIRES_IN = originalExpiration;
+      await newApp.close();
+    }, 10000);
+
+    it('should return 401 if user changed password after token was issued', async () => {
+      // Register and get token
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      const token = registerResponse.headers.authorization.split(' ')[1];
+      const userId = registerResponse.body.data.id;
+
+      // Decode the token to get the issue time (iat)
+      const decodedToken = await jwtStrategy.verifyAndDecodeToken(token);
+      const tokenIssueTime = decodedToken.iat;
+
+      // Generate new password hash
+      const { hashedPassword: newPassword } =
+        await passwordEncryption.createSaltAndHashedPassword('newPassword');
+
+      // Set password change time to a time after the token was issued
+      const passwordChangedAt = new Date((tokenIssueTime + 10) * 1000); // 10 seconds after
+
+      // Update user with new password and change time
+      await prismaService.user.update({
+        where: { id: userId },
+        data: {
+          password: newPassword,
+          passwordChangedAt: passwordChangedAt,
+        },
+      });
+
+      // Try logout with old token
+      const response = await request(app.getHttpServer())
+        .post('/logout')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(401);
+
+      expect(response.body).toEqual({
+        statusCode: 401,
+        message: errorMessages.USER_CHANGED_PASSWORD,
+      });
+    }, 10000);
   });
 });
