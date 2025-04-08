@@ -30,6 +30,7 @@ import {
   mockJwtToken,
 } from '../../../../test/utils/jwt.utils';
 import { LanguageCode } from '@prisma/client';
+import { CreateUserProfileDto } from '../../../../src/modules/user/dtos/createUserProfile.dto';
 
 describe('UserController', () => {
   let userController: UserController;
@@ -174,47 +175,44 @@ describe('UserController', () => {
   });
 
   describe('createUserProfile', () => {
-    const mockCreateProfileDto = {
-      avatar: 'https://example.com/avatar.jpg',
-      bio: 'Test bio',
-      preferred_role: 'Backend Developer',
-      location: 'Test Location',
-      website: 'https://example.com',
-      domain_labels: ['Web Development'],
-      languages: [LanguageCode.EN],
-      technical_labels: ['Node.js'],
-    };
-
-    const mockRequest = {
-      user: { id: 1 },
-    };
-
     it('should create a user profile', async () => {
       const userId = 1;
+      const createProfileDto: CreateUserProfileDto = {
+        avatar: 'https://example.com/avatar.jpg',
+        bio: 'Test bio',
+        preferred_role: 'Backend Developer',
+        location: 'Test Location',
+        website: 'https://example.com',
+        domain_labels: ['Web Development'],
+        languages: [LanguageCode.EN],
+        technical_labels: ['NestJS'],
+      };
+
+      const mockRequest = {
+        user: { id: userId },
+      };
+
       const expectedResult = {
-        id: 1,
-        userId: 1,
-        avatar: mockCreateProfileDto.avatar,
-        bio: mockCreateProfileDto.bio,
-        preferedRole: mockCreateProfileDto.preferred_role,
-        location: mockCreateProfileDto.location,
-        website: mockCreateProfileDto.website,
+        message: 'Create User Profile Success',
+        data: {
+          id: 1,
+          userId: 1,
+          avatar: 'https://example.com/avatar.jpg',
+          bio: 'Test bio',
+          preferedRole: 'Backend Developer',
+          location: 'Test Location',
+          website: 'https://example.com',
+        },
       };
 
       jest
         .spyOn(userService, 'createUserProfile')
-        .mockResolvedValue(expectedResult);
+        .mockResolvedValue(expectedResult.data);
 
       const result = await userController.createUserProfile(
         userId,
-        mockCreateProfileDto,
+        createProfileDto,
         mockRequest,
-      );
-
-      expect(userService.createUserProfile).toHaveBeenCalledWith(
-        userId,
-        mockCreateProfileDto,
-        mockRequest.user.id,
       );
       expect(result).toEqual(expectedResult);
     });

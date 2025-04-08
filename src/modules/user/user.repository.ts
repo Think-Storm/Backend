@@ -127,6 +127,23 @@ export class UserRepository {
     }
   }
 
+  /**
+   * Creates a new user profile with associated domain interests, languages, and technical skills
+   * @param userId - The ID of the user to create the profile for
+   * @param createProfileDto - Data transfer object containing profile information
+   * @param createProfileDto.domain_labels - Array of domain/interest areas (e.g., "AI", "Web Development")
+   * @param createProfileDto.languages - Array of language codes the user knows
+   * @param createProfileDto.technical_labels - Array of technical skills/technologies
+   * @param createProfileDto.prefered_role - User's prefered role in projects
+   * @param createProfileDto.profileData - Additional profile data (spread from remaining DTO fields)
+   * @returns Promise resolving to the created UserProfile with all related entities included
+   *
+   * The method handles:
+   * - Creating or connecting domain labels for user interests
+   * - Connecting existing language records
+   * - Creating or connecting technical skill labels
+   * - All relations are created in a single transaction
+   */
   async createUserProfile(
     userId: number,
     createProfileDto: CreateUserProfileDto,

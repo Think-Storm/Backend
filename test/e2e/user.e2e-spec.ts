@@ -17,6 +17,7 @@ import refreshDatabase from '../../src/prisma/prisma.dbreset';
 import { AuthModule } from '../../src/modules/auth/auth.module';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { RedisThrottlerStorageService } from '../../src/common/throttler/redisThrottlerStorage.service';
+import { roles } from '../../prisma/seed-data/role';
 
 describe('/users', () => {
   let app: INestApplication;
@@ -64,6 +65,17 @@ describe('/users', () => {
     await app.init();
     await prismaService.$connect();
     await refreshDatabase();
+  });
+
+  beforeEach(async () => {
+    // Seed roles
+    for (const role of roles) {
+      await prismaService.role.upsert({
+        where: { name: role.name },
+        update: {},
+        create: { name: role.name },
+      });
+    }
   });
 
   afterEach(async () => {
@@ -267,6 +279,180 @@ describe('/users', () => {
 
       // The response should be a 404 Not Found
       expect(updateResponse.status).toBe(404);
+    });
+  });
+
+  describe('/:id/profile POST (Create User Profile)', () => {
+    it('should return a 200 if it successfully create user profile', async () => {
+      // Create User in DB
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      // Get the cookies and authorization header
+      const cookies = registerResponse.headers['set-cookie'];
+      const authHeader = registerResponse.headers.authorization;
+
+      expect(registerResponse.body.message).toBe('register success');
+      expect(registerResponse.body.data.id).toBe(1);
+      expect(registerResponse.body.data.email).toBe(defaultCreateUserDto.email);
+      expect(registerResponse.body.data.username).toBe(
+        defaultCreateUserDto.username,
+      );
+      expect(registerResponse.body.data.birthdate).toBe(
+        defaultCreateUserDto.birthdate.toISOString(),
+      );
+      expect(registerResponse.body.data.fullName).toBe(
+        defaultCreateUserDto.fullName,
+      );
+      expect(registerResponse.body.data.createdAt).toBeDefined();
+      expect(registerResponse.body.data.lastUpdatedAt).toBeDefined();
+
+      const createProfileResponse = await request(app.getHttpServer())
+        .post(`/users/${registerResponse.body.data.id}/profile`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader)
+        .send({
+          avatar: 'https://example.com/avatar.jpg',
+          bio: 'Test bio',
+          preferred_role: 'Backend Developer',
+          location: 'Test Location',
+          website: 'https://example.com',
+          domain_labels: ['Web Development', 'Cloud Computing'],
+          languages: ['EN', 'KR'],
+          technical_labels: ['NestJS', 'TypeScript', 'PostgreSQL'],
+        });
+
+      expect(createProfileResponse.status).toBe(201);
+      expect(createProfileResponse.body.message).toBe(
+        'Create User Profile Success',
+      );
+      expect(createProfileResponse.body.data.userId).toBe(1);
+      expect(createProfileResponse.body.data.avatar).toBe(
+        'https://example.com/avatar.jpg',
+      );
+      expect(createProfileResponse.body.data.bio).toBe('Test bio');
+      expect(createProfileResponse.body.data.preferedRole).toBe(
+        'Backend Developer',
+      );
+      expect(createProfileResponse.body.data.location).toBe('Test Location');
+      expect(createProfileResponse.body.data.website).toBe(
+        'https://example.com',
+      );
+
+      // Test interests (domain_labels)
+      expect(createProfileResponse.body.data.interests).toHaveLength(2);
+      expect(createProfileResponse.body.data.interests[0].userId).toBe(1);
+      expect(createProfileResponse.body.data.interests[0].labelName).toBe(
+        'Web Development',
+      );
+      expect(createProfileResponse.body.data.interests[1].labelName).toBe(
+        'Cloud Computing',
+      );
+
+      // Test languages
+      expect(createProfileResponse.body.data.languages).toHaveLength(2);
+      createProfileResponse.body.data.languages.forEach((lang) => {
+        expect(lang.userId).toBe(1);
+        expect(['EN', 'KR']).toContain(lang.languageCode);
+      });
+
+      // Test skills (technical_labels)
+      expect(createProfileResponse.body.data.skills).toHaveLength(3);
+      const skillNames = createProfileResponse.body.data.skills.map(
+        (skill) => skill.labelName,
+      );
+      expect(skillNames).toEqual(
+        expect.arrayContaining(['NestJS', 'TypeScript', 'PostgreSQL']),
+      );
+      createProfileResponse.body.data.skills.forEach((skill) => {
+        expect(skill.userId).toBe(1);
+        expect(skill.label.name).toBe(skill.labelName);
+      });
+    });
+
+    it('should return 400 if profile already exists', async () => {
+      // Create User in DB
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      const cookies = registerResponse.headers['set-cookie'];
+      const authHeader = registerResponse.headers.authorization;
+
+      // Create profile first time
+      await request(app.getHttpServer())
+        .post(`/users/${registerResponse.body.data.id}/profile`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader)
+        .send({
+          avatar: 'https://example.com/avatar.jpg',
+          bio: 'Test bio',
+          preferred_role: 'Backend Developer',
+          location: 'Test Location',
+          website: 'https://example.com',
+          domain_labels: ['Web Development'],
+          languages: ['EN'],
+          technical_labels: ['NestJS'],
+        });
+
+      // Try to create profile again
+      const duplicateProfileResponse = await request(app.getHttpServer())
+        .post(`/users/${registerResponse.body.data.id}/profile`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader)
+        .send({
+          avatar: 'https://example.com/avatar2.jpg',
+          bio: 'Another bio',
+          preferred_role: 'Frontend Developer',
+          location: 'Another Location',
+          website: 'https://example2.com',
+          domain_labels: ['Mobile Development'],
+          languages: ['KR'],
+          technical_labels: ['React'],
+        });
+
+      expect(duplicateProfileResponse.status).toBe(400);
+      expect(duplicateProfileResponse.body.message).toBe(
+        'User profile already exists. Use update endpoint instead.',
+      );
+    });
+
+    it('should return 403 if trying to create profile for another user', async () => {
+      // Create first user
+      const firstUserResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      // Create second user
+      const secondUserResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send({
+          ...defaultCreateUserDto,
+          email: 'another@example.com',
+          username: 'anotheruser',
+        });
+
+      // Try to create profile for first user while authenticated as second user
+      const unauthorizedProfileResponse = await request(app.getHttpServer())
+        .post(`/users/${firstUserResponse.body.data.id}/profile`)
+        .set('Cookie', secondUserResponse.headers['set-cookie'])
+        .set('Authorization', secondUserResponse.headers.authorization)
+        .send({
+          avatar: 'https://example.com/avatar.jpg',
+          bio: 'Test bio',
+          preferred_role: 'Backend Developer',
+          location: 'Test Location',
+          website: 'https://example.com',
+          domain_labels: ['Web Development'],
+          languages: ['EN'],
+          technical_labels: ['NestJS'],
+        });
+
+      expect(unauthorizedProfileResponse.status).toBe(403);
+      expect(unauthorizedProfileResponse.body.message).toBe(
+        'Forbidden. You can only create a profile for your own user account',
+      );
     });
   });
 });

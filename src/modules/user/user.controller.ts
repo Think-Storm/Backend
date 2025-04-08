@@ -90,7 +90,7 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/:id/profile')
+  @Post('/users/:id/profile')
   @ApiOperation({ summary: 'Create user profile' })
   @ApiParam({ name: 'id', type: Number, description: 'User ID' })
   @ApiBody({ type: CreateUserProfileDto })
@@ -111,10 +111,15 @@ export class UserController {
     @Body() createProfileDto: CreateUserProfileDto,
     @Request() req,
   ) {
-    return await this.userService.createUserProfile(
+    const profile = await this.userService.createUserProfile(
       +userId,
       createProfileDto,
       req.user.id,
     );
+
+    return {
+      message: 'Create User Profile Success',
+      data: profile,
+    };
   }
 }
