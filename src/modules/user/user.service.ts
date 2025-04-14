@@ -9,6 +9,7 @@ import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { UpdateUserDto } from './dtos/updateUser.dto';
 import { PasswordEncryption } from '../../common/encryption/passwordEncryption';
 import { CreateUserProfileDto } from './dtos/createUserProfile.dto';
+import { UserProfileResponseDto } from '../user/dtos/userProfileResponse.dto';
 
 @Injectable()
 export class UserService {
@@ -138,5 +139,24 @@ export class UserService {
       profileUserId,
       createProfileDto,
     );
+  }
+
+  /**
+   * Get user profile by ID
+   * @param userId - ID for getting user profile
+   * @returns A promise resolving to a UserProfileResponseDto
+   */
+  async getUserProfileById(userId: number): Promise<UserProfileResponseDto> {
+    const foundProfile =
+      await this.userRepository.getUserProfileByUserId(userId);
+
+    if (!foundProfile)
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('User Profile', userId.toString()),
+      );
+
+    const mappedProfile =
+      this.userMapper.profileToProfileResponseDTO(foundProfile);
+    return mappedProfile;
   }
 }

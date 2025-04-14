@@ -226,6 +226,18 @@ export class UserRepository {
       where: {
         userId: userId,
       },
+      include: {
+        interests: {
+          include: {
+            label: true,
+          },
+        },
+        skills: {
+          include: {
+            label: true,
+          },
+        },
+      },
     });
   }
 }

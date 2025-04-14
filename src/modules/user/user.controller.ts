@@ -26,6 +26,7 @@ import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 import { AuthService } from '../auth/auth.service';
 import { CreateUserProfileDto } from './dtos/createUserProfile.dto';
+import { UserProfileResponseDto } from './dtos/userProfileResponse.dto';
 
 @ApiTags('users')
 @Controller()
@@ -90,7 +91,7 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('/users/:id/profile')
+  @Post('/:id/profile')
   @ApiOperation({ summary: 'Create user profile' })
   @ApiParam({ name: 'id', type: Number, description: 'User ID' })
   @ApiBody({ type: CreateUserProfileDto })
@@ -121,5 +122,30 @@ export class UserController {
       message: 'Create User Profile Success',
       data: profile,
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(ClassSerializerInterceptor)
+  @Get('/:id/profile')
+  @ApiOperation({ summary: 'Get user profile' })
+  @ApiParam({
+    name: 'id',
+    type: Number,
+    description: 'User ID',
+    required: true,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Get user profile success',
+    type: UserProfileResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'User profile not found' })
+  async getUserProfile(
+    @Param('id') userId: number,
+    @Request() req,
+  ): Promise<UserProfileResponseDto> {
+    const targetUserId = userId || req.user.id;
+    return await this.userService.getUserProfileById(targetUserId);
   }
 }
