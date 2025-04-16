@@ -91,4 +91,18 @@ export class NotificationRepository {
       );
     }
   }
+
+  async updateReadStatus(id: number, isRead: boolean): Promise<Notification> {
+    try {
+      return await this.prisma.notification.update({
+        where: { id },
+        data: { isRead },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_UPDATING_NOTIFICATION,
+        error,
+      );
+    }
+  }
 }

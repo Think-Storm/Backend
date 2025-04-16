@@ -82,4 +82,14 @@ export class NotificationService {
   async clearAllNotifications(userId: number) {
     return await this.notificationRepository.deleteAllByUserId(userId);
   }
+
+  async setNotificationRead(id: number, isRead: boolean) {
+    const notification = await this.notificationRepository.findById(id);
+    if (!notification) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('Notification', id.toString()),
+      );
+    }
+    return await this.notificationRepository.updateReadStatus(id, isRead);
+  }
 }
