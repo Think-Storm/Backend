@@ -168,4 +168,59 @@ describe('NotificationController (e2e)', () => {
       expect(remainingNotifications).toHaveLength(0);
     });
   });
+
+  describe('/notifications/:id/read (PATCH)', () => {
+    it('should set notification as read', async () => {
+      // Create a test notification
+      const notification = await createTestNotification(prismaService, {
+        ...defaultWelcomeNotification,
+        userId: testUser.id,
+        isRead: false,
+      });
+
+      const response = await request(app.getHttpServer())
+        .patch(`/notifications/${notification.id}/read`)
+        .send({ isRead: true })
+        .expect(200);
+
+      expect(response.body).toEqual({
+        ...notification,
+        isRead: true,
+        createdAt: notification.createdAt.toISOString(),
+        lastUpdatedAt: expect.any(String),
+      });
+
+      // Verify the notification was updated in the database
+      const updatedNotification = await prismaService.notification.findUnique({
+        where: { id: notification.id },
+      });
+      expect(updatedNotification?.isRead).toBe(true);
+    });
+
+    it('should return 404 when trying to update non-existent notification', async () => {
+      await request(app.getHttpServer())
+        .patch('/notifications/999999/read')
+        .send({ isRead: true })
+        .expect(404);
+    });
+
+    it('should validate request body', async () => {
+      const notification = await createTestNotification(prismaService, {
+        ...defaultWelcomeNotification,
+        userId: testUser.id,
+      });
+
+      // Test invalid request body
+      await request(app.getHttpServer())
+        .patch(`/notifications/${notification.id}/read`)
+        .send({ isRead: 'not a boolean' })
+        .expect(400);
+
+      // Test missing isRead field
+      await request(app.getHttpServer())
+        .patch(`/notifications/${notification.id}/read`)
+        .send({})
+        .expect(400);
+    });
+  });
 });
