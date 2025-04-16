@@ -7,6 +7,8 @@ import {
   UseGuards,
   Patch,
   Body,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
@@ -18,6 +20,7 @@ import { SetNotificationReadDto } from './dtos/setNotificationRead.dto';
 @ApiTags('notifications')
 @Controller()
 @UseGuards(JwtAuthGuard)
+@UsePipes(new ValidationPipe({ transform: true }))
 export class NotificationController {
   constructor(private notificationService: NotificationService) {}
 
@@ -66,6 +69,10 @@ export class NotificationController {
   @ApiResponse({
     status: 404,
     description: 'Notification not found',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid request body',
   })
   async setNotificationRead(
     @Param('id', ParseIntPipe) id: number,
