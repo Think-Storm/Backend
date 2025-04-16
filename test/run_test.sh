@@ -70,15 +70,7 @@ check_image_exists
 
 export COMPOSE_FILE=${COMPOSE_FILE}:docker/docker-compose.test.yml
 # Run the specified services without aborting on exit
-docker compose up ${TEST_SERVICES[@]} -d --force-recreate \
-  --user node \
-  --security-opt no-new-privileges \
-  --read-only \
-  --cpus 1 \
-  --memory 512m \
-  --memory-swap 512m \
-  --ulimit nofile=1024:1024 \
-  --ulimit nproc=100:100
+docker compose up ${TEST_SERVICES[@]} -d --force-recreate
 # Capture logs for each service in separate files
 mkdir -p "${TEST_DIR}"/logs
 docker compose logs unit -f -t --no-color --no-log-prefix > "${TEST_DIR}"/logs/unit.log &
@@ -97,6 +89,7 @@ for service in "${TEST_SERVICES[@]}"; do
   fi
   echo "You can watch the log of test in the ${TEST_DIR}/logs/$service.log file"
 done
+
 docker compose down
 
 exit 0
