@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationController } from '../../../../src/modules/notification/notification.controller';
 import { NotificationService } from '../../../../src/modules/notification/notification.service';
-import { mockUser } from '../../../utils/notification.utils';
+import { mockUser, mockNotification } from '../../../utils/notification.utils';
 
 describe('NotificationController', () => {
   let controller: NotificationController;
@@ -11,6 +11,7 @@ describe('NotificationController', () => {
     getUserNotifications: jest.fn(),
     deleteNotification: jest.fn(),
     clearAllNotifications: jest.fn(),
+    setNotificationRead: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -71,6 +72,19 @@ describe('NotificationController', () => {
 
       expect(result).toEqual(mockResult);
       expect(service.clearAllNotifications).toHaveBeenCalledWith(mockUser.id);
+    });
+  });
+
+  describe('setNotificationRead', () => {
+    it('should set notification as read', async () => {
+      mockNotificationService.setNotificationRead.mockResolvedValue(
+        mockNotification,
+      );
+
+      const result = await controller.setNotificationRead(1, { isRead: true });
+
+      expect(result).toEqual(mockNotification);
+      expect(service.setNotificationRead).toHaveBeenCalledWith(1, true);
     });
   });
 });

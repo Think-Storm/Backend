@@ -4,7 +4,7 @@ import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { NotificationType } from '@prisma/client';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
-
+import { mockNotification } from '../../../utils/notification.utils';
 describe('NotificationRepository', () => {
   let repository: NotificationRepository;
   let prismaService: PrismaService;
@@ -16,6 +16,7 @@ describe('NotificationRepository', () => {
       delete: jest.fn(),
       deleteMany: jest.fn(),
       findUnique: jest.fn(),
+      update: jest.fn(),
     },
   };
 
@@ -40,17 +41,6 @@ describe('NotificationRepository', () => {
 
   describe('create', () => {
     it('should create a notification', async () => {
-      const mockNotification = {
-        id: 1,
-        userId: 1,
-        type: NotificationType.Welcome,
-        description: 'Welcome!',
-        isRead: false,
-        link: null,
-        createdAt: new Date(),
-        lastUpdatedAt: new Date(),
-      };
-
       mockPrismaService.notification.create.mockResolvedValue(mockNotification);
 
       const result = await repository.create(
@@ -159,6 +149,50 @@ describe('NotificationRepository', () => {
       expect(result).toEqual({ count: 5 });
       expect(prismaService.notification.deleteMany).toHaveBeenCalledWith({
         where: { userId: 1 },
+      });
+    });
+  });
+
+  describe('updateReadStatus', () => {
+    it('should update notification read status', async () => {
+      const mockNotification = {
+        id: 1,
+        userId: 1,
+        type: NotificationType.Welcome,
+        description: 'Welcome!',
+        isRead: true,
+        link: null,
+        createdAt: new Date(),
+        lastUpdatedAt: new Date(),
+      };
+
+      mockPrismaService.notification.update.mockResolvedValue(mockNotification);
+
+      const result = await repository.updateReadStatus(1, true);
+
+      expect(result).toEqual(mockNotification);
+      expect(prismaService.notification.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { isRead: true },
+      });
+    });
+
+    it('should throw error when updating notification fails', async () => {
+      const prismaError = new Error('Error updating notification');
+      mockPrismaService.notification.update.mockRejectedValue(prismaError);
+
+      try {
+        await repository.updateReadStatus(1, true);
+        fail('Expected an error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ServiceException);
+        expect(error.message).toContain(
+          errorMessages.ERROR_UPDATING_NOTIFICATION,
+        );
+      }
+      expect(prismaService.notification.update).toHaveBeenCalledWith({
+        where: { id: 1 },
+        data: { isRead: true },
       });
     });
   });
