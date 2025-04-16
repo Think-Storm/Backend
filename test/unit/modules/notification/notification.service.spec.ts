@@ -4,7 +4,7 @@ import { NotificationRepository } from '../../../../src/modules/notification/not
 import { NotificationType } from '@prisma/client';
 import { notificationMessages } from '../../../../src/common/enums/notificationMessages';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
-
+import { mockNotification } from '../../../utils/notification.utils';
 describe('NotificationService', () => {
   let service: NotificationService;
   let repository: NotificationRepository;
@@ -15,6 +15,7 @@ describe('NotificationService', () => {
     deleteById: jest.fn(),
     deleteAllByUserId: jest.fn(),
     findById: jest.fn(),
+    updateReadStatus: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -40,16 +41,6 @@ describe('NotificationService', () => {
     it('should create a welcome notification', async () => {
       const userId = 1;
       const name = 'Test User';
-      const mockNotification = {
-        id: 1,
-        userId,
-        type: NotificationType.Welcome,
-        description: notificationMessages.WELCOME(name),
-        isRead: false,
-        link: null,
-        createdAt: new Date(),
-        lastUpdatedAt: new Date(),
-      };
 
       mockNotificationRepository.create.mockResolvedValue(mockNotification);
 
@@ -252,6 +243,54 @@ describe('NotificationService', () => {
 
       expect(result).toEqual(mockResult);
       expect(repository.deleteAllByUserId).toHaveBeenCalledWith(userId);
+    });
+  });
+
+  describe('setNotificationRead', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should set notification as read', async () => {
+      const mockNotification = {
+        id: 1,
+        userId: 1,
+        type: NotificationType.Welcome,
+        description: 'Welcome!',
+        isRead: true,
+        link: null,
+        createdAt: new Date(),
+        lastUpdatedAt: new Date(),
+      };
+
+      mockNotificationRepository.findById.mockResolvedValue(mockNotification);
+      mockNotificationRepository.updateReadStatus.mockResolvedValue(
+        mockNotification,
+      );
+
+      const result = await service.setNotificationRead(1, true);
+
+      expect(result).toEqual(mockNotification);
+      expect(repository.findById).toHaveBeenCalledWith(1);
+      expect(repository.updateReadStatus).toHaveBeenCalledWith(1, true);
+    });
+
+    it('should throw NotFoundException when notification does not exist', async () => {
+      const nonExistentId = 999;
+      mockNotificationRepository.findById.mockResolvedValue(null);
+
+      try {
+        await service.setNotificationRead(nonExistentId, true);
+        fail('Expected an error to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ServiceException);
+        expect(error.message).toContain(
+          `Notification with id ${nonExistentId} was not found`,
+        );
+      }
+
+      expect(repository.findById).toHaveBeenCalledWith(nonExistentId);
+      expect(repository.updateReadStatus).not.toHaveBeenCalled();
     });
   });
 });

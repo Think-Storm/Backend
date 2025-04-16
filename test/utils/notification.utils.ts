@@ -48,6 +48,17 @@ export const defaultInviteToProjectNotification: CreateNotificationDto = {
   isRead: false,
 };
 
+export const mockNotification = {
+  id: 1,
+  userId: 1,
+  type: NotificationType.Welcome,
+  description: 'Welcome!',
+  isRead: true,
+  link: null,
+  createdAt: new Date(),
+  lastUpdatedAt: new Date(),
+};
+
 export const createTestNotification = async (
   prisma: any,
   notification: CreateNotificationDto,
