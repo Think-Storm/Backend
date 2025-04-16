@@ -45,18 +45,32 @@ export class ServiceException extends Error {
         error,
       );
     } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      return new ServiceException(
-        errorMessages.BAD_REQUEST + ' ' + message,
-        400,
-        error,
-      );
-    } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2003') {
-        return new ServiceException(
-          errorMessages.FOREIGN_KEY_CONSTRAINT_VIOLATION + message,
-          500,
-          error,
-        );
+      const prismaError = error as Prisma.PrismaClientKnownRequestError;
+      switch (prismaError.code) {
+        case 'P2025': // Record not found
+          return new ServiceException(
+            errorMessages.ENTITY_NOT_FOUND('Record', '') + ' ' + message,
+            404,
+            error,
+          );
+        case 'P2002': // Unique constraint violation
+          return new ServiceException(
+            errorMessages.USER_WITH_EMAIL_ALREADY_EXISTS + ' ' + message,
+            409,
+            error,
+          );
+        case 'P2003': // Foreign key constraint violation
+          return new ServiceException(
+            errorMessages.FOREIGN_KEY_CONSTRAINT_VIOLATION + ' ' + message,
+            500,
+            error,
+          );
+        default:
+          return new ServiceException(
+            errorMessages.BAD_REQUEST + ' ' + message,
+            400,
+            error,
+          );
       }
     } else {
       return new ServiceException(
