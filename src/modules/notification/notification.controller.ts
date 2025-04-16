@@ -5,12 +5,15 @@ import {
   Param,
   ParseIntPipe,
   UseGuards,
+  Patch,
+  Body,
 } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 import { User } from '@prisma/client';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetUser } from '../auth/decorators/getUser.decorator';
+import { SetNotificationReadDto } from './dtos/setNotificationRead.dto';
 
 @ApiTags('notifications')
 @Controller()
@@ -52,5 +55,22 @@ export class NotificationController {
   })
   async deleteAllNotifications(@GetUser() user: User) {
     return this.notificationService.clearAllNotifications(user.id);
+  }
+
+  @Patch(':id/read')
+  @ApiOperation({ summary: 'Set notification read status' })
+  @ApiResponse({
+    status: 200,
+    description: 'Notification read status updated successfully',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Notification not found',
+  })
+  async setNotificationRead(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: SetNotificationReadDto,
+  ) {
+    return this.notificationService.setNotificationRead(id, dto.isRead);
   }
 }
