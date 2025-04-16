@@ -1,2 +1,14 @@
+# Run lint-staged
 npx --no-install lint-staged
-npx prettier -w . --log-level silent
+
+# Run ESLint on staged files
+echo "Running ESLint on staged files..."
+git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(js|jsx|ts|tsx)$' | xargs -r npx eslint --max-warnings=0 || exit 1
+
+# Run Prettier
+echo "Running Prettier..."
+npx prettier -w . --log-level silent || exit 1
+
+# Run TypeScript type checking
+echo "Running TypeScript type checking..."
+npx tsc --noEmit || exit 1
