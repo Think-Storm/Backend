@@ -1,6 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Notification, NotificationType } from '@prisma/client';
+import { ServiceException } from '../../common/exception-filter/serviceException';
+import { errorMessages } from '../../common/enums/errorMessages';
 
 @Injectable()
 export class NotificationRepository {
@@ -12,54 +14,81 @@ export class NotificationRepository {
     description: string,
     link?: string,
   ): Promise<Notification> {
-    return this.prisma.notification.create({
-      data: {
-        userId,
-        type,
-        description,
-        isRead: false,
-        link,
-      },
-    });
+    try {
+      return await this.prisma.notification.create({
+        data: {
+          userId,
+          type,
+          description,
+          isRead: false,
+          link,
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_CREATING_NOTIFICATION_IN_DB,
+        error,
+      );
+    }
   }
 
   async findAllByUserId(userId: number): Promise<Notification[]> {
-    return this.prisma.notification.findMany({
-      where: {
-        userId,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+    try {
+      return await this.prisma.notification.findMany({
+        where: {
+          userId,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_FINDING_NOTIFICATIONS,
+        error,
+      );
+    }
   }
 
   async deleteById(id: number): Promise<Notification> {
-    const notification = await this.prisma.notification.findUnique({
-      where: { id },
-    });
-
-    if (!notification) {
-      throw new NotFoundException('Notification not found');
+    try {
+      return await this.prisma.notification.delete({
+        where: { id },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_DELETING_NOTIFICATION_IN_DB,
+        error,
+      );
     }
-
-    return this.prisma.notification.delete({
-      where: { id },
-    });
   }
 
   async deleteAllByUserId(userId: number): Promise<{ count: number }> {
-    const result = await this.prisma.notification.deleteMany({
-      where: {
-        userId,
-      },
-    });
-    return { count: result.count };
+    try {
+      const result = await this.prisma.notification.deleteMany({
+        where: {
+          userId,
+        },
+      });
+      return { count: result.count };
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_DELETING_NOTIFICATIONS_IN_DB,
+        error,
+      );
+    }
   }
 
   async findById(id: number): Promise<Notification | null> {
-    return this.prisma.notification.findUnique({
-      where: { id },
-    });
+    try {
+      return await this.prisma.notification.findUnique({
+        where: { id },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_FINDING_NOTIFICATION,
+        error,
+      );
+    }
   }
 }

@@ -7,7 +7,6 @@ import {
   Body,
   Put,
   UseGuards,
-  Request,
   Query,
   Delete,
 } from '@nestjs/common';
@@ -25,6 +24,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 import { SearchProjectDto } from './dtos/searchProject.dto';
+import { GetUser } from '../auth/decorators/getUser.decorator';
 @ApiTags('projects')
 @Controller()
 export class ProjectController {
@@ -108,9 +108,9 @@ export class ProjectController {
   @UseGuards(JwtAuthGuard)
   async updateProject(
     @Body() body: UpdateProjectRequestDto,
-    @Request() req,
+    @GetUser() user: any,
   ): Promise<ProjectResponseDto> {
-    return await this.projectService.updateProject(body, req.user.id);
+    return await this.projectService.updateProject(body, user.id);
   }
 
   @HttpCode(200)
@@ -133,8 +133,8 @@ export class ProjectController {
   @UseGuards(JwtAuthGuard)
   async deleteProject(
     @Param() deleteProjectDto: GetProjectRequestDto,
-    @Request() req,
+    @GetUser() user: any,
   ) {
-    return this.projectService.deleteProject(deleteProjectDto, req.user.id);
+    return this.projectService.deleteProject(deleteProjectDto, user.id);
   }
 }

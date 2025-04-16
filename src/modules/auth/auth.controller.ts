@@ -4,17 +4,16 @@ import {
   Post,
   Res,
   UseGuards,
-  Req,
   HttpCode,
   Body,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { LocalAuthGuard } from './local/local.guard';
-import RequestWithUser from './local/requestWithUser.interface';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { loginUserDto } from '../auth/dtos/loginUser.dto';
 import { JwtAuthGuard } from './jwt/jwt.guard';
+import { GetUser } from './decorators/getUser.decorator';
 
 @ApiTags('auth')
 @Controller()
@@ -35,8 +34,7 @@ export class AuthController {
     status: 401,
     description: 'Email does not exist or Password is not correct',
   })
-  async login(@Req() req: RequestWithUser, @Res() res: Response): Promise<any> {
-    const user = req.user;
+  async login(@GetUser() user: any, @Res() res: Response): Promise<any> {
     const loggedInUser = this.authService.authentication(user, res);
 
     return res.send({
