@@ -35,4 +35,12 @@ export const errorMessages = {
   CACHING_TTL_ERROR: 'TTL must be a valid positive integer',
   REDIS_CONNECTION_ISSUE: (message: string) =>
     `Redis connection issue. ${message}`,
+  ERROR_CREATING_NOTIFICATION_IN_DB:
+    'An error occurred while creating notification in DB.',
+  ERROR_FINDING_NOTIFICATIONS: 'An error occurred while finding notifications.',
+  ERROR_DELETING_NOTIFICATION_IN_DB:
+    'An error occurred while deleting notification in DB.',
+  ERROR_DELETING_NOTIFICATIONS_IN_DB:
+    'An error occurred while deleting notifications in DB.',
+  ERROR_FINDING_NOTIFICATION: 'An error occurred while finding notification.',
 };

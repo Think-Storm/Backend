@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { NotificationRepository } from './notification.repository';
 import { Notification, NotificationType } from '@prisma/client';
 import { notificationMessages } from '../../common/enums/notificationMessages';
+import { ServiceException } from '../../common/exception-filter/serviceException';
+import { errorMessages } from '../../common/enums/errorMessages';
 
 @Injectable()
 export class NotificationService {
@@ -68,6 +70,12 @@ export class NotificationService {
   }
 
   async deleteNotification(id: number) {
+    const notification = await this.notificationRepository.findById(id);
+    if (!notification) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('Notification', id.toString()),
+      );
+    }
     return this.notificationRepository.deleteById(id);
   }
 
