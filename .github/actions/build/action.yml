@@ -14,7 +14,7 @@ inputs:
   image-name:
     description: 'Name to use for the built Docker image'
     required: false
-    default: 'thinkstorm-backend'
+    default: 'thinkstorm-backend-prod'
   image-tag:
     description: 'Tag to use for the built Docker image'
     required: false

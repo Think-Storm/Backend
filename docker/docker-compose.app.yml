@@ -1,7 +1,14 @@
 services:
-  app:
+  app-prod:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: thinkstorm-backend:latest
+    image: thinkstorm-backend-prod:latest
+    entrypoint: './entrypoint.sh'
+
+  app-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    image: thinkstorm-backend-dev:latest
     entrypoint: './entrypoint.sh'
