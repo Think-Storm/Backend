@@ -35,9 +35,9 @@ show_help() {
 
 # Check if the image already exists
 check_image_exists() {
-  if [[ "$(docker images -q thinkstorm-backend:latest 2> /dev/null)" == "" ]]; then
+  if [[ "$(docker images -q thinkstorm-backend-prod:latest 2> /dev/null)" == "" ]]; then
     echo "Building the image..."
-    docker-compose build app
+    docker-compose build app-prod
   else
     echo "Image already exists. Skipping build."
   fi

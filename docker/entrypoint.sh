@@ -24,6 +24,10 @@ case ${TYPE:-production} in
     echo "Starting production server..."
     npm run start:prod
     ;;
+  "development")
+    echo "Starting development server..."
+    npm run start:dev
+    ;;
   *)
     echo "Unknown TYPE: ${TEST_TYPE}"
     exit 1

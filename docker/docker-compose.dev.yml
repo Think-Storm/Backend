@@ -1,8 +1,8 @@
 services:
-  thinkstorm-backend-prod:
-    image: thinkstorm-backend-prod:latest
+  thinkstorm-backend-dev:
+    image: thinkstorm-backend-dev:latest
     environment:
-      TYPE: production
+      TYPE: development
       DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/postgres'
       REDIS_HOST: thinkstorm-redis-db
       REDIS_PORT: 6379

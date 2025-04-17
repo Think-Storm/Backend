@@ -18,7 +18,7 @@ inputs:
   image-name:
     description: 'Name of the pre-built Docker image to use for tests'
     required: false
-    default: 'thinkstorm-backend:latest'
+    default: 'thinkstorm-backend-prod:latest'
   logs-directory:
     description: 'Directory where logs should be stored'
     required: false
@@ -66,7 +66,7 @@ runs:
       shell: bash
       run: |
         # Use the --build flag only if build-image is true
-        docker compose -f ${{ inputs.compose-file-app }} build app > /dev/null 2>&1
+        docker compose -f ${{ inputs.compose-file-app }} build app-prod > /dev/null 2>&1
         if [ "${{ inputs.build-image }}" == "true" ]; then
           docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up --build -d --force-recreate|| true
         else
