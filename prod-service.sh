@@ -55,7 +55,7 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
-echo $host_port
+
 check_image_exists() {
   local env_type=$1
   local image_name="thinkstorm-backend-$env_type"
