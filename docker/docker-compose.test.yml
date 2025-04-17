@@ -19,7 +19,7 @@ services:
       - backend-network
 
   unit:
-    image: thinkstorm-backend:latest
+    image: thinkstorm-backend-prod:latest
     environment:
       DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/unit_test_db'
       TYPE: 'unit'
@@ -43,7 +43,7 @@ services:
       - backend-network
 
   e2e:
-    image: thinkstorm-backend:latest
+    image: thinkstorm-backend-prod:latest
     environment:
       DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/e2e_test_db'
       TYPE: 'e2e'
@@ -67,7 +67,7 @@ services:
       - backend-network
 
   cov:
-    image: thinkstorm-backend:latest
+    image: thinkstorm-backend-prod:latest
     environment:
       DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/coverage_test_db'
       TYPE: 'coverage'
