@@ -2,12 +2,14 @@
 
 # Function to display help message
 show_help() {
-    echo "Usage: $0 [command]"
+    echo "Usage: $0 [command] [env] [options]"
     echo "Commands:"
     echo "  start [env]    Start the containers (env: dev|prod, default: production)"
-    echo "  stop          Stop and remove the production environment containers"
+    echo "  stop [env]     Stop and remove the containers (env: dev|prod, default: production)"
     echo "  help          Display this help message"
     echo "  clean         Remove the Docker image"
+    echo "Options:"
+    echo "  --port PORT   Specify the host port to use (default: 3000)"
 }
 
 # Check if an argument is provided
@@ -19,6 +21,41 @@ fi
 # Get the command argument
 command=$1
 
+# Default values
+env_type="prod"
+host_port="3000"
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        start|stop)
+            command=$1
+            shift
+            if [[ $# -gt 0 && $1 != --* ]]; then
+                env_type=$1
+                shift
+            fi
+            ;;
+        --port)
+            shift
+            if [[ $# -gt 0 ]]; then
+                host_port=$1
+                shift
+            else
+                echo "Error: --port requires a value"
+                exit 1
+            fi
+            ;;
+        help|clean)
+            command=$1
+            shift
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+echo $host_port
 check_image_exists() {
   local env_type=$1
   local image_name="thinkstorm-backend-$env_type"
@@ -32,27 +69,35 @@ check_image_exists() {
 
 case $command in
     "start")
-        # Get the environment type (default to production)
-        env_type=${2:-prod}
-        
         # Launch docker-compose with base and environment-specific configurations
         check_image_exists $env_type
         case $env_type in
             "dev")
-                docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.dev.yml up -d
+                HOST_PORT=$host_port docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.dev.yml up -d
                 ;;
             "prod")
-                docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.prod.yml up -d
+                HOST_PORT=$host_port docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.prod.yml up -d
                 ;;
             *)
-                echo "Invalid environment type. Use 'development' or 'production'"
+                echo "Invalid environment type. Use 'dev' or 'prod'"
                 exit 1
                 ;;
         esac
         ;;
     "stop")
-        # Stop and remove containers
-        docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.prod.yml down
+        # Stop and remove containers based on environment
+        case $env_type in
+            "dev")
+                docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.dev.yml down
+                ;;
+            "prod")
+                docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.prod.yml down
+                ;;
+            *)
+                echo "Invalid environment type. Use 'dev' or 'prod'"
+                exit 1
+                ;;
+        esac
         ;;
     "help")
         show_help
