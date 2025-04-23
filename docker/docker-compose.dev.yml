@@ -11,6 +11,9 @@ services:
       REDIS_CACHING_TTL: 3600
       REDIS_USER: redis_user
       REDIS_PASSWORD: redis_password
+      JWT_SECRET: thinkstorm_jwt_secret_key_UlTrA_SeCuRe_KeY
+      JWT_EXPIRES_IN: 90d
+      JWT_COOKIE_EXPIRES_IN: 90
     ports:
       - '${HOST_PORT:-3000}:3000'
     depends_on:
