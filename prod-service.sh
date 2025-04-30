@@ -23,7 +23,7 @@ command=$1
 
 # Default values
 env_type="prod"
-host_port="3000"
+host_port="3001"
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do

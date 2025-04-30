@@ -11,6 +11,12 @@ import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
   const configService = app.get(ConfigService);
   const redisService = new RedisService(configService);
   const redisThrottlerStorageService = new RedisThrottlerStorageService(
@@ -35,7 +41,6 @@ async function bootstrap() {
   app.useGlobalFilters(
     new ServiceExceptionToHttpExceptionFilter(redisThrottlerStorageService),
   );
-
   app.use(cookieParser());
 
   const config = new DocumentBuilder()
@@ -46,6 +51,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
 
-  await app.listen(3000);
+  await app.listen(3001);
 }
 bootstrap();
