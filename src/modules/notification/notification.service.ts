@@ -13,7 +13,7 @@ export class NotificationService {
     userId: number,
     name: string,
   ): Promise<Notification> {
-    return this.notificationRepository.create(
+    return await this.notificationRepository.create(
       userId,
       NotificationType.Welcome,
       notificationMessages.WELCOME(name),
@@ -27,7 +27,7 @@ export class NotificationService {
   ) {
     const description = notificationMessages.JOIN_REQUEST(projectTitle);
     const link = `/projects/${projectId}`;
-    return this.notificationRepository.create(
+    return await this.notificationRepository.create(
       userId,
       NotificationType.JoinRequest,
       description,
@@ -42,7 +42,7 @@ export class NotificationService {
   ) {
     const description = notificationMessages.ACCEPT_JOIN_REQUEST(projectTitle);
     const link = `/projects/${projectId}`;
-    return this.notificationRepository.create(
+    return await this.notificationRepository.create(
       userId,
       NotificationType.AcceptJoinRequest,
       description,
@@ -57,7 +57,7 @@ export class NotificationService {
   ) {
     const description = notificationMessages.INVITE_TO_PROJECT(projectTitle);
     const link = `/projects/${projectId}`;
-    return this.notificationRepository.create(
+    return await this.notificationRepository.create(
       userId,
       NotificationType.InviteToProject,
       description,
@@ -66,7 +66,7 @@ export class NotificationService {
   }
 
   async getUserNotifications(userId: number) {
-    return this.notificationRepository.findAllByUserId(userId);
+    return await this.notificationRepository.findAllByUserId(userId);
   }
 
   async deleteNotification(id: number) {
@@ -76,10 +76,10 @@ export class NotificationService {
         errorMessages.ENTITY_NOT_FOUND('Notification', id.toString()),
       );
     }
-    return this.notificationRepository.deleteById(id);
+    return await this.notificationRepository.deleteById(id);
   }
 
   async clearAllNotifications(userId: number) {
-    return this.notificationRepository.deleteAllByUserId(userId);
+    return await this.notificationRepository.deleteAllByUserId(userId);
   }
 }
