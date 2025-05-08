@@ -135,6 +135,6 @@ export class ProjectController {
     @Param() deleteProjectDto: GetProjectRequestDto,
     @GetUser() user: any,
   ) {
-    return this.projectService.deleteProject(deleteProjectDto, user.id);
+    return await this.projectService.deleteProject(deleteProjectDto, user.id);
   }
 }
