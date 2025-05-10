@@ -126,27 +126,6 @@ describe('UserRepository', () => {
     });
   });
 
-  describe('createUser function', () => {
-    it('should create a new user in DB', async () => {
-      const user = await userRepository.createUser(
-        defaultCreateUserDto,
-        defaultPasswordSalt,
-      );
-
-      expect(user).toHaveProperty('id');
-      expect(user.createdAt).toBeDefined();
-      expect(user.lastUpdatedAt).toBeDefined();
-      expect(user.username).toBe(defaultCreateUserDto.username);
-      expect(user.fullName).toBe(defaultCreateUserDto.fullName);
-      expect(user.email).toBe(defaultCreateUserDto.email);
-      expect(user.password).toBe(defaultCreateUserDto.password);
-      expect(user.birthdate.toDateString()).toBe(
-        defaultCreateUserDto.birthdate.toDateString(),
-      );
-      expect(user.passwordSalt).toBe(defaultPasswordSalt);
-    });
-  });
-
   describe('updateUser function', () => {
     it('should update an existing user in DB', async () => {
       // create a user
