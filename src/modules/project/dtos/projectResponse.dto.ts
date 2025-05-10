@@ -33,7 +33,7 @@ export class ProjectResponseDto {
 
   @Expose()
   @ApiProperty({
-    example: ['NestJS', 'JavaScript', 'Jest'],
+    example: ['nestjs', 'js', 'jest'],
     description: 'The technical labels associated with the project',
   })
   technicalLabels?: string[];
