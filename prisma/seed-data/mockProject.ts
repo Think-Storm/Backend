@@ -10,7 +10,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-12-31'),
     domainLabels: ['E-commerce', 'Technology'],
-    technicalLabels: ['React', 'Express', 'PostgreSQL'],
+    technicalLabels: ['reactjs', 'postgresql'],
   },
   {
     title: 'Language Learning Platform',
@@ -21,7 +21,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-10-15'),
     domainLabels: ['Education', 'Teaching'],
-    technicalLabels: ['TypeScript', 'MongoDB', 'Express'],
+    technicalLabels: ['typescript', 'mongodb'],
   },
   {
     title: 'Fitness Tracker',
@@ -32,7 +32,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-06-30'),
     domainLabels: ['Fitness', 'Healthcare'],
-    technicalLabels: ['React', 'iOS', 'MongoDB'],
+    technicalLabels: ['reactjs', 'mongodb'],
   },
   {
     title: 'Open Source CMS',
@@ -42,7 +42,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-09-01'),
     domainLabels: ['Web Development', 'Technology'],
-    technicalLabels: ['PHP', 'MySQL', 'Vue.js'],
+    technicalLabels: ['php', 'mysql', 'vuejs'],
   },
   {
     title: 'Recipe Sharing Community',
@@ -52,7 +52,7 @@ export const mockProjects = [
     languageCode: LanguageCode.FR,
     milestone: new Date('2024-08-15'),
     domainLabels: ['Food & Beverage', 'Social Media'],
-    technicalLabels: ['Django', 'PostgreSQL', 'React'],
+    technicalLabels: ['django', 'postgresql', 'reactjs'],
   },
   {
     title: 'Smart Home Automation',
@@ -62,7 +62,7 @@ export const mockProjects = [
     languageCode: LanguageCode.DE,
     milestone: new Date('2024-11-30'),
     domainLabels: ['Technology', 'Engineering'],
-    technicalLabels: ['Python', 'Raspberry Pi', 'MongoDB'],
+    technicalLabels: ['python', 'mongodb'],
   },
   {
     title: 'Virtual Art Gallery',
@@ -72,7 +72,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-07-20'),
     domainLabels: ['Art', 'Web Development'],
-    technicalLabels: ['JavaScript', 'React', 'Express'],
+    technicalLabels: ['js', 'reactjs'],
   },
   {
     title: 'Sustainable Travel Guide',
@@ -82,7 +82,7 @@ export const mockProjects = [
     languageCode: LanguageCode.ES,
     milestone: new Date('2024-10-01'),
     domainLabels: ['Travel', 'Tourism'],
-    technicalLabels: ['Android', 'iOS', 'MongoDB'],
+    technicalLabels: ['android', 'mongodb'],
   },
   {
     title: 'Mental Health Journal',
@@ -92,7 +92,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-05-15'),
     domainLabels: ['Healthcare', 'Psychology'],
-    technicalLabels: ['Swift', 'iOS', 'SQLite'],
+    technicalLabels: ['swift'],
   },
   {
     title: 'Blockchain Voting System',
@@ -102,7 +102,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-12-15'),
     domainLabels: ['Technology', 'Web Development'],
-    technicalLabels: ['Python', 'Docker', 'PostgreSQL'],
+    technicalLabels: ['python', 'docker', 'postgresql'],
   },
   {
     title: 'Music Collaboration Platform',
@@ -112,7 +112,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-09-30'),
     domainLabels: ['Music', 'Social Media'],
-    technicalLabels: ['WebSocket', 'Express', 'MongoDB'],
+    technicalLabels: ['mongodb'],
   },
   {
     title: 'AI Code Review Assistant',
@@ -122,7 +122,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-11-15'),
     domainLabels: ['Artificial Intelligence', 'Web Development'],
-    technicalLabels: ['Python', 'Docker', 'PostgreSQL'],
+    technicalLabels: ['python', 'docker', 'postgresql'],
   },
   {
     title: 'Local Community Board',
@@ -132,7 +132,7 @@ export const mockProjects = [
     languageCode: LanguageCode.FR,
     milestone: new Date('2024-06-01'),
     domainLabels: ['Social Media', 'Public Health'],
-    technicalLabels: ['PHP', 'MySQL', 'Vue.js'],
+    technicalLabels: ['php', 'mysql', 'vuejs'],
   },
   {
     title: 'Educational Game Platform',
@@ -142,7 +142,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-08-30'),
     domainLabels: ['Education', 'Game Development'],
-    technicalLabels: ['Unity', 'C#', 'MongoDB'],
+    technicalLabels: ['csharp', 'mongodb'],
   },
   {
     title: 'Sustainable Fashion Marketplace',
@@ -152,7 +152,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-10-30'),
     domainLabels: ['Fashion', 'E-commerce'],
-    technicalLabels: ['Next.js', 'PostgreSQL', 'Redis'],
+    technicalLabels: ['nextjs', 'postgresql', 'redis'],
   },
   {
     title: 'Open Source CAD Software',
@@ -162,7 +162,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-12-31'),
     domainLabels: ['Engineering', 'Design'],
-    technicalLabels: ['C++'],
+    technicalLabels: ['c++'],
   },
   {
     title: 'Pet Care App',
@@ -172,7 +172,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-07-15'),
     domainLabels: ['Healthcare', 'Veterinary'],
-    technicalLabels: ['React', 'iOS', 'MongoDB'],
+    technicalLabels: ['reactjs', 'mongodb'],
   },
   {
     title: 'Digital Art Marketplace',
@@ -182,7 +182,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-09-15'),
     domainLabels: ['Art', 'E-commerce'],
-    technicalLabels: ['React', 'Express', 'MongoDB'],
+    technicalLabels: ['reactjs', 'mongodb'],
   },
   {
     title: 'Remote Work Hub',
@@ -192,7 +192,7 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-08-01'),
     domainLabels: ['Social Media', 'Project Management'],
-    technicalLabels: ['Django', 'PostgreSQL', 'React'],
+    technicalLabels: ['django', 'postgresql', 'reactjs'],
   },
   {
     title: 'Open Source Game Engine',
@@ -202,6 +202,6 @@ export const mockProjects = [
     languageCode: LanguageCode.EN,
     milestone: new Date('2024-11-30'),
     domainLabels: ['Game Development', 'Technology'],
-    technicalLabels: ['C++', 'Unity'],
+    technicalLabels: ['c++'],
   },
 ];

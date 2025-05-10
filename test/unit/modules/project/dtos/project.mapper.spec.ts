@@ -66,13 +66,13 @@ describe('ProjectMapper', () => {
           },
         ],
         technicalLabels: [
-          { projectId: 1, labelName: 'NestJS', label: { name: 'NestJS' } },
+          { projectId: 1, labelName: 'nestjs', label: { name: 'nestjs' } },
           {
             projectId: 1,
-            labelName: 'JavaScript',
-            label: { name: 'JavaScript' },
+            labelName: 'js',
+            label: { name: 'js' },
           },
-          { projectId: 1, labelName: 'Jest', label: { name: 'Jest' } },
+          { projectId: 1, labelName: 'jest', label: { name: 'jest' } },
         ],
         language: {
           code: LanguageCode.EN,
@@ -94,7 +94,7 @@ describe('ProjectMapper', () => {
           createdAt: expect.any(Date),
           lastUpdatedAt: expect.any(Date),
         },
-        technicalLabels: ['NestJS', 'JavaScript', 'Jest'],
+        technicalLabels: ['nestjs', 'js', 'jest'],
         domainLabels: ['Cooking', 'Design', 'Geography'],
         goal: Goal.Education,
         status: ProjectStatus.InProgress,
@@ -111,7 +111,7 @@ describe('ProjectMapper', () => {
 
       expect(result).toEqual(expectedDto);
       expect(result.domainLabels).toEqual(['Cooking', 'Design', 'Geography']);
-      expect(result.technicalLabels).toEqual(['NestJS', 'JavaScript', 'Jest']);
+      expect(result.technicalLabels).toEqual(['nestjs', 'js', 'jest']);
     });
 
     it('should handle a Project without complex labels', () => {
@@ -172,7 +172,7 @@ describe('ProjectMapper', () => {
       const projectWithStringArrayLabels: ProjectWithStringArrayLabels = {
         ...defaultProject,
         domainLabels: ['Cooking', 'Design', 'Geography'],
-        technicalLabels: ['NestJS', 'JavaScript', 'Jest'],
+        technicalLabels: ['nestjs', 'js'],
         language: {
           code: LanguageCode.EN,
           name: LanguageName.English,
@@ -189,7 +189,7 @@ describe('ProjectMapper', () => {
 
       expect(result).toBeDefined();
       expect(result.domainLabels).toEqual(['Cooking', 'Design', 'Geography']);
-      expect(result.technicalLabels).toEqual(['NestJS', 'JavaScript', 'Jest']);
+      expect(result.technicalLabels).toEqual(['nestjs', 'js']);
 
       // Restore the original implementation
       jest.restoreAllMocks();

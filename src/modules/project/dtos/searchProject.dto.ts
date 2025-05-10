@@ -51,7 +51,7 @@ export class SearchProjectDto {
   goal?: Goal;
 
   @ApiProperty({
-    example: 'NestJS,JavaScript,Jest',
+    example: 'nestjs,js,jest',
     description: 'The technical labels associated with the project',
     required: false,
   })

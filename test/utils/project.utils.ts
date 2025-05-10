@@ -124,7 +124,7 @@ export const secondProjectResponseDto: ProjectResponseDto = {
     createdAt: new Date('2025-01-01'),
     lastUpdatedAt: new Date('2025-01-01'),
   },
-  technicalLabels: ['AWS', 'Next.js', 'Gatsby'],
+  technicalLabels: ['aws', 'nextjs', 'gatsby'],
   domainLabels: ['Design', 'Mathematics', 'Mindfulness'],
   goal: Goal.Fun,
   status: ProjectStatus.Complete,
@@ -143,7 +143,7 @@ export const defaultCreateProjectRequestDto: CreateProjectRequestDto = {
   status: ProjectStatus.InProgress,
   languageCode: LanguageCode.EN,
   milestone: new Date('2000-01-01'),
-  technicalLabels: ['NestJS', 'JavaScript', 'Jest'],
+  technicalLabels: ['nestjs', 'js', 'jest'],
   domainLabels: ['Cooking', 'Design', 'Geography'],
 };
 
@@ -155,7 +155,7 @@ export const secondCreateProjectRequestDto: CreateProjectRequestDto = {
   status: ProjectStatus.Complete,
   languageCode: LanguageCode.KR,
   milestone: new Date('2028-01-01'),
-  technicalLabels: ['AWS', 'Next.js', 'Gatsby'],
+  technicalLabels: ['aws', 'nextjs', 'gatsby'],
   domainLabels: ['Design', 'Mathematics', 'Mindfulness'],
 };
 
@@ -169,7 +169,7 @@ export const defaultProjectResponseDto: ProjectResponseDto = {
     createdAt: new Date('2000-01-01'),
     lastUpdatedAt: new Date('2000-01-01'),
   },
-  technicalLabels: ['NestJS', 'JavaScript', 'Jest'],
+  technicalLabels: ['nestjs', 'js', 'jest'],
   domainLabels: ['Cooking', 'Design', 'Geography'],
   goal: Goal.Education,
   status: ProjectStatus.InProgress,
@@ -223,7 +223,7 @@ export const defaultCreateProjectDto: CreateProjectRequestDto = {
   founderId: 1,
   title: 'title',
   description: 'description',
-  technicalLabels: ['NestJS', 'JavaScript', 'Jest'],
+  technicalLabels: ['nestjs', 'js', 'jest'],
   domainLabels: [],
   goal: Goal.Education,
   status: ProjectStatus.InProgress,
@@ -241,7 +241,7 @@ export const defaultUpdateProjectDto: UpdateProjectRequestDto = {
   goal: Goal.OpenSource,
   milestone: new Date('2021-01-01'),
   domainLabels: ['Science', 'Technology'],
-  technicalLabels: ['TypeScript', 'GraphQL'],
+  technicalLabels: ['typescript', 'graphql'],
 };
 
 export const defaultDeleteProjectDto: GetProjectRequestDto = {
@@ -254,7 +254,7 @@ export const defaultSearchProjectDto: SearchProjectDto = {
   description: 'description',
   status: ProjectStatus.InProgress,
   goal: Goal.Education,
-  technicalLabels: 'NestJS,JavaScript,Jest',
+  technicalLabels: 'nestjs,js,jest',
   domainLabels: 'Cooking,Design,Geography',
   mileStoneFrom: new Date('2000-01-01'),
   mileStoneTo: new Date('2030-01-01'),
@@ -267,7 +267,7 @@ export const defaultSearchProjectDto: SearchProjectDto = {
 };
 
 export const secondSearchProjectDto: SearchProjectDto = {
-  technicalLabels: 'AWS',
+  technicalLabels: 'aws',
   domainLabels: 'Mathematics,Mindfulness',
   mileStoneFrom: new Date('2000-01-01'),
   mileStoneTo: new Date('2030-01-01'),

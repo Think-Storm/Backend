@@ -124,7 +124,7 @@ describe('ProjectService', () => {
         .mockReturnValue([defaultProjectResponseDto, secondProjectResponseDto]);
 
       const bothSearchProjectQuery = defaultSearchProjectDto;
-      bothSearchProjectQuery.technicalLabels = 'AWS,NestJS';
+      bothSearchProjectQuery.technicalLabels = 'aws,nestjs';
       bothSearchProjectQuery.domainLabels = undefined;
       bothSearchProjectQuery.title = undefined;
       bothSearchProjectQuery.languageCode = undefined;
