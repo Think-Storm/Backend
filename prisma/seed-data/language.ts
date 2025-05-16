@@ -1,4 +1,4 @@
-import { LanguageCode, LanguageName } from '@prisma/client';
+import { LanguageCode, LanguageName } from '@think-storm/contracts';
 export const languages = [
   { code: LanguageCode.EN, name: LanguageName.English },
   { code: LanguageCode.FR, name: LanguageName.French },

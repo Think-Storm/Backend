@@ -7,8 +7,9 @@ import {
   IsNotEmpty,
   IsDate,
 } from 'class-validator';
+import { CreateUser } from '@think-storm/contracts';
 
-export class CreateUserDto {
+export class CreateUserDto implements CreateUser {
   @ApiProperty({ description: 'Username of the user' })
   @IsString()
   @IsNotEmpty()

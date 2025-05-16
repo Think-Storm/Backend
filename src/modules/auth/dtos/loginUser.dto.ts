@@ -1,7 +1,8 @@
 import { IsString, IsEmail, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { LoginUser } from '@think-storm/contracts';
 
-export class loginUserDto {
+export class LoginUserDto implements LoginUser {
   @ApiProperty({
     description: 'User email address',
     example: 'user@example.com',

@@ -6,11 +6,16 @@ import {
   IsNotEmpty,
   IsInt,
 } from 'class-validator';
-import { ProjectStatus, Goal, LanguageCode } from '@prisma/client';
+import {
+  ProjectStatus,
+  Goal,
+  LanguageCode,
+  UpdateProject,
+} from '@think-storm/contracts';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 
-export class UpdateProjectRequestDto {
+export class UpdateProjectRequestDto implements UpdateProject {
   @ApiProperty({ description: 'The ID of the founder' })
   @IsInt()
   @IsNotEmpty()
