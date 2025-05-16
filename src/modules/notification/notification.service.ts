@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { NotificationRepository } from './notification.repository';
-import { Notification, NotificationType } from '@prisma/client';
+import { Notification } from '@prisma/client';
 import { notificationMessages } from '../../common/enums/notificationMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { errorMessages } from '../../common/enums/errorMessages';
-
+import { NotificationType } from '@think-storm/contracts';
 @Injectable()
 export class NotificationService {
   constructor(private notificationRepository: NotificationRepository) {}

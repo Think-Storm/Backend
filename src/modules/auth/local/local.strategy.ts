@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-custom';
 import { AuthService } from '../auth.service';
-import { loginUserDto } from '../dtos/loginUser.dto';
+import { LoginUserDto } from '../dtos/loginUser.dto';
+import { UserResponseDto } from '../../user/dtos/userResponse.dto';
 import { ServiceException } from './../../../common/exception-filter/serviceException';
 import { errorMessages } from '../../../common/enums/errorMessages';
-import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
 import { Request } from 'express';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class LocalStrategy extends PassportStrategy(Strategy, 'local') {
   }
 
   async validate(req: Request): Promise<UserResponseDto> {
-    const loginUserDto: loginUserDto = {
+    const loginUserDto: LoginUserDto = {
       email: req.body.email,
       password: req.body.password,
     };

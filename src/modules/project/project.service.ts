@@ -1,13 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { ProjectRepository } from './project.repository';
 import { ProjectMapper } from './dtos/project.mapper';
-import { ProjectResponseDto } from './dtos/projectResponse.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
-import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { UserService } from '../user/user.service';
-import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
-import { SearchProjectDto } from './dtos/searchProject.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
@@ -15,6 +11,10 @@ import { RedisService } from '../../common/caching/redisCaching.service';
 import { GetProjectRequestDto } from './dtos/getProjectRequest.dto';
 import { Project } from '@prisma/client';
 import { SearchProjectResponseDto } from './dtos/searchProjectResponse.dto';
+import { ProjectResponseDto } from './dtos/projectResponse.dto';
+import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
+import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
+import { SearchProjectDto } from './dtos/searchProject.dto';
 
 @Injectable()
 export class ProjectService {

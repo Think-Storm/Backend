@@ -2,8 +2,9 @@ import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { ProjectResponseDto } from './projectResponse.dto';
 import { defaultUser } from '../../../../test/utils/user.utils';
+import { SearchProjectResponse } from '@think-storm/contracts';
 
-export class SearchProjectResponseDto {
+export class SearchProjectResponseDto implements SearchProjectResponse {
   @Expose()
   @ApiProperty({
     example: [

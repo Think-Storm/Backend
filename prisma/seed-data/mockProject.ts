@@ -1,4 +1,4 @@
-import { Goal, ProjectStatus, LanguageCode } from '@prisma/client';
+import { Goal, ProjectStatus, LanguageCode } from '@think-storm/contracts';
 
 export const mockProjects = [
   {

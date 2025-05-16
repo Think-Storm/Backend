@@ -59,9 +59,9 @@ model Project {
   founderId       Int                     @map("founder_id")
   title           String
   description     String?
-  goal            Goal
-  status          ProjectStatus
-  languageCode    LanguageCode            @map("language_code")
+  goal            String
+  status          String
+  languageCode    String            @map("language_code")
   milestone       DateTime?
   createdAt       DateTime                @default(now()) @map("created_at")
   lastUpdatedAt   DateTime                @updatedAt @map("last_updated_at")
@@ -80,7 +80,7 @@ model Project {
 model Notification {
   id              Int                     @id @default(autoincrement())
   userId          Int                     @map("user_id")
-  type            NotificationType
+  type            String
   description     String
   link            String?
   isRead          Boolean                 @default(false)
@@ -173,7 +173,7 @@ model JoinRequest {
   userId    Int               @map("user_id")
   projectId Int               @map("project_id")
   roleName  String            @map("role_name")
-  status    JoinRequestStatus @default(Pending)
+  status    String            @default("Pending")
   user      User              @relation(fields: [userId], references: [id])
   project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   role      Role              @relation(fields: [roleName], references: [name])
@@ -183,8 +183,8 @@ model JoinRequest {
 }
 
 model Language {
-  code          LanguageCode          @id
-  name          LanguageName
+  code          String          @id
+  name          String
   createdAt     DateTime              @default(now()) @map("created_at")
   lastUpdatedAt DateTime              @updatedAt @map("last_updated_at")
   projects      Project[]
@@ -206,7 +206,7 @@ model Role {
 
 model UserProfileLanguage {
   userId       Int          @map("user_id")
-  languageCode LanguageCode @map("language_code")
+  languageCode String @map("language_code")
   language     Language     @relation(fields: [languageCode], references: [code], onUpdate: Cascade)
   userProfile  UserProfile? @relation(fields: [userId], references: [userId], onUpdate: Cascade)
 
@@ -214,55 +214,3 @@ model UserProfileLanguage {
   @@map("user_profile_languages")
 }
 
-enum ProjectStatus {
-  Complete
-  InProgress
-  OnHold
-  Canceled
-}
-
-enum JoinRequestStatus {
-  Pending
-  Accepted
-  Rejected
-}
-
-enum Goal {
-  Education
-  Profitable
-  Fun
-  OpenSource
-}
-
-enum LanguageCode {
-  EN
-  FR
-  KR
-  ES
-  DE
-  IT
-  JA
-  ZH
-  RU
-  AR
-}
-
-enum LanguageName {
-  English
-  French
-  Korean
-  Spanish
-  German
-  Italian
-  Japanese
-  Chinese
-  Russian
-  Arabic
-}
-
-enum NotificationType {
-  JoinRequest
-  AcceptJoinRequest
-  InviteToProject
-  Welcome
-}

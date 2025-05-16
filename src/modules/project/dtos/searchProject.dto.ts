@@ -1,4 +1,9 @@
-import { Goal, LanguageCode, ProjectStatus } from '@prisma/client';
+import {
+  Goal,
+  LanguageCode,
+  ProjectStatus,
+  SearchProject,
+} from '@think-storm/contracts';
 import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
@@ -6,7 +11,7 @@ import { PaginationDefault, SortDefault } from '../../../common/consts';
 import { IsBeforeDate } from '../../../common/decorator/isBeforeDate';
 import { IsAfterDate } from '../../../common/decorator/isAfterDate';
 
-export class SearchProjectDto {
+export class SearchProjectDto implements SearchProject {
   @ApiProperty({
     description: 'The title of the project',
     required: false,
