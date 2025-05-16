@@ -1,5 +1,4 @@
 import { NewsletterService } from './newsletter.service';
-import { CreateNewsletterSubscriptionDto } from './dtos/createNewsletterSubscription.dto';
 import {
   Controller,
   Post,
@@ -8,6 +7,7 @@ import {
   UseInterceptors,
   ClassSerializerInterceptor,
 } from '@nestjs/common';
+import { CreateNewsletterSubscriptionDto } from './dtos/createNewsletterSubscription.dto';
 import { NewsletterSubscriptionResponseDto } from './dtos/newsletterSubscriptionResponse.dto';
 import {
   ApiOperation,

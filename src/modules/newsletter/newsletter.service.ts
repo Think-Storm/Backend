@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { CreateNewsletterSubscriptionDto } from './dtos/createNewsletterSubscription.dto';
-import { NewsletterRepository } from './newsletter.repository';
 import { NewsletterSubscriptionResponseDto } from './dtos/newsletterSubscriptionResponse.dto';
+import { NewsletterRepository } from './newsletter.repository';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { NewsletterSubscription } from '@prisma/client';
 import { NewsletterMapper } from './dtos/newsletter.mapper';

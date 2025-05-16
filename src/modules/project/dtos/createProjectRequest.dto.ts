@@ -1,4 +1,9 @@
-import { Goal, LanguageCode, ProjectStatus } from '@prisma/client';
+import {
+  Goal,
+  LanguageCode,
+  ProjectStatus,
+  CreateProject,
+} from '@think-storm/contracts';
 import { Transform } from 'class-transformer';
 import {
   IsString,
@@ -11,7 +16,7 @@ import {
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateProjectRequestDto {
+export class CreateProjectRequestDto implements CreateProject {
   @ApiProperty({ description: 'The ID of the founder' })
   @IsInt()
   @IsNotEmpty()

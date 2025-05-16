@@ -11,7 +11,7 @@ import { Response } from 'express';
 import { LocalAuthGuard } from './local/local.guard';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
-import { loginUserDto } from '../auth/dtos/loginUser.dto';
+import { LoginUserDto } from './dtos/loginUser.dto';
 import { JwtAuthGuard } from './jwt/jwt.guard';
 import { GetUser } from './decorators/getUser.decorator';
 
@@ -24,7 +24,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('/login')
   @ApiOperation({ summary: 'User login' })
-  @ApiBody({ type: loginUserDto })
+  @ApiBody({ type: LoginUserDto })
   @ApiResponse({ status: 200, description: 'Login success' })
   @ApiResponse({
     status: 400,

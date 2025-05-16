@@ -1,14 +1,14 @@
+import { User } from '@prisma/client';
 import {
-  Goal,
+  ProjectResponse,
   Language,
-  LanguageCode,
   ProjectStatus,
-  User,
-} from '@prisma/client';
+  Goal,
+} from '@think-storm/contracts';
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class ProjectResponseDto {
+export class ProjectResponseDto implements ProjectResponse {
   @Expose()
   @ApiProperty({
     example: 1,
@@ -27,7 +27,6 @@ export class ProjectResponseDto {
   @ApiProperty({
     example: 'EN',
     description: 'The language of the project',
-    enum: LanguageCode,
   })
   language: Language;
 
