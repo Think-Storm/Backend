@@ -1,7 +1,8 @@
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { UserResponse } from '@think-storm/contracts';
 
-export class UserResponseDto {
+export class UserResponseDto implements UserResponse {
   @ApiProperty()
   @Expose()
   id: number;

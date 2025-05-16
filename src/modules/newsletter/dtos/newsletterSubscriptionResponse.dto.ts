@@ -1,7 +1,10 @@
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { NewsletterSubscriptionResponse } from '@think-storm/contracts';
 
-export class NewsletterSubscriptionResponseDto {
+export class NewsletterSubscriptionResponseDto
+  implements NewsletterSubscriptionResponse
+{
   @ApiProperty({
     example: 1,
     description: 'The unique identifier of the newsletter subscription',

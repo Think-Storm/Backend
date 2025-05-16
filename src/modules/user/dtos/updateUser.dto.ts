@@ -8,8 +8,9 @@ import {
   IsDate,
   IsNumber,
 } from 'class-validator';
+import { UpdateUser } from '@think-storm/contracts';
 
-export class UpdateUserDto {
+export class UpdateUserDto implements UpdateUser {
   @ApiProperty({ description: 'User ID', required: true })
   @IsNumber()
   @IsNotEmpty()

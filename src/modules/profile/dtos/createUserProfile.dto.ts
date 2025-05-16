@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsUrl, IsArray, IsEnum } from 'class-validator';
-import { LanguageCode } from '@prisma/client';
+import { LanguageCode, CreateProfile } from '@think-storm/contracts';
 
-export class CreateUserProfileDto {
+export class CreateUserProfileDto implements CreateProfile {
   @ApiProperty({
     description: 'URL to user avatar',
     required: false,

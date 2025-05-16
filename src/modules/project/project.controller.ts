@@ -15,6 +15,7 @@ import { GetProjectRequestDto } from './dtos/getProjectRequest.dto';
 import { ProjectResponseDto } from './dtos/projectResponse.dto';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
+import { SearchProjectDto } from './dtos/searchProject.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -23,7 +24,6 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
-import { SearchProjectDto } from './dtos/searchProject.dto';
 import { GetUser } from '../auth/decorators/getUser.decorator';
 import { SearchProjectResponseDto } from './dtos/searchProjectResponse.dto';
 

@@ -8,6 +8,7 @@ import {
   Involvement,
   JoinRequest,
 } from '@prisma/client';
+import { stringToEnum, Goal, ProjectStatus } from '@think-storm/contracts';
 import { ProjectResponseDto } from './projectResponse.dto';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -56,6 +57,16 @@ export class ProjectMapper {
       plainProject.technicalLabels = project.technicalLabels.map(
         (tl) => tl.label.name,
       );
+    }
+
+    // Transform string goal to enum
+    if (plainProject.goal) {
+      plainProject.goal = stringToEnum(plainProject.goal, Goal);
+    }
+
+    // Transform string status to enum
+    if (plainProject.status) {
+      plainProject.status = stringToEnum(plainProject.status, ProjectStatus);
     }
 
     return plainToInstance(ProjectResponseDto, plainProject, {
