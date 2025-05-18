@@ -11,6 +11,7 @@ import {
 import { ProjectResponseDto } from './projectResponse.dto';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { SearchProjectResponseDto } from './searchProjectResponse.dto';
 
 type ProjectWithLabels = Project & {
   domainLabels?: (ProjectDomainLabel & {
@@ -74,5 +75,31 @@ export class ProjectMapper {
         excludeExtraneousValues: true,
       }),
     );
+  }
+
+  /**
+   * Maps a ProjectResponseDto entity to a SearchProjectResponseDto[]
+   * @param ProjectResponseDto - The ProjectResponseDto to be mapped
+   * @param page - Current page of the result
+   * @param limit - Number of items for each page
+   * @param totalPages - Total number of pages
+   * @param totalItems - Total number of items
+   * @returns A SearchProjectResponseDto with the mapped data
+   */
+  @ApiProperty({ type: SearchProjectResponseDto })
+  projectResponseDtoToSearchProjectResponseDtos(
+    projects: ProjectResponseDto[],
+    page: number,
+    limit: number,
+    totalPages: number,
+    totalItems: number,
+  ): SearchProjectResponseDto {
+    const searchProjectResponseDto = new SearchProjectResponseDto();
+    searchProjectResponseDto.projects = projects;
+    searchProjectResponseDto.page = page;
+    searchProjectResponseDto.limit = limit;
+    searchProjectResponseDto.totalPages = totalPages;
+    searchProjectResponseDto.totalItems = totalItems;
+    return searchProjectResponseDto;
   }
 }
