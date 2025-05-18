@@ -15,6 +15,7 @@ import { UserRepository } from '../../src/modules/user/user.repository';
 import { defaultPasswordSalt } from '../../test/unit/common/passwordEncryption.utils';
 import { SearchProjectDto } from '../../src/modules/project/dtos/searchProject.dto';
 import { GetProjectRequestDto } from '../../src/modules/project/dtos/getProjectRequest.dto';
+import { SearchProjectResponseDto } from './../../src/modules/project/dtos/searchProjectResponse.dto';
 
 export const createProjectInDB = async (
   prismaService: PrismaService,
@@ -277,6 +278,14 @@ export const secondSearchProjectDto: SearchProjectDto = {
   lastUpdatedAtTo: new Date('2030-01-01'),
   page: 1,
   limit: 10,
+};
+
+export const searchProjectResponseDto: SearchProjectResponseDto = {
+  projects: [defaultProjectResponseDto],
+  page: 1,
+  limit: 10,
+  totalPages: 1,
+  totalItems: 1,
 };
 
 export const defaultSortBy: Array<object> = [

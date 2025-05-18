@@ -10,6 +10,7 @@ import {
   defaultProjectResponseDto,
   defaultSearchProjectDto,
   defaultUpdateProjectDto,
+  searchProjectResponseDto,
   secondProject,
   secondProjectResponseDto,
 } from '../../../utils/project.utils';
@@ -83,13 +84,10 @@ describe('ProjectService', () => {
 
   describe('searchProjects', () => {
     it('should return a right project if searched projects with the queries exist', async () => {
-      const defaultSearchedResults: ProjectResponseDto[] = [
-        defaultProjectResponseDto,
-      ];
       // Mock call to DB to return Projects
       const spy = jest
         .spyOn(projectRepository, 'searchProjects')
-        .mockResolvedValue([defaultProject]);
+        .mockResolvedValue({ projects: [defaultProject], totalItems: 1 });
 
       // Mock call to project mapper to return ProjectResponseDtos
       const transformToDtoSpy = jest
@@ -105,7 +103,7 @@ describe('ProjectService', () => {
       expect(transformToDtoSpy).toHaveBeenCalledTimes(1);
       // eslint-disable-next-line prettier/prettier
       expect(transformToDtoSpy).toHaveBeenCalledWith([defaultProject]);
-      expect(searchedProjects).toStrictEqual(defaultSearchedResults);
+      expect(searchedProjects).toMatchObject(searchProjectResponseDto);
     });
 
     it('should return right projects if searched projects with the queries exist', async () => {
@@ -116,7 +114,10 @@ describe('ProjectService', () => {
       // Mock call to DB to return Projects
       const spy = jest
         .spyOn(projectRepository, 'searchProjects')
-        .mockResolvedValue([defaultProject, secondProject]);
+        .mockResolvedValue({
+          projects: [defaultProject, secondProject],
+          totalItems: 2,
+        });
 
       // Mock call to project mapper to return ProjectResponseDtos
       const transformToDtoSpy = jest
@@ -146,11 +147,18 @@ describe('ProjectService', () => {
         defaultProject,
         secondProject,
       ]);
-      expect(searchedProjects).toStrictEqual(defaultSearchedResults);
+
+      const expectedResponse = {
+        ...searchProjectResponseDto,
+        projects: defaultSearchedResults,
+        totalItems: 2,
+      };
+
+      expect(searchedProjects).toMatchObject(expectedResponse);
     });
 
     it('should return cached results if they exist', async () => {
-      const cachedResults = [defaultProjectResponseDto];
+      const cachedResults = searchProjectResponseDto;
 
       // Mock cache manager and mapper
       jest
@@ -158,7 +166,7 @@ describe('ProjectService', () => {
         .mockResolvedValue(cachedResults);
       jest
         .spyOn(projectMapper, 'projectsToProjectResponseDtos')
-        .mockReturnValue(cachedResults);
+        .mockReturnValue(cachedResults.projects);
 
       const result = await projectService.searchProjects(
         defaultSearchProjectDto,
