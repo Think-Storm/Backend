@@ -9,6 +9,7 @@ import {
   defaultProjectResponseDto,
   defaultSearchProjectDto,
   defaultUpdateProjectDto,
+  searchProjectResponseDto,
   secondProjectResponseDto,
 } from '../../../utils/project.utils';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -94,10 +95,16 @@ describe('ProjectController', () => {
         defaultProjectResponseDto,
         secondProjectResponseDto,
       ];
+
+      const expectedResponse = {
+        ...searchProjectResponseDto,
+        projects: defaultSearchedResults,
+        totalItems: 2,
+      };
       // Mock service function
       const serviceSpy = jest
         .spyOn(projectService, 'searchProjects')
-        .mockResolvedValue(defaultSearchedResults);
+        .mockResolvedValue(expectedResponse);
 
       const response = await projectController.searchProjects(
         defaultSearchProjectDto,
@@ -105,7 +112,7 @@ describe('ProjectController', () => {
 
       expect(serviceSpy).toHaveBeenCalledTimes(1);
       expect(serviceSpy).toHaveBeenCalledWith(defaultSearchProjectDto);
-      expect(response).toBe(defaultSearchedResults);
+      expect(response).toStrictEqual(expectedResponse);
     });
   });
 

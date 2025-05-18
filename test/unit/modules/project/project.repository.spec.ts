@@ -73,7 +73,9 @@ describe('ProjectRepository', () => {
       }
 
       expect(defaultSearchedResults).toBeDefined();
-      expect(defaultSearchedResults).toStrictEqual(searchedProjectsByQuery);
+      expect({ projects: defaultSearchedResults, totalItems: 1 }).toStrictEqual(
+        searchedProjectsByQuery,
+      );
     });
 
     it('should retrieve 2 searched projects in DB with request queries', async () => {
@@ -102,7 +104,9 @@ describe('ProjectRepository', () => {
       }
 
       expect(defaultSearchedResults).toBeDefined();
-      expect(defaultSearchedResults).toStrictEqual(searchedProjectsByQuery);
+      expect({ projects: defaultSearchedResults, totalItems: 1 }).toStrictEqual(
+        searchedProjectsByQuery,
+      );
     });
   });
 
