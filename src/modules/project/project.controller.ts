@@ -25,6 +25,8 @@ import {
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 import { SearchProjectDto } from './dtos/searchProject.dto';
 import { GetUser } from '../auth/decorators/getUser.decorator';
+import { SearchProjectResponseDto } from './dtos/searchProjectResponse.dto';
+
 @ApiTags('projects')
 @Controller()
 export class ProjectController {
@@ -48,8 +50,8 @@ export class ProjectController {
   })
   async searchProjects(
     @Query() searchProjectDto: SearchProjectDto,
-  ): Promise<ProjectResponseDto[]> {
-    return this.projectService.searchProjects(searchProjectDto);
+  ): Promise<SearchProjectResponseDto> {
+    return await this.projectService.searchProjects(searchProjectDto);
   }
 
   @HttpCode(200)
@@ -68,7 +70,7 @@ export class ProjectController {
   async getProjectById(
     @Param() param: GetProjectRequestDto,
   ): Promise<ProjectResponseDto> {
-    return this.projectService.getProjectById(param.id);
+    return await this.projectService.getProjectById(param.id);
   }
 
   @HttpCode(201)
