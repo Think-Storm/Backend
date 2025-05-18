@@ -13,6 +13,8 @@ import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../../common/caching/redisCaching.service';
 import { GetProjectRequestDto } from './dtos/getProjectRequest.dto';
+import { Project } from '@prisma/client';
+import { SearchProjectResponseDto } from './dtos/searchProjectResponse.dto';
 
 @Injectable()
 export class ProjectService {
@@ -98,50 +100,73 @@ export class ProjectService {
    */
   async searchProjects(
     searchProjectDto: SearchProjectDto,
-  ): Promise<ProjectResponseDto[]> {
-    let searchResult = undefined;
-    const cacheKey = JSON.stringify(searchProjectDto); // Key to uniquely identify the cached result
+  ): Promise<SearchProjectResponseDto> {
+    const cacheKey = this.generateCacheKey(searchProjectDto);
 
-    // Try to get the cached result
-    const cachedResult = await this.cacheManager.get(cacheKey);
+    // Try to get cached result
+    const cachedResult = await this.cacheManager.get<{
+      projects: Project[];
+      totalItems: number;
+    }>(cacheKey);
+
+    let projects: Project[];
+    let totalItems: number;
+
     if (cachedResult) {
-      searchResult = cachedResult; // If data is found in cache, save data in searchResult
+      ({ projects, totalItems } = cachedResult);
     } else {
-      // If not found in cache, perform the actual search
-      //extract sorting conditions from query string
-      const sortByArr = [];
-      if (searchProjectDto.sort) {
-        const sortByString = searchProjectDto.sort.split(',');
-        for (const sortCondition of sortByString) {
-          const sortByObject = {};
-          const condition = sortCondition.split('=')[0];
-          const value = sortCondition.split('=')[1];
-          sortByObject[condition] = value;
-          sortByArr.push(sortByObject);
-        }
-      }
+      const sortByArr = this.parseSortConditions(searchProjectDto.sort);
 
-      //Get searched Projects from repository
-      const searchedProjects = await this.projectRepository.searchProjects(
-        searchProjectDto,
-        sortByArr,
-      );
+      const { projects: searchedProjects, totalItems: itemsCount } =
+        await this.projectRepository.searchProjects(
+          searchProjectDto,
+          sortByArr,
+        );
 
-      // Store the search results in cache with a TTL of 3600 seconds (1 hour)
-      await this.cacheManager.set(
-        cacheKey,
-        searchedProjects,
-        Number(this.configService.get<number>('REDIS_CACHING_TTL')),
-      );
-      await this.redisService.set(
-        cacheKey,
-        searchedProjects,
-        Number(this.configService.get<number>('REDIS_CACHING_TTL')),
-      );
-      searchResult = searchedProjects;
+      projects = searchedProjects;
+      totalItems = itemsCount;
+
+      const cachePayload = { projects, totalItems };
+      const ttl =
+        Number(this.configService.get<number>('REDIS_CACHING_TTL')) || 3600;
+
+      await this.cacheManager.set(cacheKey, cachePayload, ttl);
+      await this.redisService.set(cacheKey, cachePayload, ttl);
     }
 
-    return this.projectMapper.projectsToProjectResponseDtos(searchResult);
+    const projectsResult =
+      this.projectMapper.projectsToProjectResponseDtos(projects);
+
+    const totalPages = Math.ceil(totalItems / searchProjectDto.limit);
+    const page = searchProjectDto.page;
+    const limit = searchProjectDto.limit;
+
+    return this.projectMapper.projectResponseDtoToSearchProjectResponseDtos(
+      projectsResult,
+      page,
+      limit,
+      totalPages,
+      totalItems,
+    );
+  }
+
+  /**
+   * Generate a consistent cache key for project search
+   */
+  private generateCacheKey(dto: SearchProjectDto): string {
+    return JSON.stringify(dto);
+  }
+
+  /**
+   * Parse sort query string into Prisma orderBy format
+   */
+  private parseSortConditions(sort?: string): Array<Record<string, string>> {
+    if (!sort) return [];
+
+    return sort.split(',').map((sortCondition) => {
+      const [field, order] = sortCondition.split('=');
+      return { [field]: order };
+    });
   }
 
   /**

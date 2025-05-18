@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Project } from '@prisma/client';
+import { Prisma, Project } from '@prisma/client';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
@@ -200,70 +200,75 @@ export class ProjectRepository {
   async searchProjects(
     searchProjectDto: SearchProjectDto,
     sortByArr: Array<object>,
-  ): Promise<Project[]> {
+  ): Promise<{ projects: Project[]; totalItems: number }> {
     try {
-      return await this.prisma.project.findMany({
-        skip: (searchProjectDto.page - 1) * searchProjectDto.limit,
-        take: searchProjectDto.limit,
-        where: {
-          title: {
-            contains: searchProjectDto.title,
-            mode: 'insensitive',
-          },
-          languageCode: searchProjectDto.languageCode,
-          description: {
-            contains: searchProjectDto.description,
-            mode: 'insensitive',
-          },
-          status: searchProjectDto.status,
-          goal: searchProjectDto.goal,
-          milestone: {
-            gte: searchProjectDto.mileStoneFrom,
-            lte: searchProjectDto.mileStoneTo,
-          },
-          createdAt: {
-            gte: searchProjectDto.createdAtFrom,
-            lte: searchProjectDto.createdAtTo,
-          },
-          lastUpdatedAt: {
-            gte: searchProjectDto.lastUpdatedAtFrom,
-            lte: searchProjectDto.lastUpdatedAtTo,
-          },
-          technicalLabels: {
-            some: {
-              OR: searchProjectDto.technicalLabels
-                ?.split(',')
-                .map((technicalLabel) => {
-                  return {
-                    labelName: technicalLabel,
-                  };
-                }),
-            },
-          },
-          domainLabels: {
-            some: {
-              OR: searchProjectDto.domainLabels
-                ?.split(',')
-                .map((domainLabel) => {
-                  return {
-                    labelName: domainLabel,
-                  };
-                }),
-            },
+      const whereClause = {
+        title: {
+          contains: searchProjectDto.title,
+          mode: Prisma.QueryMode.insensitive,
+        },
+        languageCode: searchProjectDto.languageCode,
+        description: {
+          contains: searchProjectDto.description,
+          mode: Prisma.QueryMode.insensitive,
+        },
+        status: searchProjectDto.status,
+        goal: searchProjectDto.goal,
+        milestone: {
+          gte: searchProjectDto.mileStoneFrom,
+          lte: searchProjectDto.mileStoneTo,
+        },
+        createdAt: {
+          gte: searchProjectDto.createdAtFrom,
+          lte: searchProjectDto.createdAtTo,
+        },
+        lastUpdatedAt: {
+          gte: searchProjectDto.lastUpdatedAtFrom,
+          lte: searchProjectDto.lastUpdatedAtTo,
+        },
+        technicalLabels: {
+          some: {
+            OR: searchProjectDto.technicalLabels
+              ?.split(',')
+              .map((technicalLabel) => {
+                return {
+                  labelName: technicalLabel,
+                };
+              }),
           },
         },
-        include: {
-          language: true,
-          users: true,
-          founder: true,
-          domainLabels: true,
-          technicalLabels: true,
-          like: true,
-          involvement: true,
-          joinRequest: true,
+        domainLabels: {
+          some: {
+            OR: searchProjectDto.domainLabels?.split(',').map((domainLabel) => {
+              return {
+                labelName: domainLabel,
+              };
+            }),
+          },
         },
-        orderBy: sortByArr,
-      });
+      };
+
+      const [projects, totalItems] = await this.prisma.$transaction([
+        this.prisma.project.findMany({
+          skip: (searchProjectDto.page - 1) * searchProjectDto.limit,
+          take: searchProjectDto.limit,
+          where: whereClause,
+          include: {
+            language: true,
+            users: true,
+            founder: true,
+            domainLabels: true,
+            technicalLabels: true,
+            like: true,
+            involvement: true,
+            joinRequest: true,
+          },
+          orderBy: sortByArr,
+        }),
+        this.prisma.project.count({ where: whereClause }),
+      ]);
+
+      return { projects, totalItems };
     } catch (error) {
       throw ServiceException.ErrorException(
         errorMessages.ERROR_SEARCHING_PROJECTS,
@@ -271,7 +276,6 @@ export class ProjectRepository {
       );
     }
   }
-
   /**
    * Deletes a Project by id
    * @param id - The id of the Project to delete
