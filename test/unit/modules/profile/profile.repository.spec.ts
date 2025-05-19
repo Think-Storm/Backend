@@ -60,6 +60,16 @@ describe('ProfileRepository', () => {
         include: expect.any(Object),
       });
     });
+    it('should throw ServiceException on error', async () => {
+      const userId = 1;
+      jest
+        .spyOn(prismaService.userProfile, 'create')
+        .mockRejectedValue(new Error('DB error'));
+
+      await expect(
+        profileRepository.createUserProfile(userId, defaultCreateProfileDto),
+      ).rejects.toThrow();
+    });
   });
 
   describe('getUserProfileByUserId', () => {
@@ -92,5 +102,15 @@ describe('ProfileRepository', () => {
         where: { userId },
       });
     });
+  });
+  it('should throw ServiceException on error', async () => {
+    const userId = 1;
+    jest
+      .spyOn(prismaService.userProfile, 'findUnique')
+      .mockRejectedValue(new Error('DB error'));
+
+    await expect(
+      profileRepository.getUserProfileByUserId(userId),
+    ).rejects.toThrow();
   });
 });
