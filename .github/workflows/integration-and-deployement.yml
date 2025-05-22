@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: '20'
           cache-key-suffix: '-v1'
-          contract-access-token: ${{ secrets.CONTRACT_ACCESS_TOKEN }}
+          contract-access-token: ${{ secrets.NPM_TOKEN }}
 
       - name: Lint
         uses: ./.github/actions/lint
@@ -30,10 +30,12 @@ jobs:
       - name: Build
         uses: ./.github/actions/build
         with:
-          build-args: '--build-arg CONTRACT_ACCESS_TOKEN=${{ secrets.CONTRACT_ACCESS_TOKEN }}'
+          build-args: '--build-arg CONTRACT_ACCESS_TOKEN=${{ secrets.NPM_TOKEN }}'
 
       - name: Tests
         uses: ./.github/actions/run-tests
+        with:
+          build-args: '--build-arg CONTRACT_ACCESS_TOKEN=${{ secrets.NPM_TOKEN }}'
 
   deploy:
     runs-on: ubuntu-latest
