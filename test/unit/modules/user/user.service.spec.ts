@@ -21,15 +21,15 @@ import refreshDatabase from '../../../../src/prisma/prisma.dbreset';
 import { UserResponseDto } from '../../../../src/modules/user/dtos/userResponse.dto';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
-import { defaultPasswordSalt } from '../../../../test/unit/common/passwordEncryption.utils';
 import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
 import { NotificationService } from '../../../../src/modules/notification/notification.service';
+import { JwtHelperService } from '../../../../src/modules/auth/jwt/jwt-helper.service';
+import { MailService } from '../../../../src/modules/mail/mail.service';
 
 describe('UserService', () => {
   let authService: AuthService;
   let userService: UserService;
   let userRepository: UserRepository;
-  let passwordEncryption: PasswordEncryption;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -45,6 +45,8 @@ describe('UserService', () => {
         ConfigService,
         NotificationService,
         NotificationRepository,
+        JwtHelperService,
+        MailService,
       ],
     })
       .overrideInterceptor(ClassSerializerInterceptor)
@@ -54,7 +56,6 @@ describe('UserService', () => {
     authService = module.get<AuthService>(AuthService);
     userService = module.get<UserService>(UserService);
     userRepository = module.get<UserRepository>(UserRepository);
-    passwordEncryption = module.get<PasswordEncryption>(PasswordEncryption);
   });
 
   beforeEach(async () => {
@@ -93,6 +94,8 @@ describe('UserService', () => {
 
       const expectedResponseDto: UserResponseDto = {
         ...defaultUpdateUser1Dto,
+        password: defaultUser.password,
+        passwordChangedAt: defaultUser.passwordChangedAt,
         createdAt: defaultUser.createdAt,
         lastUpdatedAt: defaultUser.lastUpdatedAt,
       };
@@ -110,13 +113,6 @@ describe('UserService', () => {
           ...expectedResponseDto, // Ensure the mock value matches the expected response
         });
 
-      const passwordSaltSpy = jest
-        .spyOn(passwordEncryption, 'createSaltAndHashedPassword')
-        .mockResolvedValue({
-          passwordSalt: defaultPasswordSalt,
-          hashedPassword: 'hashedPassword',
-        });
-
       const successUserResponseDto = await userService.updateUserById(
         defaultUpdateUser1Dto,
         defaultUser.id,
@@ -124,11 +120,7 @@ describe('UserService', () => {
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(successDbSpy).toHaveBeenCalledTimes(1);
-      expect(successDbSpy).toHaveBeenCalledWith(
-        defaultUpdateUser1Dto,
-        defaultPasswordSalt,
-      );
-      expect(passwordSaltSpy).toHaveBeenCalledTimes(1);
+      expect(successDbSpy).toHaveBeenCalledWith(defaultUpdateUser1Dto);
       expect(successUserResponseDto).toEqual(expectedResponseDto);
     });
 

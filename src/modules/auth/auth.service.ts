@@ -9,8 +9,13 @@ import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { UserMapper } from './../user/dtos/user.mapper';
 import { UserService } from './../user/user.service';
 import { PasswordEncryption } from '../../common/encryption/passwordEncryption';
-
+import { UpdatePasswordDto } from './dtos/updatePassword.dto';
 import { NotificationService } from '../notification/notification.service';
+import { MailService } from '../mail/mail.service';
+import { UserRepository } from './../user/user.repository';
+import { JwtHelperService } from './jwt/jwt-helper.service';
+import { ForgotPasswordDto } from './dtos/forgotPassword.dto';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -19,6 +24,9 @@ export class AuthService {
     private passwordEncryption: PasswordEncryption,
     private readonly jwtService: JwtService,
     private notificationService: NotificationService,
+    private mailService: MailService,
+    private userRepository: UserRepository,
+    private jwtHelperService: JwtHelperService,
   ) {}
 
   /**
@@ -151,4 +159,75 @@ export class AuthService {
       maxAge: 0,
     };
   }
+
+  /**
+   * get user if user email exists for forgot password
+   * @param userEmail - Email for getting user
+   * @returns A promise resolving to a UserResponseDto
+   */
+  async sendForgotPassword(
+    userEmailDto: ForgotPasswordDto,
+  ): Promise<UserResponseDto> {
+    const foundUser = await this.userRepository.getUserByEmail(
+      userEmailDto.email,
+    );
+
+    if (!foundUser)
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND_MSG('User', userEmailDto.email),
+      );
+
+    const payload = { id: foundUser.id };
+    const resetToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+
+    const passwordResetUrl = `https://thinkstorm.app/reset-password?token=${resetToken}`;
+
+    await this.mailService.forgotPassword(
+      foundUser.email,
+      foundUser.username,
+      passwordResetUrl,
+    );
+
+    return this.userMapper.userToUserResponseDTO(foundUser);
+  }
+
+  /**
+   * update user
+   * @param UpdatePasswordDto - UpdatePasswordDto that has updated user's password information
+   * @returns A promise resolving to the updated User object or null
+   */
+  updatePassword = async (
+    passwordDto: UpdatePasswordDto,
+  ): Promise<UserResponseDto> => {
+    // check if the password reset token is valid
+    const decoded = await this.jwtHelperService.verifyAndDecodeToken(
+      passwordDto.passwordResetToken,
+    );
+
+    const foundUser = await this.jwtHelperService.checkUserExistsInDB(
+      decoded.id,
+    );
+
+    // Authorization check in service layer
+    if (foundUser.email !== passwordDto.email) {
+      throw ServiceException.ForbiddenException(
+        errorMessages.FORBIDDEN('You are not the owner of this account'),
+      );
+    }
+
+    //password update
+    const passwordInformation =
+      await this.passwordEncryption.createSaltAndHashedPassword(
+        passwordDto.password,
+      );
+    passwordDto.password = passwordInformation.hashedPassword;
+
+    const updatedUserWithNewPw = await this.userRepository.udpatePassword(
+      passwordDto,
+      passwordInformation.passwordSalt,
+      foundUser.id,
+    );
+
+    return this.userMapper.userToUserResponseDTO(updatedUserWithNewPw);
+  };
 }

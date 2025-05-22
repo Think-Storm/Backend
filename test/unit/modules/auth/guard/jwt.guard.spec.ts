@@ -20,6 +20,8 @@ import { PrismaModule } from '../../../../../src/prisma/prisma.module';
 import { UserMapper } from '../../../../../src/modules/user/dtos/user.mapper';
 import { NotificationService } from '../../../../../src/modules/notification/notification.service';
 import { NotificationRepository } from '../../../../../src/modules/notification/notification.repository';
+import { JwtHelperService } from '../../../../../src/modules/auth/jwt/jwt-helper.service';
+import { MailService } from '../../../../../src/modules/mail/mail.service';
 
 describe('JwtAuthGuard', () => {
   jest.useFakeTimers();
@@ -53,6 +55,8 @@ describe('JwtAuthGuard', () => {
         UserMapper,
         PasswordEncryption,
         JwtStrategy,
+        JwtHelperService,
+        MailService,
         LocalStrategy,
         ConfigService,
         NotificationService,

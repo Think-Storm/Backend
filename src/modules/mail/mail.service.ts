@@ -31,13 +31,25 @@ export class MailService {
     templateVariables,
   }: SendMailOptions): Promise<any> {
     try {
-      const response = await this.enveloopClient.sendMessage({
-        to,
-        from,
-        subject,
-        template,
-        templateVariables,
+      const response = await fetch('https://api.enveloop.com/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.enveloopClient.apiKey}`,
+        },
+        body: JSON.stringify({
+          to,
+          template,
+          subject,
+          from,
+          templateVariables,
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Enveloop error:', errorData);
+      }
 
       return response;
     } catch (error) {
@@ -53,10 +65,31 @@ export class MailService {
   async sendWelcomeEmail(userEmail: string, userName: string): Promise<void> {
     await this.sendMail({
       to: userEmail,
-      template: 'welcome-email', // Template slug created in Enveloop
+      from: 'info@thinkstorm.app',
+      template: 'user-welcome',
       subject: 'Welcome to Our Platform!',
       templateVariables: {
         name: userName,
+      },
+    });
+  }
+
+  /**
+   * Send Forgot Password Link to a user
+   */
+  async forgotPassword(
+    userEmail: string,
+    userName: string,
+    passwordResetUrl: string,
+  ): Promise<void> {
+    await this.sendMail({
+      to: userEmail,
+      from: 'info@thinkstorm.app',
+      template: 'forgot-password',
+      subject: 'Password Reset Requested',
+      templateVariables: {
+        name: userName,
+        reset_url: passwordResetUrl,
       },
     });
   }

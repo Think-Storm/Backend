@@ -16,13 +16,13 @@ import { AppModule } from './../../src/app.module';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { RedisThrottlerStorageService } from '../../src/common/throttler/redisThrottlerStorage.service';
 import { PasswordEncryption } from '../../src/common/encryption/passwordEncryption';
-import { JwtStrategy } from '../../src/modules/auth/jwt/jwt.strategy';
+import { JwtHelperService } from '../../src/modules/auth/jwt/jwt-helper.service';
 
 describe('/', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
   let passwordEncryption: PasswordEncryption;
-  let jwtStrategy: JwtStrategy;
+  let jwtHelperService: JwtHelperService;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -48,7 +48,7 @@ describe('/', () => {
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
     passwordEncryption =
       moduleFixture.get<PasswordEncryption>(PasswordEncryption);
-    jwtStrategy = moduleFixture.get<JwtStrategy>(JwtStrategy);
+    jwtHelperService = moduleFixture.get<JwtHelperService>(JwtHelperService);
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
       new ValidationPipe({
@@ -330,7 +330,7 @@ describe('/', () => {
       const userId = registerResponse.body.data.id;
 
       // Decode the token to get the issue time (iat)
-      const decodedToken = await jwtStrategy.verifyAndDecodeToken(token);
+      const decodedToken = await jwtHelperService.verifyAndDecodeToken(token);
       const tokenIssueTime = decodedToken.iat;
 
       // Generate new password hash

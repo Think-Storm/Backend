@@ -7,14 +7,12 @@ import { UserMapper } from '../user/dtos/user.mapper';
 import { User } from '@prisma/client';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { UpdateUserDto } from './dtos/updateUser.dto';
-import { PasswordEncryption } from '../../common/encryption/passwordEncryption';
 
 @Injectable()
 export class UserService {
   constructor(
     private userRepository: UserRepository,
     private userMapper: UserMapper,
-    private passwordEncryption: PasswordEncryption,
   ) {}
 
   /**
@@ -89,16 +87,8 @@ export class UserService {
       }
     }
 
-    const passwordInformation =
-      await this.passwordEncryption.createSaltAndHashedPassword(
-        updateUser.password,
-      );
-    updateUser.password = passwordInformation.hashedPassword;
-
-    const updatedUserFromRepo = await this.userRepository.updateUser(
-      updateUser,
-      passwordInformation.passwordSalt,
-    );
+    const updatedUserFromRepo =
+      await this.userRepository.updateUser(updateUser);
 
     return this.userMapper.userToUserResponseDTO(updatedUserFromRepo);
   };
