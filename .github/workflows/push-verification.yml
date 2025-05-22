@@ -1,5 +1,10 @@
 name: Push Verification Pipeline
 
+permissions:
+  contents: read # for actions/checkout
+  packages: read # for GitHub Packages
+  id-token: write # Required for requesting the JWT
+
 on:
   push:
     branches:
@@ -11,8 +16,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          node-version: '20' # Update to Node.js 20 to fix engine warning
+          cache-key-suffix: '-v1' # Add version suffix for cache busting if needed
+          contract-access-token: ${{ secrets.NPM_TOKEN }}
 
       - name: Commitlint
         uses: wagoid/commitlint-github-action@v6
@@ -22,3 +32,5 @@ jobs:
 
       - name: Build
         uses: ./.github/actions/build
+        with:
+          build-args: '--build-arg CONTRACT_ACCESS_TOKEN=${{ secrets.NPM_TOKEN }}'
