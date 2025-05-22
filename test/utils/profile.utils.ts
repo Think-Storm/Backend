@@ -1,4 +1,5 @@
-import { LanguageCode, UserProfile } from '@prisma/client';
+import { UserProfile } from '@prisma/client';
+import { LanguageCode } from '@think-storm/contracts';
 import { CreateUserProfileDto } from '../../src/modules/profile/dtos/createUserProfile.dto';
 
 export const defaultCreateProfileDto: CreateUserProfileDto = {
