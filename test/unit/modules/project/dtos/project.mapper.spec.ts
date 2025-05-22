@@ -10,7 +10,8 @@ import {
   LanguageCode,
   LanguageName,
   ProjectStatus,
-} from '@prisma/client';
+  stringToEnum,
+} from '@think-storm/contracts';
 
 // Define a type for the project with string array labels
 type ProjectWithStringArrayLabels = {
@@ -18,9 +19,9 @@ type ProjectWithStringArrayLabels = {
   founderId: number;
   title: string;
   description: string | null;
-  goal: Goal;
-  status: ProjectStatus;
-  languageCode: LanguageCode;
+  goal: string;
+  status: string;
+  languageCode: string;
   milestone: Date | null;
   createdAt: Date;
   lastUpdatedAt: Date;
@@ -56,6 +57,9 @@ describe('ProjectMapper', () => {
       // Create a Project with complex domain and technical labels
       const projectWithLabels: MockProjectWithLabels = {
         ...defaultProject,
+        goal: Goal.Education,
+        status: ProjectStatus.InProgress,
+        languageCode: stringToEnum(defaultProject.languageCode, LanguageCode),
         domainLabels: [
           { projectId: 1, labelName: 'Cooking', label: { name: 'Cooking' } },
           { projectId: 1, labelName: 'Design', label: { name: 'Design' } },
@@ -118,6 +122,9 @@ describe('ProjectMapper', () => {
       // Create a Project without complex domain and technical labels
       const projectWithoutComplexLabels: MockProjectWithLabels = {
         ...defaultProject,
+        goal: stringToEnum(defaultProject.goal, Goal),
+        status: stringToEnum(defaultProject.status, ProjectStatus),
+        languageCode: stringToEnum(defaultProject.languageCode, LanguageCode),
         domainLabels: [],
         technicalLabels: [],
         language: {
@@ -199,6 +206,9 @@ describe('ProjectMapper', () => {
       // Create a Project with some null fields
       const projectWithNullFields: MockProjectWithLabels = {
         ...defaultProject,
+        goal: stringToEnum(defaultProject.goal, Goal),
+        status: stringToEnum(defaultProject.status, ProjectStatus),
+        languageCode: stringToEnum(defaultProject.languageCode, LanguageCode),
         description: null,
         domainLabels: undefined,
         technicalLabels: undefined,

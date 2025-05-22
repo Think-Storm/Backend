@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import { LanguageCode, LanguageName } from '@prisma/client';
+import { LanguageCode, LanguageName } from '@think-storm/contracts';
 import { CommonDataRepository } from '../../src/modules/common-data/common-data.repository';
 import { CommonDataModule } from '../../src/modules/common-data/common-data.module';
 import { ConfigModule } from '@nestjs/config';

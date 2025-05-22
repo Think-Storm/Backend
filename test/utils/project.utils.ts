@@ -1,10 +1,10 @@
+import { Project } from '@prisma/client';
 import {
   Goal,
   LanguageCode,
   LanguageName,
-  Project,
   ProjectStatus,
-} from '@prisma/client';
+} from '@think-storm/contracts';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { CreateProjectRequestDto } from '../../src/modules/project/dtos/createProjectRequest.dto';
 import { ProjectResponseDto } from '../../src/modules/project/dtos/projectResponse.dto';
@@ -122,8 +122,6 @@ export const secondProjectResponseDto: ProjectResponseDto = {
   language: {
     code: LanguageCode.KR,
     name: LanguageName.Korean,
-    createdAt: new Date('2025-01-01'),
-    lastUpdatedAt: new Date('2025-01-01'),
   },
   technicalLabels: ['aws', 'nextjs', 'gatsby'],
   domainLabels: ['Design', 'Mathematics', 'Mindfulness'],
@@ -167,8 +165,6 @@ export const defaultProjectResponseDto: ProjectResponseDto = {
   language: {
     code: LanguageCode.EN,
     name: LanguageName.English,
-    createdAt: new Date('2000-01-01'),
-    lastUpdatedAt: new Date('2000-01-01'),
   },
   technicalLabels: ['nestjs', 'js', 'jest'],
   domainLabels: ['Cooking', 'Design', 'Geography'],
@@ -251,7 +247,7 @@ export const defaultDeleteProjectDto: GetProjectRequestDto = {
 
 export const defaultSearchProjectDto: SearchProjectDto = {
   title: 'title',
-  languageCode: 'EN',
+  languageCode: LanguageCode.EN,
   description: 'description',
   status: ProjectStatus.InProgress,
   goal: Goal.Education,

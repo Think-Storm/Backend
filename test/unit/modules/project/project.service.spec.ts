@@ -24,7 +24,7 @@ import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/encryption/passwordEncryption';
-import { LanguageName } from '@prisma/client';
+import { LanguageName } from '@think-storm/contracts';
 import { ProjectResponseDto } from '../../../../src/modules/project/dtos/projectResponse.dto';
 import { RedisService } from '../../../../src/common/caching/redisCaching.service';
 import { CacheModule } from '@nestjs/cache-manager';

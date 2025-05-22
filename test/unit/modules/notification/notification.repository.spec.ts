@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
-import { NotificationType } from '@prisma/client';
+import { NotificationType } from '@think-storm/contracts';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { mockNotification } from '../../../utils/notification.utils';
