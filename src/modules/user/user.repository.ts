@@ -5,6 +5,7 @@ import { ServiceException } from '../../common/exception-filter/serviceException
 import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { UpdateUserDto } from '../user/dtos/updateUser.dto';
+import { UpdatePasswordDto } from '../auth/dtos/updatePassword.dto';
 
 @Injectable()
 export class UserRepository {
@@ -97,35 +98,62 @@ export class UserRepository {
   /**
    * Update an existing user
    * @param UpdateUserDto - The data transfer object containing user updating details
-   * @param passwordSalt - The password salt for hashing
    * @returns A promise resolving to the updated User object
    */
-  async updateUser(
-    updateUserDto: UpdateUserDto,
-    passwordSalt: string,
-  ): Promise<User> {
+  async updateUser(updateUserDto: UpdateUserDto): Promise<User> {
     try {
       return await this.prisma.user.update({
         data: {
           username: updateUserDto.username,
           email: updateUserDto.email.toLowerCase(),
-          password: updateUserDto.password,
-          passwordSalt: passwordSalt,
           fullName: updateUserDto.fullName,
           birthdate: updateUserDto.birthdate,
           lastUpdatedAt: new Date(),
-          passwordChangedAt: new Date(),
-        },
-        omit: {
-          password: false,
-          passwordChangedAt: false,
         },
         where: {
           id: updateUserDto.id,
         },
       });
     } catch (error) {
-      throw ServiceException.ErrorException(error.message, error);
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_UPDATING_USER,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Update an existing user password
+   * @param UpdatePasswordDto - The data transfer object containing user password
+   * @param passwordSalt - The password salt for hashing
+   * @param userId - The ID of the user to update
+   * @returns A promise resolving to the updated User object
+   */
+  async udpatePassword(
+    updateUserDto: UpdatePasswordDto,
+    passwordSalt: string,
+    userId: number,
+  ): Promise<User> {
+    try {
+      return await this.prisma.user.update({
+        data: {
+          password: updateUserDto.password,
+          passwordSalt: passwordSalt,
+          lastUpdatedAt: new Date(),
+          passwordChangedAt: new Date(),
+        },
+        omit: {
+          passwordChangedAt: false,
+        },
+        where: {
+          id: userId,
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_UPDATING_PASSWORD_USER,
+        error,
+      );
     }
   }
 

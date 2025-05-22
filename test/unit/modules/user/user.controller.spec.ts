@@ -31,6 +31,8 @@ import {
 } from '../../../../test/utils/jwt.utils';
 import { NotificationService } from '../../../../src/modules/notification/notification.service';
 import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
+import { JwtHelperService } from '../../../../src/modules/auth/jwt/jwt-helper.service';
+import { MailService } from '../../../../src/modules/mail/mail.service';
 
 describe('UserController', () => {
   let userController: UserController;
@@ -56,6 +58,8 @@ describe('UserController', () => {
           },
         },
         ConfigService,
+        JwtHelperService,
+        MailService,
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -111,11 +115,9 @@ describe('UserController', () => {
 
   describe('updateUserById function', () => {
     it('should return a modified user responseDto', async () => {
-      // Setup
-      const mockRequest = createMockRequestWithUser(
-        defaultUserResponseDto,
-      ) as any;
-      mockRequest.headers = createAuthHeader(mockJwtToken);
+      const mockRequest = {
+        user: { id: defaultUserResponseDto.id },
+      };
 
       const res = httpMocks.createResponse();
 
@@ -130,13 +132,13 @@ describe('UserController', () => {
           response.cookie('jwt', 'test-token', { httpOnly: true });
           return {
             ...user,
-            token: 'test-token', // Include the token in the UserResponseDto
+            token: 'test-token',
           };
         });
 
       await userController.updateUserById(
         defaultUpdateUser1Dto,
-        mockRequest,
+        mockRequest.user,
         res,
       );
 
@@ -146,13 +148,13 @@ describe('UserController', () => {
         defaultUserResponseDto.id,
       );
 
-      // Check the response data in the mock response object
+      // Check the response data
       const responseData = res._getData();
       expect(responseData).toEqual({
         message: 'Update User Success',
         data: {
           ...defaultUserResponseDto,
-          token: 'test-token', // Ensure the token is part of the response data
+          token: 'test-token',
         },
       });
     });

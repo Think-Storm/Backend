@@ -3,7 +3,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsString,
   IsEmail,
-  IsOptional,
   IsNotEmpty,
   IsDate,
   IsNumber,
@@ -25,14 +24,6 @@ export class UpdateUserDto implements UpdateUser {
   @IsEmail()
   @IsNotEmpty()
   email: string;
-
-  @ApiProperty({
-    description: 'New password for the user account',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  password: string;
 
   @ApiProperty({ description: 'New full name of the user', required: true })
   @IsString()

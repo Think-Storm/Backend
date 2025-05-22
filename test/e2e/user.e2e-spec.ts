@@ -220,7 +220,7 @@ describe('/users', () => {
           email: defaultUpdateUser2Dto.email,
           username: defaultUpdateUser2Dto.username,
           fullName: defaultUpdateUser2Dto.fullName,
-          password: defaultUpdateUser2Dto.password,
+          password: defaultCreateUserDto.password,
           birthdate: defaultUpdateUser2Dto.birthdate,
         });
 
@@ -230,7 +230,7 @@ describe('/users', () => {
       // Login as a second user
       await request(app.getHttpServer()).post('/login').send({
         email: defaultUpdateUser2Dto.email,
-        password: defaultUpdateUser2Dto.password,
+        password: defaultCreateUserDto.password,
       });
 
       // Try to update first user when logged in as a second user

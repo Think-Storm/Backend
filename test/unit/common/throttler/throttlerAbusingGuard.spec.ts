@@ -9,7 +9,10 @@ import { throttlerOptions } from '../../../../src/common/throttler/throttlerOpti
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtStrategy } from '../../../../src/modules/auth/jwt/jwt.strategy';
+import { JwtHelperService } from '../../../../src/modules/auth/jwt/jwt-helper.service';
+import { UserRepository } from '../../../../src/modules/user/user.repository';
+import { PasswordEncryption } from '../../../../src/common/encryption/passwordEncryption';
+import { PrismaService } from '../../../../src/prisma/prisma.service';
 
 describe('ThrottlerAbusingGuard', () => {
   let guard: ThrottlerAbusingGuard;
@@ -49,7 +52,7 @@ describe('ThrottlerAbusingGuard', () => {
           },
         },
         {
-          provide: JwtStrategy,
+          provide: JwtHelperService,
           useValue: {
             validate: jest
               .fn()
@@ -65,6 +68,10 @@ describe('ThrottlerAbusingGuard', () => {
             get: jest.fn().mockReturnValue('test-secret'),
           },
         },
+        JwtHelperService,
+        UserRepository,
+        PasswordEncryption,
+        PrismaService,
       ],
     })
       .overrideGuard(ThrottlerAbusingGuard)

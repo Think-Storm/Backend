@@ -25,6 +25,7 @@ import { UpdateUserDto } from './dtos/updateUser.dto';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 import { AuthService } from '../auth/auth.service';
+import { GetUser } from '../auth/decorators/getUser.decorator';
 
 @ApiTags('users')
 @Controller()
@@ -65,16 +66,16 @@ export class UserController {
   })
   @ApiResponse({
     status: 404,
-    description: 'Updated user is not found',
+    description: 'User to be updated is not found',
   })
   async updateUserById(
     @Body() updatedUserData: UpdateUserDto,
-    @Request() req,
+    @GetUser() user: any,
     @Res() res: Response,
   ): Promise<any> {
     const updatedUser = await this.userService.updateUserById(
       updatedUserData,
-      req.user.id,
+      user.id,
     );
 
     const updatedUserWithJwt = this.authService.authentication(

@@ -24,11 +24,14 @@ import { ServiceException } from '../../../../src/common/exception-filter/servic
 import { PasswordEncryption } from '../../../../src/common/encryption/passwordEncryption';
 import { NotificationService } from '../../../../src/modules/notification/notification.service';
 import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
+import { JwtHelperService } from '../../../../src/modules/auth/jwt/jwt-helper.service';
+import { MailService } from '../../../../src/modules/mail/mail.service';
 
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
   let jwtStrategy: JwtStrategy;
+  let jwtHelperService: JwtHelperService;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -57,6 +60,8 @@ describe('AuthController', () => {
         AuthService,
         ConfigService,
         JwtStrategy,
+        JwtHelperService,
+        MailService,
       ],
     })
       .overrideGuard(LocalAuthGuard)
@@ -66,6 +71,7 @@ describe('AuthController', () => {
     authController = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
     jwtStrategy = module.get<JwtStrategy>(JwtStrategy);
+    jwtHelperService = module.get<JwtHelperService>(JwtHelperService);
   });
 
   beforeEach(() => {
@@ -147,9 +153,11 @@ describe('AuthController', () => {
       const error = ServiceException.UnAuthorizedException(
         errorMessages.PROTECT_ROUTES,
       );
-      jest.spyOn(jwtStrategy, 'checkTokenExists').mockImplementation(() => {
-        throw error;
-      });
+      jest
+        .spyOn(jwtHelperService, 'checkTokenExists')
+        .mockImplementation(() => {
+          throw error;
+        });
 
       try {
         await jwtStrategy.validate(req);
@@ -169,11 +177,13 @@ describe('AuthController', () => {
       );
 
       jest
-        .spyOn(jwtStrategy, 'checkTokenExists')
+        .spyOn(jwtHelperService, 'checkTokenExists')
         .mockReturnValue('expired-token');
-      jest.spyOn(jwtStrategy, 'verifyAndDecodeToken').mockImplementation(() => {
-        throw error;
-      });
+      jest
+        .spyOn(jwtHelperService, 'verifyAndDecodeToken')
+        .mockImplementation(() => {
+          throw error;
+        });
 
       try {
         await jwtStrategy.validate(req);
@@ -183,8 +193,8 @@ describe('AuthController', () => {
         expect(e.message).toBe(errorMessages.TOKEN_EXPIRED);
       }
 
-      expect(jwtStrategy.checkTokenExists).toHaveBeenCalled();
-      expect(jwtStrategy.verifyAndDecodeToken).toHaveBeenCalledWith(
+      expect(jwtHelperService.checkTokenExists).toHaveBeenCalled();
+      expect(jwtHelperService.verifyAndDecodeToken).toHaveBeenCalledWith(
         'expired-token',
       );
       expect(authService.logout).not.toHaveBeenCalled();
@@ -197,14 +207,16 @@ describe('AuthController', () => {
       );
 
       jest
-        .spyOn(jwtStrategy, 'checkTokenExists')
+        .spyOn(jwtHelperService, 'checkTokenExists')
         .mockReturnValue('valid-token');
       jest
-        .spyOn(jwtStrategy, 'verifyAndDecodeToken')
+        .spyOn(jwtHelperService, 'verifyAndDecodeToken')
         .mockResolvedValue({ id: 9999 });
-      jest.spyOn(jwtStrategy, 'checkUserExistsInDB').mockImplementation(() => {
-        throw error;
-      });
+      jest
+        .spyOn(jwtHelperService, 'checkUserExistsInDB')
+        .mockImplementation(() => {
+          throw error;
+        });
 
       try {
         await jwtStrategy.validate(req);
@@ -214,11 +226,11 @@ describe('AuthController', () => {
         expect(e.message).toBe(errorMessages.ENTITY_NOT_FOUND('User', '9999'));
       }
 
-      expect(jwtStrategy.checkTokenExists).toHaveBeenCalled();
-      expect(jwtStrategy.verifyAndDecodeToken).toHaveBeenCalledWith(
+      expect(jwtHelperService.checkTokenExists).toHaveBeenCalled();
+      expect(jwtHelperService.verifyAndDecodeToken).toHaveBeenCalledWith(
         'valid-token',
       );
-      expect(jwtStrategy.checkUserExistsInDB).toHaveBeenCalledWith(9999);
+      expect(jwtHelperService.checkUserExistsInDB).toHaveBeenCalledWith(9999);
       expect(authService.logout).not.toHaveBeenCalled();
     });
 
@@ -229,17 +241,17 @@ describe('AuthController', () => {
       );
 
       jest
-        .spyOn(jwtStrategy, 'checkTokenExists')
+        .spyOn(jwtHelperService, 'checkTokenExists')
         .mockReturnValue('valid-token');
-      jest.spyOn(jwtStrategy, 'verifyAndDecodeToken').mockResolvedValue({
+      jest.spyOn(jwtHelperService, 'verifyAndDecodeToken').mockResolvedValue({
         id: defaultUser.id,
         iat: Date.now() / 1000,
       });
       jest
-        .spyOn(jwtStrategy, 'checkUserExistsInDB')
+        .spyOn(jwtHelperService, 'checkUserExistsInDB')
         .mockResolvedValue(defaultUser);
       jest
-        .spyOn(jwtStrategy, 'checkUserPasswordChanged')
+        .spyOn(jwtHelperService, 'checkUserPasswordChanged')
         .mockImplementation(() => {
           throw error;
         });
@@ -252,12 +264,12 @@ describe('AuthController', () => {
         expect(e.message).toBe(errorMessages.USER_CHANGED_PASSWORD);
       }
 
-      expect(jwtStrategy.checkTokenExists).toHaveBeenCalledTimes(1);
-      expect(jwtStrategy.verifyAndDecodeToken).toHaveBeenCalledWith(
+      expect(jwtHelperService.checkTokenExists).toHaveBeenCalledTimes(1);
+      expect(jwtHelperService.verifyAndDecodeToken).toHaveBeenCalledWith(
         'valid-token',
       );
-      expect(jwtStrategy.checkUserExistsInDB).toHaveBeenCalled();
-      expect(jwtStrategy.checkUserPasswordChanged).toHaveBeenCalled();
+      expect(jwtHelperService.checkUserExistsInDB).toHaveBeenCalled();
+      expect(jwtHelperService.checkUserPasswordChanged).toHaveBeenCalled();
       expect(authService.logout).not.toHaveBeenCalled();
     });
   });

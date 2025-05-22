@@ -13,6 +13,9 @@ export const errorMessages = {
   ERROR_GETTING_USER_BY_EMAIL: 'An error occurred while getting user by email.',
   ERROR_GETTING_USER_BY_ID: 'An error occurred while getting user by id.',
   ERROR_CREATING_USER: 'An error occurred while creating user.',
+  ERROR_UPDATING_USER: 'An error occurred while updating user.',
+  ERROR_UPDATING_PASSWORD_USER:
+    'An error occurred while updating user password.',
   BAD_REQUEST: 'Wrong client request. Check your request format again.',
   ERROR_CREATING_PROJECT_IN_DB:
     'An error occurred while inserting Project in DB.',
@@ -20,12 +23,14 @@ export const errorMessages = {
   VALIDATION_ERROR: 'The validation has failed.',
   ENTITY_NOT_FOUND: (entity: string, id: string) =>
     `${entity} with id ${id} was not found.`,
+  ENTITY_NOT_FOUND_MSG: (entity: string, message: string) =>
+    `${entity} with ${message} was not found.`,
   ENTITY_NOT_FOUND_LANGUAGE: 'language was not found.',
   BAD_REQUEST_LOGIN_ERROR: 'Please provide email and password.',
   INCORRECT_EMAIL_OR_PASSWORD: 'Incorrect email or password.',
   PROTECT_ROUTES: 'You are not logged in! Please log in to get access.',
-  INVALID_TOKEN: 'Invalid Token. Please log in again!',
-  TOKEN_EXPIRED: 'Your token has expired. Please log in again!',
+  INVALID_TOKEN: 'Invalid Token.',
+  TOKEN_EXPIRED: 'Your token has expired.',
   USER_CHANGED_PASSWORD: 'User recently changed password! Please log in again!',
   FORBIDDEN: (message: string) => `Forbidden. ${message}`,
   THROTTLER_BLOCK:

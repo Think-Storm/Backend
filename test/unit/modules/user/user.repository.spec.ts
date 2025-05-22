@@ -134,10 +134,7 @@ describe('UserRepository', () => {
         defaultPasswordSalt,
       );
 
-      const user = await userRepository.updateUser(
-        defaultUpdateUser1Dto,
-        defaultPasswordSalt,
-      );
+      const user = await userRepository.updateUser(defaultUpdateUser1Dto);
 
       expect(user).toBeDefined();
       expect(user.id).toBe(createdUser.id);
@@ -146,7 +143,6 @@ describe('UserRepository', () => {
       expect(user.username).toBe(defaultUpdateUser1Dto.username);
       expect(user.fullName).toBe(defaultUpdateUser1Dto.fullName);
       expect(user.email).toBe(defaultUpdateUser1Dto.email);
-      expect(user.password).toBe(defaultUpdateUser1Dto.password);
       expect(user.birthdate.toDateString()).toBe(
         defaultUpdateUser1Dto.birthdate.toDateString(),
       );
