@@ -1,5 +1,10 @@
 name: Pre Integration Verification Pipeline
 
+permissions:
+  contents: read
+  packages: read
+  id-token: write # Required for requesting the JWT
+
 on:
   pull_request:
     branches:
@@ -14,16 +19,24 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          node-version: '20'
+          cache-key-suffix: '-v1'
+          contract-access-token: ${{ secrets.NPM_TOKEN }}
 
       - name: Lint
         uses: ./.github/actions/lint
 
       - name: Build
         uses: ./.github/actions/build
+        with:
+          build-args: '--build-arg CONTRACT_ACCESS_TOKEN=${{ secrets.NPM_TOKEN }}'
 
       - name: Tests
         id: run-tests
         uses: ./.github/actions/run-tests
+        with:
+          build-args: '--build-arg CONTRACT_ACCESS_TOKEN=${{ secrets.NPM_TOKEN }}'
 
       - name: Check Test Results
         if: steps.run-tests.outputs.test-success != 'true'

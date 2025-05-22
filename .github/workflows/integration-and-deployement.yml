@@ -1,5 +1,10 @@
 name: Integration and Deployment Pipeline
 
+permissions:
+  contents: read
+  packages: read
+  id-token: write # Required for requesting the JWT
+
 on:
   push:
     branches:
@@ -14,12 +19,18 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          node-version: '20'
+          cache-key-suffix: '-v1'
+          contract-access-token: ${{ secrets.CONTRACT_ACCESS_TOKEN }}
 
       - name: Lint
         uses: ./.github/actions/lint
 
       - name: Build
         uses: ./.github/actions/build
+        with:
+          build-args: '--build-arg CONTRACT_ACCESS_TOKEN=${{ secrets.CONTRACT_ACCESS_TOKEN }}'
 
       - name: Tests
         uses: ./.github/actions/run-tests

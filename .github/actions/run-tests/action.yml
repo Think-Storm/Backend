@@ -39,6 +39,10 @@ inputs:
     description: 'Whether to build the image during test (set to false if using pre-built image)'
     required: false
     default: 'false'
+  build-args:
+    description: 'Additional build arguments to pass to Docker Compose build'
+    required: false
+    default: ''
 
 # Define outputs from the test process
 outputs:
@@ -66,11 +70,11 @@ runs:
       shell: bash
       run: |
         # Use the --build flag only if build-image is true
-        docker compose -f ${{ inputs.compose-file-app }} build app-prod > /dev/null 2>&1
+        docker compose -f ${{ inputs.compose-file-app }} build app-prod ${{ inputs.build-args }}
         if [ "${{ inputs.build-image }}" == "true" ]; then
-          docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up --build -d --force-recreate|| true
+          docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up -d --force-recreate
         else
-          docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up -d --force-recreate || true
+          docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up -d --force-recreate
         fi
 
     # Step 3: Create logs directory

@@ -6,7 +6,7 @@ inputs:
   node-version:
     description: 'Node.js version to use'
     required: false
-    default: '18'
+    default: '20'
   cache-key-suffix:
     description: 'Optional suffix for cache key customization'
     required: false
@@ -15,6 +15,9 @@ inputs:
     description: 'Whether to generate Prisma client'
     required: false
     default: 'true'
+  contract-access-token:
+    description: 'Contract access token'
+    required: true
 
 # Define outputs that can be used by workflows
 outputs:
@@ -35,15 +38,39 @@ runs:
       id: cache-modules
       uses: actions/cache@v4
       with:
-        path: node_modules
+        path: |
+          node_modules
+          .npmrc
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}${{ inputs.cache-key-suffix }}
         restore-keys: |
           ${{ runner.os }}-node-
 
+    - name: Create .npmrc file
+      shell: bash
+      env:
+        NPM_TOKEN: ${{ inputs.contract-access-token }}
+      run: |
+        # Create .npmrc in the project root with the correct format
+        echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" > .npmrc
+        echo "@think-storm:registry=https://npm.pkg.github.com" >> .npmrc
+        # Also create in home directory for global npm config
+        echo "//npm.pkg.github.com/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+        echo "@think-storm:registry=https://npm.pkg.github.com" >> ~/.npmrc
+        # Set proper permissions
+        chmod 600 .npmrc
+        chmod 600 ~/.npmrc
+        # Debug: Check if .npmrc files exist and have correct permissions
+        ls -la .npmrc ~/.npmrc
+        cat .npmrc
+        cat ~/.npmrc
+
     - name: Install dependencies
       if: steps.cache-modules.outputs.cache-hit != 'true'
-      shell: bash # Must specify shell for each step in composite actions
-      run: npm install
+      shell: bash
+      env:
+        CONTRACT_ACCESS_TOKEN: ${{ inputs.contract-access-token }}
+      run: |
+        npm install
 
     - name: Generate Prisma client
       if: inputs.prisma-generate == 'true'
