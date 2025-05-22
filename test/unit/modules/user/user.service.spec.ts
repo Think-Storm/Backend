@@ -202,4 +202,51 @@ describe('UserService', () => {
     expect(spy).toHaveBeenCalledTimes(1);
     expect(spy).toHaveBeenCalledWith(defaultUpdateUser1Dto.id);
   });
+
+  describe('delete User service function', () => {
+    it('should delete the user if the user exists and is the owner', async () => {
+      // Arrange
+      const userId = defaultUser.id;
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValue(defaultUser);
+      const deleteSpy = jest
+        .spyOn(userRepository, 'deleteUserById')
+        .mockResolvedValue(undefined);
+
+      // Act
+      await userService.deleteUserById(userId, userId);
+
+      // Assert
+      expect(userRepository.getUserById).toHaveBeenCalledTimes(1);
+      expect(userRepository.getUserById).toHaveBeenCalledWith(userId);
+      expect(deleteSpy).toHaveBeenCalledTimes(1);
+      expect(deleteSpy).toHaveBeenCalledWith(userId);
+    });
+
+    it('should throw 404 if user does not exist', async () => {
+      // Arrange
+      const userId = 999;
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(userService.deleteUserById(userId, userId)).rejects.toThrow(
+        errorMessages.ENTITY_NOT_FOUND('User', userId.toString()),
+      );
+      expect(userRepository.getUserById).toHaveBeenCalledWith(userId);
+    });
+
+    it('should throw 403 if user is not the owner', async () => {
+      // Arrange
+      const userId = defaultUser.id;
+      const anotherUserId = 2;
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValue(defaultUser);
+
+      // Act & Assert
+      await expect(
+        userService.deleteUserById(anotherUserId, userId),
+      ).rejects.toThrow(
+        errorMessages.FORBIDDEN('You are not the owner of this account'),
+      );
+      expect(userRepository.getUserById).toHaveBeenCalledWith(userId);
+    });
+  });
 });
