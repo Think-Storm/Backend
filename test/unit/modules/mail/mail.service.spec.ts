@@ -2,21 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MailService } from '../../../../src/modules/mail/mail.service';
 import { ConfigService } from '@nestjs/config';
 
-// Create a mock instance that we can control
-const mockSendMessage = jest.fn().mockResolvedValue({
-  success: true,
-  messageId: 'mock-message-id',
-});
-
-// Mock Enveloop client
-jest.mock('enveloop', () => ({
-  Enveloop: jest.fn().mockImplementation(() => ({
-    sendMessage: mockSendMessage,
-  })),
-}));
+// Mock fetch globally
+global.fetch = jest.fn();
 
 describe('MailService', () => {
   let mailService: MailService;
+  const mockConfigService = {
+    get: jest.fn().mockReturnValue('mock-api-key'),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -24,81 +17,125 @@ describe('MailService', () => {
         MailService,
         {
           provide: ConfigService,
-          useValue: {
-            get: jest.fn().mockReturnValue('mock-api-key'),
-          },
+          useValue: mockConfigService,
         },
       ],
     }).compile();
 
     mailService = module.get<MailService>(MailService);
-
-    // Clear all mocks before each test
     jest.clearAllMocks();
   });
 
+  const verifyFetchCall = (actualCall: any, expectedBody: any) => {
+    const [url, options] = actualCall;
+    expect(url).toBe('https://api.enveloop.com/messages');
+    expect(options.method).toBe('POST');
+    expect(options.headers).toEqual({
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer mock-api-key',
+    });
+    expect(JSON.parse(options.body)).toEqual(expectedBody);
+  };
+
+  const mockMailOptions = {
+    to: 'test@example.com',
+    from: 'info@thinkstorm.app',
+    subject: 'Test Subject',
+    template: 'test-template',
+    templateVariables: { name: 'Test User' },
+  };
+
   describe('sendMail', () => {
-    const mockMailOptions = {
-      to: 'test@example.com',
-      subject: 'Test Subject',
-      template: 'test-template',
-      templateVariables: { name: 'Test User' },
-    };
-
     it('should successfully send an email', async () => {
-      const result = await mailService.sendMail(mockMailOptions);
+      const mockResponse = { ok: true, json: jest.fn() };
+      (global.fetch as jest.Mock).mockResolvedValueOnce(mockResponse);
 
-      expect(mockSendMessage).toHaveBeenCalledWith(mockMailOptions);
-      expect(result).toEqual({
-        success: true,
-        messageId: 'mock-message-id',
-      });
+      await mailService.sendMail(mockMailOptions);
+
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      verifyFetchCall(
+        (global.fetch as jest.Mock).mock.calls[0],
+        mockMailOptions,
+      );
     });
 
-    it('should throw an error when email sending fails', async () => {
-      const errorMessage = 'Failed to send email';
-      jest.spyOn(console, 'error').mockImplementation(() => {}); // Suppress console.error
+    it('should handle API error response', async () => {
+      const mockErrorResponse = {
+        ok: false,
+        json: jest.fn().mockResolvedValueOnce({ error: 'API Error' }),
+      };
+      (global.fetch as jest.Mock).mockResolvedValueOnce(mockErrorResponse);
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
-      // Mock the rejection
-      mockSendMessage.mockRejectedValueOnce(new Error(errorMessage));
+      await mailService.sendMail(mockMailOptions);
+
+      expect(consoleSpy).toHaveBeenCalledWith('Enveloop error:', {
+        error: 'API Error',
+      });
+      consoleSpy.mockRestore();
+    });
+
+    it('should handle network errors', async () => {
+      const networkError = new Error('Network error');
+      (global.fetch as jest.Mock).mockRejectedValueOnce(networkError);
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
       await expect(mailService.sendMail(mockMailOptions)).rejects.toThrow(
-        errorMessage,
+        'Network error',
       );
-      expect(console.error).toHaveBeenCalledWith(
+      expect(consoleSpy).toHaveBeenCalledWith(
         'Failed to send email:',
-        expect.any(Error),
+        networkError,
       );
+      consoleSpy.mockRestore();
     });
   });
 
   describe('sendWelcomeEmail', () => {
-    it('should send welcome email with correct template and variables', async () => {
+    it('should call sendMail with correct welcome email parameters', async () => {
+      const mockResponse = { ok: true, json: jest.fn() };
+      (global.fetch as jest.Mock).mockResolvedValueOnce(mockResponse);
+
       const userEmail = 'test@example.com';
       const userName = 'Test User';
 
       await mailService.sendWelcomeEmail(userEmail, userName);
 
-      expect(mockSendMessage).toHaveBeenCalledWith({
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      verifyFetchCall((global.fetch as jest.Mock).mock.calls[0], {
         to: userEmail,
-        template: 'welcome-email',
+        from: 'info@thinkstorm.app',
+        template: 'user-welcome',
         subject: 'Welcome to Our Platform!',
         templateVariables: {
           name: userName,
         },
       });
     });
+  });
 
-    it('should throw error when welcome email fails', async () => {
-      const errorMessage = 'Failed to send welcome email';
-      jest.spyOn(console, 'error').mockImplementation(() => {}); // Suppress console.error
+  describe('forgotPassword', () => {
+    it('should call sendMail with correct password reset parameters', async () => {
+      const mockResponse = { ok: true, json: jest.fn() };
+      (global.fetch as jest.Mock).mockResolvedValueOnce(mockResponse);
 
-      // Mock the rejection
-      mockSendMessage.mockRejectedValueOnce(new Error(errorMessage));
+      const userEmail = 'test@example.com';
+      const userName = 'Test User';
+      const resetUrl = 'https://example.com/reset';
 
-      await expect(
-        mailService.sendWelcomeEmail('test@example.com', 'Test User'),
-      ).rejects.toThrow(errorMessage);
+      await mailService.forgotPassword(userEmail, userName, resetUrl);
+
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      verifyFetchCall((global.fetch as jest.Mock).mock.calls[0], {
+        to: userEmail,
+        from: 'info@thinkstorm.app',
+        template: 'forgot-password',
+        subject: 'Password Reset Requested',
+        templateVariables: {
+          name: userName,
+          reset_url: resetUrl,
+        },
+      });
     });
   });
 });

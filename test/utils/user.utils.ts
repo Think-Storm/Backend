@@ -25,6 +25,7 @@ export const defaultUserResponseDto: UserResponseDto = {
   username: 'username',
   fullName: 'Full Name',
   password: 'hashedPassword',
+  passwordChangedAt: null,
   birthdate: new Date('2000-01-01'),
   createdAt: new Date('2000-01-01'),
   lastUpdatedAt: new Date('2000-01-01'),
@@ -59,7 +60,6 @@ export const defaultUpdateUser1Dto: UpdateUserDto = {
   username: 'username1',
   fullName: 'Full Name 1',
   email: 'email@email.com',
-  password: 'hashedPassword',
   birthdate: new Date('2000-01-01'),
 };
 
@@ -68,6 +68,5 @@ export const defaultUpdateUser2Dto: UpdateUserDto = {
   username: 'username2',
   fullName: 'Full Name 2',
   email: 'email2@email.com',
-  password: 'hashedPassword',
   birthdate: new Date('2000-01-01'),
 };
