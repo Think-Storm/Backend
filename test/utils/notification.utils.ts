@@ -1,4 +1,4 @@
-import { NotificationType } from '@prisma/client';
+import { NotificationType } from '@think-storm/contracts';
 import { notificationMessages } from '../../src/common/enums/notificationMessages';
 import { CreateNotificationDto } from '../../src/modules/notification/dtos/createNotification.dto';
 import { User } from '@prisma/client';

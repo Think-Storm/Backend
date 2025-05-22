@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommonDataRepository } from '../../../../src/modules/common-data/common-data.repository';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
-import { LanguageCode, LanguageName } from '@prisma/client';
+import { LanguageCode, LanguageName } from '@think-storm/contracts';
 
 describe('CommonDataRepository', () => {
   let repository: CommonDataRepository;

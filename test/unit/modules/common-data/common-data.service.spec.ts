@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { CommonDataService } from '../../../../src/modules/common-data/common-data.service';
 import { CommonDataRepository } from '../../../../src/modules/common-data/common-data.repository';
 import { CommonDataMapper } from '../../../../src/modules/common-data/dto/common-data.mapper';
-import { LanguageCode, LanguageName } from '@prisma/client';
+import { LanguageCode, LanguageName } from '@think-storm/contracts';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 
