@@ -8,32 +8,33 @@ generator client {
 }
 
 model NewsletterSubscription {
-  id            Int         @id @default(autoincrement())
-  email         String      @unique
-  createdAt     DateTime    @default(now()) @map("created_at")
-  lastUpdatedAt DateTime    @updatedAt @map("last_updated_at")
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  createdAt     DateTime @default(now()) @map("created_at")
+  lastUpdatedAt DateTime @updatedAt @map("last_updated_at")
 
   @@map("newsletter_subscriptions")
 }
 
 model User {
-  id                Int           @id @default(autoincrement())
-  email             String        @unique
+  id                Int            @id @default(autoincrement())
+  email             String         @unique
   username          String
   password          String
-  passwordSalt      String               @map("password_salt")
-  passwordChangedAt DateTime?            @map("password_changed_at")
-  fullName          String?              @map("full_name")
+  passwordSalt      String         @map("password_salt")
+  passwordChangedAt DateTime?      @map("password_changed_at")
+  fullName          String?        @map("full_name")
   birthdate         DateTime?
-  founded_projects  Project[]     @relation("FounderProjects")
+  founded_projects  Project[]      @relation("FounderProjects")
   projects          Project[]
   like              Like[]
   involvement       Involvement[]
   joinRequest       JoinRequest[]
   userProfile       UserProfile?
-  createdAt         DateTime      @default(now()) @map("created_at")
-  lastUpdatedAt     DateTime      @updatedAt @map("last_updated_at")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  lastUpdatedAt     DateTime       @updatedAt @map("last_updated_at")
   notifications     Notification[]
+
   @@map("users")
 }
 
@@ -47,7 +48,7 @@ model UserProfile {
   website      String?
   interests    UserProfileDomainLabel[]
   skills       UserProfileTechnicalLabel[]
-  user         User                        @relation(fields: [userId], references: [id], onUpdate: Cascade)
+  user         User                        @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   languages    UserProfileLanguage[]
   role         Role?                       @relation(fields: [preferedRole], references: [name], onUpdate: Cascade)
 
@@ -78,15 +79,15 @@ model Project {
 }
 
 model Notification {
-  id              Int                     @id @default(autoincrement())
-  userId          Int                     @map("user_id")
-  type            String
-  description     String
-  link            String?
-  isRead          Boolean                 @default(false)
-  createdAt       DateTime                @default(now()) @map("created_at")
-  lastUpdatedAt   DateTime                @updatedAt @map("last_updated_at")
-  user            User                    @relation(fields: [userId], references: [id])
+  id            Int              @id @default(autoincrement())
+  userId        Int              @map("user_id")
+  type          String
+  description   String
+  link          String?
+  isRead        Boolean          @default(false)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  lastUpdatedAt DateTime         @updatedAt @map("last_updated_at")
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
 }
@@ -150,7 +151,7 @@ model ProjectTechnicalLabel {
 model Like {
   userId    Int     @map("user_id")
   projectId Int     @map("project_id")
-  user      User    @relation(fields: [userId], references: [id])
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@id([userId, projectId])
@@ -161,7 +162,7 @@ model Involvement {
   userId    Int     @map("user_id")
   projectId Int     @map("project_id")
   roleName  String  @map("role_name")
-  user      User    @relation(fields: [userId], references: [id])
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   role      Role    @relation(fields: [roleName], references: [name])
 
@@ -174,7 +175,7 @@ model JoinRequest {
   projectId Int               @map("project_id")
   roleName  String            @map("role_name")
   status    String            @default("Pending")
-  user      User              @relation(fields: [userId], references: [id])
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   role      Role              @relation(fields: [roleName], references: [name])
 
