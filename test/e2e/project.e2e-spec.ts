@@ -23,7 +23,7 @@ import { UserRepository } from '../../src/modules/user/user.repository';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { RedisThrottlerStorageService } from '../../src/common/throttler/redisThrottlerStorage.service';
 import { RedisService } from '../../src/common/caching/redisCaching.service';
-
+import { LanguageCode, stringToEnum } from '@think-storm/contracts';
 describe('/projects', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
@@ -96,7 +96,10 @@ describe('/projects', () => {
 
       const createProjectRequest = defaultCreateProjectDto;
       createProjectRequest.founderId = createdProject.founderId;
-      createProjectRequest.languageCode = createdProject.languageCode;
+      createProjectRequest.languageCode = stringToEnum(
+        createdProject.languageCode,
+        LanguageCode,
+      );
 
       return await request(app.getHttpServer())
         .post('/')

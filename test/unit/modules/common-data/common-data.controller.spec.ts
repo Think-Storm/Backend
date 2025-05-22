@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommonDataController } from '../../../../src/modules/common-data/common-data.controller';
 import { CommonDataService } from '../../../../src/modules/common-data/common-data.service';
-import { LanguageCode, LanguageName } from '@prisma/client';
+import { LanguageCode, LanguageName } from '@think-storm/contracts';
 
 describe('CommonDataController', () => {
   let controller: CommonDataController;

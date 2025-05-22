@@ -1,9 +1,9 @@
 import { ExecutionContext } from '@nestjs/common';
 import { defaultUserResponseDto } from './user.utils';
 import { mockJwtToken } from './jwt.utils';
-import { loginUserDto } from '../../src/modules/auth/dtos/loginUser.dto';
+import { LoginUserDto } from '../../src/modules/auth/dtos/loginUser.dto';
 
-export const defaultLoginUserDto: loginUserDto = {
+export const defaultLoginUserDto: LoginUserDto = {
   email: 'email@email.com',
   password: 'hashedPassword',
 };
