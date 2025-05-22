@@ -269,4 +269,69 @@ describe('/users', () => {
       expect(updateResponse.status).toBe(404);
     });
   });
+
+  describe('/:id DELETE (Delete User)', () => {
+    it('should delete the user if authenticated and owner', async () => {
+      // Register user
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+      const userId = registerResponse.body.data.id;
+      const cookies = registerResponse.headers['set-cookie'];
+      const authHeader = registerResponse.headers.authorization;
+
+      // Act
+      const deleteResponse = await request(app.getHttpServer())
+        .delete(`/${userId}`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader);
+
+      // Assert
+      expect(deleteResponse.status).toBe(200);
+      expect(deleteResponse.body.message).toBe('Delete User Success');
+    });
+
+    it('should return 403 if user tries to delete another user', async () => {
+      // Register first user
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      // Register second user
+      const registerResponse2 = await request(app.getHttpServer())
+        .post('/register')
+        .send({
+          ...defaultCreateUserDto,
+          email: 'another@email.com',
+          username: 'anotheruser',
+        });
+      const cookies2 = registerResponse2.headers['set-cookie'];
+      const authHeader2 = registerResponse2.headers.authorization;
+
+      // Try to delete first user while logged in as second user
+      const deleteResponse = await request(app.getHttpServer())
+        .delete(`/1`)
+        .set('Cookie', cookies2)
+        .set('Authorization', authHeader2);
+
+      expect(deleteResponse.status).toBe(403);
+    });
+
+    it('should return 404 if user does not exist', async () => {
+      // Register user
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+      const cookies = registerResponse.headers['set-cookie'];
+      const authHeader = registerResponse.headers.authorization;
+
+      // Try to delete a non-existent user
+      const deleteResponse = await request(app.getHttpServer())
+        .delete(`/9999`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader);
+
+      expect(deleteResponse.status).toBe(404);
+    });
+  });
 });
