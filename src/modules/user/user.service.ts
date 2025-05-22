@@ -38,6 +38,7 @@ export class UserService {
       throw ServiceException.EntityNotFoundException(
         errorMessages.ENTITY_NOT_FOUND('User', userId.toString()),
       );
+
     return this.userMapper.userToUserResponseDTO(foundUser);
   }
 
@@ -101,4 +102,26 @@ export class UserService {
 
     return this.userMapper.userToUserResponseDTO(updatedUserFromRepo);
   };
+
+  /**
+   * delete user by ID
+   * @param userId - ID for deleting user
+   */
+  async deleteUserById(currentUserId: number, userId: number) {
+    const foundUser = await this.userRepository.getUserById(userId);
+
+    if (!foundUser) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('User', userId.toString()),
+      );
+    }
+
+    if (foundUser.id !== currentUserId) {
+      throw ServiceException.ForbiddenException(
+        errorMessages.FORBIDDEN('You are not the owner of this account'),
+      );
+    }
+
+    return await this.userRepository.deleteUserById(userId);
+  }
 }

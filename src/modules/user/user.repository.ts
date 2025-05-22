@@ -128,4 +128,24 @@ export class UserRepository {
       throw ServiceException.ErrorException(error.message, error);
     }
   }
+
+  /**
+   * Finds a user by user id
+   * @param userId - The id of the user to find
+   */
+  async deleteUserById(userId: number) {
+    try {
+      return await this.prisma.user.delete({
+        where: {
+          id: userId,
+        },
+      });
+    } catch (error) {
+      console.log('here is your error', error);
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_DELETING_USER,
+        error,
+      );
+    }
+  }
 }

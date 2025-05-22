@@ -44,4 +44,5 @@ export const errorMessages = {
     'An error occurred while deleting notifications in DB.',
   ERROR_FINDING_NOTIFICATION: 'An error occurred while finding notification.',
   ERROR_UPDATING_NOTIFICATION: 'Error updating notification',
+  ERROR_DELETING_USER: 'An error occurred while deleting user.',
 };
