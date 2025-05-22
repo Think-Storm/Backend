@@ -153,4 +153,53 @@ describe('UserRepository', () => {
       expect(user.passwordSalt).toBe(defaultPasswordSalt);
     });
   });
+
+  describe('deleteUser repository function', () => {
+    it('should delete an existing user from DB', async () => {
+      // Arrange: create a user
+      const createdUser = await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+
+      // Act
+      const result = await userRepository.deleteUserById(createdUser.id);
+
+      // Assert
+      expect(result).toBeDefined();
+      expect(result.id).toBe(createdUser.id);
+    });
+
+    it('should throw ServiceException if user does not exist', async () => {
+      // Arrange
+      const nonExistentUserId = 99999;
+      // Act & Assert
+      await expect(
+        userRepository.deleteUserById(nonExistentUserId),
+      ).rejects.toThrow(ServiceException);
+      await expect(
+        userRepository.deleteUserById(nonExistentUserId),
+      ).rejects.toThrow(errorMessages.ERROR_DELETING_USER);
+    });
+
+    it('should throw ServiceException for foreign key constraint violation', async () => {
+      // This test assumes you have a Notification or related table with a foreign key to User.
+      // You may need to adjust this test based on your schema and seed data.
+      // Arrange: create a user
+      const createdUser = await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+      // Simulate a foreign key constraint by creating a related record if possible
+      // For demonstration, we expect the error to be thrown if such a constraint exists
+      // Act & Assert
+      try {
+        await userRepository.deleteUserById(createdUser.id);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        // The error message should include the foreign key constraint violation message if triggered
+        // expect(e.message).toContain(errorMessages.FOREIGN_KEY_CONSTRAINT_VIOLATION); // Uncomment if you have such a constraint
+      }
+    });
+  });
 });

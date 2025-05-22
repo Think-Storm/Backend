@@ -175,4 +175,66 @@ describe('UserController', () => {
       ).rejects.toThrow('Update failed');
     });
   });
+
+  describe('deleteUser function', () => {
+    it('should return a success message', async () => {
+      // Arrange
+      const mockRequest = { user: { id: 1 } } as any;
+      const mockResponse = httpMocks.createResponse();
+      const userId = 1;
+
+      const mainSpy = jest
+        .spyOn(userService, 'deleteUserById')
+        .mockResolvedValue(undefined);
+
+      // Act
+      await userController.deleteUserById(mockRequest, mockResponse, userId);
+
+      // Assert
+      expect(mainSpy).toHaveBeenCalledTimes(1);
+      expect(mainSpy).toHaveBeenCalledWith(1, 1);
+      const responseData = mockResponse._getData();
+      expect(responseData).toEqual({ message: 'Delete User Success' });
+    });
+
+    it('should throw forbidden if user tries to delete another user', async () => {
+      // Arrange
+      const mockRequest = { user: { id: 1 } } as any;
+      const mockResponse = httpMocks.createResponse();
+      const userId = 2;
+
+      jest.spyOn(userService, 'deleteUserById').mockImplementation(() => {
+        throw ServiceException.ForbiddenException(
+          errorMessages.FORBIDDEN('You are not the owner of this account'),
+        );
+      });
+
+      // Act & Assert
+      await expect(
+        userController.deleteUserById(mockRequest, mockResponse, userId),
+      ).rejects.toThrow(
+        errorMessages.FORBIDDEN('You are not the owner of this account'),
+      );
+    });
+
+    it('should throw not found if user does not exist', async () => {
+      // Arrange
+      const mockRequest = { user: { id: 1 } } as any;
+      const mockResponse = httpMocks.createResponse();
+      const userId = 999;
+
+      jest.spyOn(userService, 'deleteUserById').mockImplementation(() => {
+        throw ServiceException.EntityNotFoundException(
+          errorMessages.ENTITY_NOT_FOUND('User', userId.toString()),
+        );
+      });
+
+      // Act & Assert
+      await expect(
+        userController.deleteUserById(mockRequest, mockResponse, userId),
+      ).rejects.toThrow(
+        errorMessages.ENTITY_NOT_FOUND('User', userId.toString()),
+      );
+    });
+  });
 });
