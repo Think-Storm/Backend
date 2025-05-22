@@ -10,6 +10,7 @@ import {
 import {
   Controller,
   Get,
+  Delete,
   Param,
   UseInterceptors,
   ClassSerializerInterceptor,
@@ -84,6 +85,35 @@ export class UserController {
     return res.send({
       message: 'Update User Success',
       data: updatedUserWithJwt,
+    });
+  }
+
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @Delete('/:id')
+  @ApiOperation({ summary: 'Delete user' })
+  @ApiResponse({ status: 200, description: 'Delete User Success' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized. You must be logged in to delete your account.',
+  })
+  @ApiResponse({
+    status: 403,
+    description:
+      'Forbidden. Only owner of the account can delete user information',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'User is not found',
+  })
+  async deleteUserById(
+    @Request() req,
+    @Res() res: Response,
+    @Param('id') userId: number,
+  ) {
+    await this.userService.deleteUserById(req.user.id, userId);
+    return res.send({
+      message: 'Delete User Success',
     });
   }
 }
