@@ -4,6 +4,54 @@ Main backend for the ThinkStorm project (API and DB relationships)
 
 ## Installation
 
+### GitHub Authentication Setup
+
+Before installing dependencies, you need to set up GitHub authentication to access the private `@think-storm/contracts` package:
+
+1. Create a GitHub Personal Access Token (PAT):
+
+   - Go to GitHub.com → Settings → Developer Settings → Personal Access Tokens → Tokens (classic)
+   - Click "Generate new token (classic)"
+   - Give it a name (e.g., "ThinkStorm Package Access")
+   - Select scopes: at minimum, check "read:packages"
+   - Click "Generate token"
+   - **IMPORTANT**: Copy the token immediately as you won't be able to see it again
+
+2. Add the token to your environment:
+
+   **For Linux/macOS:**
+
+   ```bash
+   # Add to ~/.bashrc or ~/.zshrc
+   echo 'export GITHUB_TOKEN=your_token_here' >> ~/.bashrc
+   source ~/.bashrc
+   ```
+
+   **For Windows (PowerShell):**
+
+   ```powershell
+   # Add to PowerShell profile
+   Add-Content $PROFILE "`$env:GITHUB_TOKEN='your_token_here'"
+   # Reload profile
+   . $PROFILE
+   ```
+
+   **For Windows (Command Prompt):**
+
+   ```cmd
+   # Add to system environment variables
+   setx GITHUB_TOKEN "your_token_here"
+   ```
+
+3. Configure npm to use the token:
+   ```bash
+   # Create or edit .npmrc in your home directory
+   echo "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> ~/.npmrc
+   echo "@think-storm:registry=https://npm.pkg.github.com" >> ~/.npmrc
+   ```
+
+Now you can proceed with the installation:
+
 ```bash
 npm install
 
