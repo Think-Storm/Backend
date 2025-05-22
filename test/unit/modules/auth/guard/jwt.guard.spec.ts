@@ -120,7 +120,11 @@ describe('JwtAuthGuard', () => {
   // 1) without any token
   it('should throw 401 error without any auth token', () => {
     const context = createMock<ExecutionContext>();
-
+    context.switchToHttp().getRequest.mockReturnValue({
+      headers: {
+        authorization: '',
+      },
+    });
     expect(guard.canActivate(context)).rejects.toThrow(
       ServiceException.UnAuthorizedException(errorMessages.PROTECT_ROUTES),
     );
