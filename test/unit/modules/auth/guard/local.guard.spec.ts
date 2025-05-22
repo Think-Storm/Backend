@@ -19,6 +19,8 @@ import prisma from '../../../../../src/prisma/prisma.client';
 import { PrismaModule } from '../../../../../src/prisma/prisma.module';
 import { NotificationService } from '../../../../../src/modules/notification/notification.service';
 import { NotificationRepository } from '../../../../../src/modules/notification/notification.repository';
+import { JwtHelperService } from '../../../../../src/modules/auth/jwt/jwt-helper.service';
+import { MailService } from '../../../../../src/modules/mail/mail.service';
 
 describe('LocalAuthGuard', () => {
   let userService: UserService;
@@ -76,6 +78,8 @@ describe('LocalAuthGuard', () => {
         },
         LocalStrategy,
         ConfigService,
+        JwtHelperService,
+        MailService,
       ],
     }).compile();
 

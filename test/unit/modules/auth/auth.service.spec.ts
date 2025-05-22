@@ -22,6 +22,9 @@ import { PassportModule } from '@nestjs/passport';
 import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
 import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
 import { NotificationService } from '../../../../src/modules/notification/notification.service';
+import { MailService } from '../../../../src/modules/mail/mail.service';
+import { JwtHelperService } from '../../../../src/modules/auth/jwt/jwt-helper.service';
+
 describe('AuthService', () => {
   let authService: AuthService;
   let userService: UserService;
@@ -53,6 +56,8 @@ describe('AuthService', () => {
         ConfigService,
         NotificationService,
         NotificationRepository,
+        MailService,
+        JwtHelperService,
       ],
     }).compile();
 
@@ -121,6 +126,7 @@ describe('AuthService', () => {
         birthdate: defaultUser.birthdate,
         createdAt: defaultUser.createdAt,
         lastUpdatedAt: defaultUser.lastUpdatedAt,
+        passwordChangedAt: defaultUser.passwordChangedAt,
       };
 
       const userResponseDto = await authService.register(defaultCreateUserDto);

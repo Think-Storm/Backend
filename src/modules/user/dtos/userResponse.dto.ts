@@ -19,6 +19,10 @@ export class UserResponseDto implements UserResponse {
   @Expose()
   password: string;
 
+  @ApiProperty({ writeOnly: true })
+  @Expose()
+  passwordChangedAt?: Date;
+
   @ApiProperty({ required: false })
   @Expose()
   fullName?: string;
