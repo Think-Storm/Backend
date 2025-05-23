@@ -169,7 +169,6 @@ export class UserRepository {
         },
       });
     } catch (error) {
-      console.log('here is your error', error);
       throw ServiceException.ErrorException(
         errorMessages.ERROR_DELETING_USER,
         error,
