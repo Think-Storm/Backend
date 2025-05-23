@@ -14,6 +14,12 @@ export class RedisService {
   }
 
   getClient(): Redis {
+    if (!this.redis) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Redis client not initialized'),
+        500,
+      );
+    }
     return this.redis;
   }
 
@@ -49,15 +55,36 @@ export class RedisService {
   }
 
   async get(key: string): Promise<any> {
-    return await this.redis.get(key);
+    try {
+      return await this.redis.get(key);
+    } catch (error) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Error getting data from Redis'),
+        500,
+      );
+    }
   }
 
   async delete(key: string) {
-    await this.redis.del(key);
+    try {
+      await this.redis.del(key);
+    } catch (error) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Error deleting data from Redis'),
+        500,
+      );
+    }
   }
 
   async flushDb() {
-    await this.redis.flushdb();
+    try {
+      await this.redis.flushdb();
+    } catch (error) {
+      throw new ServiceException(
+        errorMessages.REDIS_CONNECTION_ISSUE('Error flushing Redis DB'),
+        500,
+      );
+    }
   }
 
   disconnect() {

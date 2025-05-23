@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import { ExecutionContext } from '@nestjs/common';
 import { ServiceExceptionToHttpExceptionFilter } from '../../../../src/common/exception-filter/serviceExceptionFilter';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
@@ -13,6 +14,7 @@ import {
   RATE_LIMITING_LIMIT,
   RATE_LIMITING_TTL,
 } from '../../../../src/common/consts';
+import { mockThrottlerOptions } from '../../../utils/throttler.utils';
 
 describe('ServiceExceptionToHttpExceptionFilter', () => {
   let filter: ServiceExceptionToHttpExceptionFilter;
@@ -74,6 +76,7 @@ describe('ServiceExceptionToHttpExceptionFilter', () => {
 
   describe('catch in development environment', () => {
     beforeEach(() => {
+      jest.clearAllMocks();
       process.env.NODE_ENV = 'development';
     });
 
@@ -114,6 +117,7 @@ describe('ServiceExceptionToHttpExceptionFilter', () => {
 
   describe('catch in production environment', () => {
     beforeEach(() => {
+      jest.clearAllMocks();
       process.env.NODE_ENV = 'production';
     });
 
@@ -150,6 +154,7 @@ describe('ServiceExceptionToHttpExceptionFilter', () => {
 
   describe('Rate limiting errors', () => {
     beforeEach(() => {
+      jest.clearAllMocks();
       process.env.NODE_ENV = 'development';
       mockResponse.setHeader = jest.fn();
       mockRequest = {
@@ -230,6 +235,7 @@ describe('ServiceExceptionToHttpExceptionFilter', () => {
 
   describe('Error response structure', () => {
     beforeEach(() => {
+      jest.clearAllMocks();
       mockJson = jest.fn().mockReturnThis();
       mockStatus = jest.fn().mockReturnThis();
       mockResponse = {
@@ -294,6 +300,92 @@ describe('ServiceExceptionToHttpExceptionFilter', () => {
       });
       expect(jsonCall.stack).toBeDefined();
       expect(jsonCall.timestamp).toBeDefined();
+    });
+  });
+
+  describe('ThrottlerException handling', () => {
+    it('should handle ThrottlerException and set retry-after header with blockedIpData', async () => {
+      process.env.NODE_ENV = 'development';
+      const { ThrottlerException } = require('@nestjs/throttler');
+      const exception = new ThrottlerException();
+
+      // Mock throttlerGuardService.get to return block info
+      mockRedisThrottlerService.get.mockResolvedValue({
+        ...mockThrottlerOptions,
+        blockDuration: 12345,
+      });
+      mockResponse.setHeader = jest.fn();
+
+      await filter.catch(exception, mockHost());
+
+      expect(mockRedisThrottlerService.set).toHaveBeenCalled();
+      expect(mockRedisThrottlerService.get).toHaveBeenCalled();
+      expect(mockResponse.setHeader).toHaveBeenCalledWith(
+        'retry-after',
+        String(12345 / 1000),
+      );
+      expect(mockStatus).toHaveBeenCalledWith(429);
+      expect(mockJson).toHaveBeenCalled();
+    });
+
+    it('should handle ThrottlerException and set retry-after header with default block time', async () => {
+      process.env.NODE_ENV = 'development';
+      const { ThrottlerException } = require('@nestjs/throttler');
+      const exception = new ThrottlerException();
+
+      // Mock throttlerGuardService.get to return null
+      mockRedisThrottlerService.get.mockResolvedValue(null);
+      mockResponse.setHeader = jest.fn();
+
+      await filter.catch(exception, mockHost());
+
+      expect(mockRedisThrottlerService.set).toHaveBeenCalled();
+      expect(mockRedisThrottlerService.get).toHaveBeenCalled();
+      expect(mockResponse.setHeader).toHaveBeenCalledWith(
+        'retry-after',
+        String(Number(BLOCK_REQUEST_TIME) / 1000),
+      );
+      expect(mockStatus).toHaveBeenCalledWith(429);
+      expect(mockJson).toHaveBeenCalled();
+    });
+
+    it('should not fail if setHeader is missing', async () => {
+      process.env.NODE_ENV = 'development';
+      const { ThrottlerException } = require('@nestjs/throttler');
+      const exception = new ThrottlerException();
+
+      // Remove setHeader
+      const req = { url: '/test-url' } as any;
+      const res = {
+        status: mockStatus,
+        json: mockJson,
+        setHeader: jest.fn(),
+      } as any;
+
+      mockRedisThrottlerService.get.mockResolvedValue(null);
+
+      await filter.catch(exception, mockHost(req, res));
+
+      expect(mockStatus).toHaveBeenCalledWith(429);
+      expect(mockJson).toHaveBeenCalled();
+    });
+  });
+
+  describe('HttpException handling', () => {
+    it('should handle ServiceException with custom status and message', async () => {
+      jest.clearAllMocks();
+      process.env.NODE_ENV = 'development';
+      const exception = new ServiceException('Custom error', 418);
+
+      await filter.catch(exception, mockHost());
+      expect(mockStatus).toHaveBeenCalled();
+      expect(mockStatus).toHaveBeenCalledWith(418);
+      expect(mockJson).toHaveBeenCalledWith(
+        expect.objectContaining({
+          statusCode: 418,
+          message: 'Custom error',
+        }),
+      );
     });
   });
 
