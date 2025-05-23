@@ -10,6 +10,12 @@ export const mockJwtPayload = {
   exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour from now
 };
 
+export const mockJwtPayloadForPasswordReset = {
+  id: 1,
+  iat: Math.floor(Date.now() / 1000),
+  exp: Math.floor(Date.now() / 1000) + 15 * 60, // 15 minutes from now
+};
+
 export interface RequestWithUser extends Request {
   user: UserResponseDto;
 }

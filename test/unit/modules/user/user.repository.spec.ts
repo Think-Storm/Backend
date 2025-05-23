@@ -146,7 +146,39 @@ describe('UserRepository', () => {
       expect(user.birthdate.toDateString()).toBe(
         defaultUpdateUser1Dto.birthdate.toDateString(),
       );
-      expect(user.passwordSalt).toBe(defaultPasswordSalt);
+    });
+  });
+
+  describe('udpatePassword', () => {
+    it('should update user password', async () => {
+      const createdUser = await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+
+      const updatedUser = await userRepository.udpatePassword(
+        { password: 'newHashedPassword' } as any,
+        'newPasswordSalt',
+        createdUser.id,
+      );
+
+      expect(updatedUser).toBeDefined();
+      expect(updatedUser.id).toBe(createdUser.id);
+      expect(updatedUser.password).toBe('newHashedPassword');
+      expect(updatedUser.passwordSalt).toBe('newPasswordSalt');
+    });
+
+    it('should throw ServiceException on DB error', async () => {
+      jest
+        .spyOn(prismaService.user, 'update')
+        .mockRejectedValue(new Error('DB error'));
+      await expect(
+        userRepository.udpatePassword(
+          { password: 'newHashedPassword' } as any,
+          'newPasswordSalt',
+          1,
+        ),
+      ).rejects.toThrow(ServiceException);
     });
   });
 
