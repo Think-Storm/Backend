@@ -220,4 +220,34 @@ describe('RedisService', () => {
       });
     });
   });
+
+  describe('Cache Operations', () => {
+    describe('get', () => {
+      it('should handle Redis errors during get', async () => {
+        mockRedisInstance.get.mockRejectedValue(new Error('Redis error'));
+        await expect(service.get('key')).rejects.toThrow(ServiceException);
+      });
+    });
+
+    describe('delete', () => {
+      it('should handle Redis errors during delete', async () => {
+        mockRedisInstance.del.mockRejectedValue(new Error('Redis error'));
+        await expect(service.delete('key')).rejects.toThrow(ServiceException);
+      });
+    });
+
+    describe('flushDb', () => {
+      it('should handle Redis errors during flushDb', async () => {
+        mockRedisInstance.flushdb.mockRejectedValue(new Error('Redis error'));
+        await expect(service.flushDb()).rejects.toThrow(ServiceException);
+      });
+    });
+  });
+
+  describe('getClient', () => {
+    it('should throw ServiceException if redis is undefined', () => {
+      Object.defineProperty(service, 'redis', { value: undefined });
+      expect(() => service.getClient()).toThrow(ServiceException);
+    });
+  });
 });
