@@ -14,16 +14,27 @@ import { UserController } from '../../../../src/modules/user/user.controller';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { AuthService } from '../../../../src/modules/auth/auth.service';
-import { JsonWebTokenError, JwtModule } from '@nestjs/jwt';
+import { JsonWebTokenError, JwtModule, JwtService } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import prisma from '../../../../src/prisma/prisma.client';
 import { PassportModule } from '@nestjs/passport';
-import { defaultSaltAndPassword } from '../../common/passwordEncryption.utils';
+import {
+  defaultPasswordSalt,
+  defaultSaltAndPassword,
+} from '../../common/passwordEncryption.utils';
 import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
 import { NotificationService } from '../../../../src/modules/notification/notification.service';
 import { MailService } from '../../../../src/modules/mail/mail.service';
 import { JwtHelperService } from '../../../../src/modules/auth/jwt/jwt-helper.service';
+import {
+  mockJwtPayloadForPasswordReset,
+  mockJwtToken,
+} from '../../../utils/jwt.utils';
+import {
+  defaultForgotPasswordDto,
+  defaultUpdatePasswordDto,
+} from '../../../utils/auth.utils';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -31,6 +42,10 @@ describe('AuthService', () => {
   let userRepository: UserRepository;
   let passwordEncryption: PasswordEncryption;
   let notificationService: NotificationService;
+  let jwtHelperService: JwtHelperService;
+  let mailService: MailService;
+  let jwtService: JwtService;
+  let userMapper: UserMapper;
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -66,6 +81,10 @@ describe('AuthService', () => {
     userService = module.get<UserService>(UserService);
     userRepository = module.get<UserRepository>(UserRepository);
     passwordEncryption = module.get<PasswordEncryption>(PasswordEncryption);
+    jwtHelperService = module.get<JwtHelperService>(JwtHelperService);
+    mailService = module.get<MailService>(MailService);
+    jwtService = module.get<JwtService>(JwtService);
+    userMapper = module.get<UserMapper>(UserMapper);
   });
 
   afterEach(() => {
@@ -306,6 +325,188 @@ describe('AuthService', () => {
         httpOnly: true,
         maxAge: 0,
       });
+    });
+  });
+
+  describe('sendForgotPassword', () => {
+    it('should send forgot password email and return user response dto', async () => {
+      jest
+        .spyOn(userRepository, 'getUserByEmail')
+        .mockResolvedValue(defaultUser);
+      jest.spyOn(jwtService, 'sign').mockReturnValue(mockJwtToken);
+      const mailSpy = jest
+        .spyOn(mailService, 'forgotPassword')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn(userMapper, 'userToUserResponseDTO')
+        .mockReturnValue(defaultUserResponseDto);
+
+      const result = await authService.sendForgotPassword(
+        defaultForgotPasswordDto,
+      );
+
+      expect(userRepository.getUserByEmail).toHaveBeenCalledWith(
+        defaultUser.email,
+      );
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        { id: defaultUser.id },
+        { expiresIn: '15m' },
+      );
+      expect(mailSpy).toHaveBeenCalledWith(
+        defaultUser.email,
+        defaultUser.username,
+        expect.stringContaining(
+          `https://thinkstorm.app/reset-password?token=${mockJwtToken}`,
+        ),
+      );
+      expect(result).toEqual(defaultUserResponseDto);
+    });
+
+    it('should throw if user is not found', async () => {
+      jest.spyOn(userRepository, 'getUserByEmail').mockResolvedValue(null);
+
+      await expect(
+        authService.sendForgotPassword({
+          ...defaultForgotPasswordDto,
+          email: 'notfound@email.com',
+        }),
+      ).rejects.toThrow(
+        ServiceException.EntityNotFoundException(
+          errorMessages.ENTITY_NOT_FOUND_MSG('User', 'notfound@email.com'),
+        ),
+      );
+    });
+  });
+
+  describe('updatePassword', () => {
+    it('should update password and return user response dto', async () => {
+      jest
+        .spyOn(jwtHelperService, 'verifyAndDecodeToken')
+        .mockResolvedValue(mockJwtPayloadForPasswordReset);
+      jest
+        .spyOn(jwtHelperService, 'checkUserExistsInDB')
+        .mockResolvedValue(defaultUser);
+      jest
+        .spyOn(passwordEncryption, 'createSaltAndHashedPassword')
+        .mockResolvedValue({
+          passwordSalt: defaultPasswordSalt,
+          hashedPassword: 'newHashedPassword',
+        });
+      jest
+        .spyOn(userRepository, 'udpatePassword')
+        .mockResolvedValue(defaultUser);
+      jest.spyOn(userMapper, 'userToUserResponseDTO').mockReturnValue({
+        ...defaultUserResponseDto,
+        password: defaultUpdatePasswordDto.password,
+      });
+
+      const originalPassword = 'newpassword';
+
+      const result = await authService.updatePassword({
+        ...defaultUpdatePasswordDto,
+        password: originalPassword,
+      });
+
+      expect(jwtHelperService.verifyAndDecodeToken).toHaveBeenCalledWith(
+        defaultUpdatePasswordDto.passwordResetToken,
+      );
+      expect(jwtHelperService.checkUserExistsInDB).toHaveBeenCalledWith(
+        mockJwtPayloadForPasswordReset.id,
+      );
+      expect(
+        passwordEncryption.createSaltAndHashedPassword,
+      ).toHaveBeenCalledWith(defaultUpdatePasswordDto.password);
+      expect(userRepository.udpatePassword).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ...defaultUpdatePasswordDto,
+          password: 'newHashedPassword',
+        }),
+        defaultPasswordSalt,
+        defaultUser.id,
+      );
+      expect(result).toEqual({
+        ...defaultUserResponseDto,
+        password: originalPassword,
+      });
+    });
+
+    it('should throw if verifyAndDecodeToken fails for invalid token', async () => {
+      jest
+        .spyOn(jwtHelperService, 'verifyAndDecodeToken')
+        .mockRejectedValue(
+          ServiceException.UnAuthorizedException(errorMessages.TOKEN_EXPIRED),
+        );
+
+      await expect(
+        authService.updatePassword(defaultUpdatePasswordDto),
+      ).rejects.toThrow('Your token has expired.');
+    });
+
+    it('should throw if verifyAndDecodeToken fails for expired token', async () => {
+      jest
+        .spyOn(jwtHelperService, 'verifyAndDecodeToken')
+        .mockRejectedValue(
+          ServiceException.UnAuthorizedException(errorMessages.INVALID_TOKEN),
+        );
+
+      await expect(
+        authService.updatePassword(defaultUpdatePasswordDto),
+      ).rejects.toThrow('Invalid Token.');
+    });
+
+    it('should throw if checkUserExistsInDB fails', async () => {
+      jest
+        .spyOn(jwtHelperService, 'verifyAndDecodeToken')
+        .mockResolvedValue(mockJwtPayloadForPasswordReset);
+      jest
+        .spyOn(jwtHelperService, 'checkUserExistsInDB')
+        .mockRejectedValue(
+          ServiceException.UnAuthorizedException(
+            errorMessages.ENTITY_NOT_FOUND(
+              'User',
+              String(mockJwtPayloadForPasswordReset.id),
+            ),
+          ),
+        );
+
+      await expect(
+        authService.updatePassword(defaultUpdatePasswordDto),
+      ).rejects.toThrow(
+        `User with id ${mockJwtPayloadForPasswordReset.id} was not found`,
+      );
+    });
+
+    it('should throw if user is not the owner', async () => {
+      jest
+        .spyOn(jwtHelperService, 'verifyAndDecodeToken')
+        .mockResolvedValue(mockJwtPayloadForPasswordReset);
+      jest
+        .spyOn(jwtHelperService, 'checkUserExistsInDB')
+        .mockResolvedValue({ ...defaultUser, email: 'other@email.com' });
+
+      await expect(
+        authService.updatePassword(defaultUpdatePasswordDto),
+      ).rejects.toThrow(
+        ServiceException.ForbiddenException(
+          errorMessages.FORBIDDEN('You are not the owner of this account'),
+        ),
+      );
+    });
+
+    it('should throw if password hashing fails', async () => {
+      jest
+        .spyOn(jwtHelperService, 'verifyAndDecodeToken')
+        .mockResolvedValue(mockJwtPayloadForPasswordReset);
+      jest
+        .spyOn(jwtHelperService, 'checkUserExistsInDB')
+        .mockResolvedValue(defaultUser);
+      jest
+        .spyOn(passwordEncryption, 'createSaltAndHashedPassword')
+        .mockRejectedValue(new Error('hash error'));
+
+      await expect(
+        authService.updatePassword(defaultUpdatePasswordDto),
+      ).rejects.toThrow('hash error');
     });
   });
 });
