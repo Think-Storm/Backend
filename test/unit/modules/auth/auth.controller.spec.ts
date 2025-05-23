@@ -26,12 +26,18 @@ import { NotificationService } from '../../../../src/modules/notification/notifi
 import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
 import { JwtHelperService } from '../../../../src/modules/auth/jwt/jwt-helper.service';
 import { MailService } from '../../../../src/modules/mail/mail.service';
+import {
+  defaultForgotPasswordDto,
+  defaultUpdatePasswordDto,
+} from '../../../utils/auth.utils';
+import { mockJwtPayloadForPasswordReset } from '../../../utils/jwt.utils';
 
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
   let jwtStrategy: JwtStrategy;
   let jwtHelperService: JwtHelperService;
+  let passwordEncryption: PasswordEncryption;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -72,6 +78,7 @@ describe('AuthController', () => {
     authService = module.get<AuthService>(AuthService);
     jwtStrategy = module.get<JwtStrategy>(JwtStrategy);
     jwtHelperService = module.get<JwtHelperService>(JwtHelperService);
+    passwordEncryption = module.get<PasswordEncryption>(PasswordEncryption);
   });
 
   beforeEach(() => {
@@ -271,6 +278,148 @@ describe('AuthController', () => {
       expect(jwtHelperService.checkUserExistsInDB).toHaveBeenCalled();
       expect(jwtHelperService.checkUserPasswordChanged).toHaveBeenCalled();
       expect(authService.logout).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('forgot password function', () => {
+    it('should return logged in user responseDto', async () => {
+      const mainSpy = jest
+        .spyOn(authService, 'sendForgotPassword')
+        .mockResolvedValue(defaultUserResponseDto);
+
+      const response = await authController.forgotPassword(
+        defaultForgotPasswordDto,
+      );
+
+      expect(mainSpy).toHaveBeenCalledWith(defaultForgotPasswordDto);
+      expect(response).toEqual(defaultUserResponseDto);
+    });
+
+    it('should handle user not found scenario', async () => {
+      const userEmail = defaultUser.email;
+      jest
+        .spyOn(authService, 'sendForgotPassword')
+        .mockRejectedValue(
+          ServiceException.EntityNotFoundException(
+            errorMessages.ENTITY_NOT_FOUND_MSG('User', userEmail),
+          ),
+        );
+
+      await expect(
+        authController.forgotPassword(defaultForgotPasswordDto),
+      ).rejects.toThrow(ServiceException);
+    });
+  });
+
+  describe('update password function', () => {
+    it('should update password of a existing user', async () => {
+      const res = httpMocks.createResponse();
+
+      jest
+        .spyOn(authService, 'updatePassword')
+        .mockResolvedValue(defaultUserResponseDto);
+      jest
+        .spyOn(authService, 'authentication')
+        .mockReturnValue(defaultUserResponseDto);
+
+      const response = await authController.updatePassword(
+        defaultUpdatePasswordDto,
+        res,
+      );
+
+      expect(response._getData()).toEqual({
+        message: 'Update User Password Success',
+        data: defaultUserResponseDto,
+      });
+    });
+
+    it('should handle password reset token invalid scenario', async () => {
+      const res = httpMocks.createResponse();
+
+      jest
+        .spyOn(authService, 'updatePassword')
+        .mockRejectedValue(
+          ServiceException.UnAuthorizedException(errorMessages.INVALID_TOKEN),
+        );
+
+      await expect(
+        authController.updatePassword(defaultUpdatePasswordDto, res),
+      ).rejects.toThrow('Invalid Token');
+    });
+
+    it('should handle password reset token expired scenario', async () => {
+      const res = httpMocks.createResponse();
+
+      jest
+        .spyOn(authService, 'updatePassword')
+        .mockRejectedValue(
+          ServiceException.UnAuthorizedException(errorMessages.TOKEN_EXPIRED),
+        );
+
+      await expect(
+        authController.updatePassword(defaultUpdatePasswordDto, res),
+      ).rejects.toThrow('Your token has expired.');
+    });
+
+    it('should handle user not found during password reset', async () => {
+      const res = httpMocks.createResponse();
+
+      jest
+        .spyOn(authService, 'updatePassword')
+        .mockRejectedValue(
+          ServiceException.UnAuthorizedException(
+            errorMessages.ENTITY_NOT_FOUND(
+              'User',
+              String(mockJwtPayloadForPasswordReset.id),
+            ),
+          ),
+        );
+
+      await expect(
+        authController.updatePassword(defaultUpdatePasswordDto, res),
+      ).rejects.toThrow(
+        `User with id ${mockJwtPayloadForPasswordReset.id} was not found`,
+      );
+    });
+
+    it('should handle when user email and decoded user email is not same scenario', async () => {
+      const res = httpMocks.createResponse();
+
+      jest
+        .spyOn(jwtHelperService, 'verifyAndDecodeToken')
+        .mockResolvedValue(mockJwtPayloadForPasswordReset);
+      jest
+        .spyOn(jwtHelperService, 'checkUserExistsInDB')
+        .mockResolvedValue(defaultUser);
+      jest
+        .spyOn(authService, 'updatePassword')
+        .mockRejectedValue(
+          ServiceException.ForbiddenException(
+            errorMessages.FORBIDDEN('You are not the owner of this account'),
+          ),
+        );
+
+      await expect(
+        authController.updatePassword(defaultUpdatePasswordDto, res),
+      ).rejects.toThrow('You are not the owner of this account');
+    });
+
+    it('should throw if password hash generation fails', async () => {
+      const res = httpMocks.createResponse();
+
+      jest
+        .spyOn(jwtHelperService, 'verifyAndDecodeToken')
+        .mockResolvedValue({ id: defaultUser.id });
+      jest
+        .spyOn(jwtHelperService, 'checkUserExistsInDB')
+        .mockResolvedValue(defaultUser);
+      jest
+        .spyOn(authService, 'updatePassword')
+        .mockRejectedValue(new Error('hash error'));
+
+      await expect(
+        authController.updatePassword(defaultUpdatePasswordDto, res),
+      ).rejects.toThrow('hash error');
     });
   });
 
