@@ -7,16 +7,7 @@ import {
   BLOCK_REQUEST_TIME,
   RATE_LIMITING_TTL,
 } from '../../../../src/common/consts';
-
-const mockThrottlerOptions = {
-  name: 'API Rate Limiter',
-  limit: expect.any(Function),
-  ttl: RATE_LIMITING_TTL,
-  blockDuration: BLOCK_REQUEST_TIME * 1000,
-  ignoreUserAgents: expect.any(Array),
-  skipIf: expect.any(Function),
-  generateKey: expect.any(Function),
-};
+import { mockThrottlerOptions } from '../../../utils/throttler.utils';
 
 describe('RedisThrottlerStorageService', () => {
   let service: RedisThrottlerStorageService;
@@ -140,6 +131,54 @@ describe('RedisThrottlerStorageService', () => {
 
         expect(mockRedisClient.del).toHaveBeenCalledWith('test-key');
         expect(clearIntervalSpy).toHaveBeenCalled();
+      });
+    });
+
+    describe('decrby', () => {
+      it('should decrease blockDuration and update redis', async () => {
+        const throttlerData = { ...mockThrottlerOptions, blockDuration: 2000 };
+        jest.spyOn(service, 'get').mockResolvedValue(throttlerData);
+
+        await service.decrby('test-key', 1000);
+
+        expect(mockRedisClient.set).toHaveBeenCalledWith(
+          'test-key',
+          expect.stringContaining('"blockDuration":1000'),
+        );
+      });
+    });
+
+    describe('delete', () => {
+      it('should delete key even if interval does not exist', async () => {
+        // No interval set for this key
+        await service.delete('no-interval-key');
+        expect(mockRedisClient.del).toHaveBeenCalledWith('no-interval-key');
+      });
+    });
+
+    describe('keys', () => {
+      it('should return all keys', async () => {
+        mockRedisClient.keys.mockResolvedValue(['a', 'b']);
+        const result = await service.keys();
+        expect(result).toEqual(['a', 'b']);
+      });
+    });
+
+    describe('decrementBlockDuration', () => {
+      it('should clear interval and delete if blockDuration is 0 or less', async () => {
+        const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
+        const deleteSpy = jest.spyOn(service, 'delete').mockResolvedValue();
+        jest.spyOn(service, 'get').mockResolvedValue({
+          ...mockThrottlerOptions,
+          blockDuration: 0,
+        });
+
+        await service.decrementBlockDuration('test-key');
+        jest.runOnlyPendingTimers();
+
+        await Promise.resolve();
+        expect(clearIntervalSpy).toHaveBeenCalled();
+        expect(deleteSpy).toHaveBeenCalledWith('test-key');
       });
     });
   });
