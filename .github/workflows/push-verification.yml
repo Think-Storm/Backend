@@ -9,7 +9,7 @@ on:
   push:
     branches:
       - '**'
-
+  workflow_dispatch:
 jobs:
   push-verification:
     runs-on: ubuntu-latest

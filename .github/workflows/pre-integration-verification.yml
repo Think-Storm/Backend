@@ -9,7 +9,7 @@ on:
   pull_request:
     branches:
       - 'develop'
-
+  workflow_dispatch:
 jobs:
   pre-integration:
     runs-on: ubuntu-latest

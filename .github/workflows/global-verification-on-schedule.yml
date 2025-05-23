@@ -7,7 +7,7 @@ permissions:
 on:
   schedule:
     - cron: '0 8 * * *'
-
+  workflow_dispatch:
 jobs:
   global-verification:
     runs-on: ubuntu-latest
