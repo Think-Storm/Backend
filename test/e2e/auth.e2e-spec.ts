@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
@@ -5,8 +6,16 @@ import { UserModule } from '../../src/modules/user/user.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { ServiceException } from '../../src/common/exception-filter/serviceException';
 import { PrismaModule } from '../../src/prisma/prisma.module';
-import { defaultLoginUserDto } from '../utils/auth.utils';
-import { defaultCreateUserDto } from '../utils/user.utils';
+import {
+  createMockPasswordResetToken,
+  defaultForgotPasswordDto,
+  defaultLoginUserDto,
+  defaultUpdatePasswordDto,
+} from '../utils/auth.utils';
+import {
+  defaultCreateUserDto,
+  defaultUserResponseDto,
+} from '../utils/user.utils';
 import prisma from '../../src/prisma/prisma.client';
 import { ConfigService } from '@nestjs/config';
 import { AuthModule } from '../../src/modules/auth/auth.module';
@@ -17,12 +26,15 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { RedisThrottlerStorageService } from '../../src/common/throttler/redisThrottlerStorage.service';
 import { PasswordEncryption } from '../../src/common/encryption/passwordEncryption';
 import { JwtHelperService } from '../../src/modules/auth/jwt/jwt-helper.service';
+import { UserRepository } from '../../src/modules/user/user.repository';
+import { MailService } from '../../src/modules/mail/mail.service';
 
 describe('/', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
   let passwordEncryption: PasswordEncryption;
   let jwtHelperService: JwtHelperService;
+  let userRepository: UserRepository;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -43,12 +55,19 @@ describe('/', () => {
         get: jest.fn().mockResolvedValue(null), // Mock get method to always return null
         set: jest.fn(), // Mock set method
       })
+      .overrideProvider(MailService)
+      .useValue({
+        forgotPassword: jest.fn().mockResolvedValue(undefined),
+        sendMail: jest.fn().mockResolvedValue(undefined),
+        sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+      })
       .compile();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
     passwordEncryption =
       moduleFixture.get<PasswordEncryption>(PasswordEncryption);
     jwtHelperService = moduleFixture.get<JwtHelperService>(JwtHelperService);
+    userRepository = moduleFixture.get<UserRepository>(UserRepository);
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(
       new ValidationPipe({
@@ -360,5 +379,158 @@ describe('/', () => {
         message: errorMessages.USER_CHANGED_PASSWORD,
       });
     }, 10000);
+
+    describe('/forgot-password (Forgot Password)', () => {
+      let resetToken: string;
+      let userId: number;
+
+      beforeEach(async () => {
+        const registerResponse = await request(app.getHttpServer())
+          .post('/register')
+          .send(defaultCreateUserDto);
+
+        userId = registerResponse.body.data.id;
+      });
+
+      it('should send forgot password email if user exists', async () => {
+        const response = await request(app.getHttpServer())
+          .post('/forgot-password')
+          .send(defaultForgotPasswordDto)
+          .expect(201);
+
+        expect(response.body.email).toEqual(defaultUserResponseDto.email);
+        expect(response.body.id).toEqual(defaultUserResponseDto.id);
+      });
+
+      it('should return 404 if user does not exist', async () => {
+        const notFoundEmail = 'notfound@email.com';
+        const response = await request(app.getHttpServer())
+          .post('/forgot-password')
+          .send({ ...defaultForgotPasswordDto, email: notFoundEmail })
+          .expect(404);
+
+        expect(response.body.message).toContain(
+          `User with ${notFoundEmail} was not found.`,
+        );
+      });
+
+      it('should return 400 if email is missing', async () => {
+        const response = await request(app.getHttpServer())
+          .post('/forgot-password')
+          .send({})
+          .expect(400);
+
+        expect(response.body.message).toContain('email');
+      });
+
+      it('should update password with valid token', async () => {
+        const user = await userRepository.getUserByEmail(
+          defaultCreateUserDto.email,
+        );
+        const jwt = require('jsonwebtoken');
+        resetToken = jwt.sign(
+          { id: user.id, iat: Math.floor(Date.now() / 1000) },
+          process.env.JWT_SECRET,
+          { expiresIn: '15m' },
+        );
+
+        const response = await request(app.getHttpServer())
+          .put('/forgot-password')
+          .send({ ...defaultUpdatePasswordDto, passwordResetToken: resetToken })
+          .expect(200);
+
+        expect(response.body.message).toBe('Update User Password Success');
+        expect(response.body.data.email).toBe(defaultCreateUserDto.email);
+
+        const loginResponse = await request(app.getHttpServer())
+          .post('/login')
+          .send({
+            email: defaultCreateUserDto.email,
+            password: defaultUpdatePasswordDto.password,
+          })
+          .expect(200);
+
+        expect(loginResponse.body.data.email).toBe(defaultCreateUserDto.email);
+      });
+
+      it('should return 401 if token is invalid', async () => {
+        const response = await request(app.getHttpServer())
+          .put('/forgot-password')
+          .send({
+            ...defaultUpdatePasswordDto,
+            passwordResetToken: 'invalid.token.value',
+          })
+          .expect(401);
+
+        expect(response.body.message).toContain('Invalid Token');
+      });
+
+      it('should return 401 if token is expired', async () => {
+        const jwt = require('jsonwebtoken');
+        const expiredToken = jwt.sign(
+          { id: userId, iat: Math.floor(Date.now() / 1000) - 3600 },
+          process.env.JWT_SECRET,
+          { expiresIn: '-1s' },
+        );
+
+        const response = await request(app.getHttpServer())
+          .put('/forgot-password')
+          .send({
+            ...defaultUpdatePasswordDto,
+            passwordResetToken: expiredToken,
+          })
+          .expect(401);
+
+        expect(response.body.message).toContain('expired');
+      });
+
+      it('should return 404 if user does not exist for password reset', async () => {
+        const jwt = require('jsonwebtoken');
+        const fakeToken = jwt.sign(
+          { id: 99999, iat: Math.floor(Date.now() / 1000) },
+          process.env.JWT_SECRET,
+          { expiresIn: '15m' },
+        );
+
+        const response = await request(app.getHttpServer())
+          .put('/forgot-password')
+          .send({
+            ...defaultUpdatePasswordDto,
+            email: 'notfound@email.com',
+            passwordResetToken: fakeToken,
+          })
+          .expect(401);
+
+        expect(response.body.message).toContain(
+          'User with id 99999 was not found',
+        );
+      });
+
+      it('should return 403 if email does not match token user', async () => {
+        const registerRes = await request(app.getHttpServer())
+          .post('/register')
+          .send(defaultCreateUserDto);
+        const userId = registerRes.body.id;
+
+        await request(app.getHttpServer())
+          .post('/register')
+          .send({ ...defaultCreateUserDto, email: 'other@email.com' });
+
+        const resetToken = createMockPasswordResetToken(userId);
+
+        const response = await request(app.getHttpServer())
+          .put('/forgot-password')
+          .send({
+            ...defaultUpdatePasswordDto,
+            email: 'other@email.com',
+            passwordResetToken: resetToken,
+          })
+          .expect(403);
+
+        expect(response.body.message).toContain(
+          'You are not the owner of this account',
+        );
+      });
+    });
   });
 });
