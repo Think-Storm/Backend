@@ -30,9 +30,11 @@ services:
       REDIS_CACHING_TTL: 3600
       REDIS_USER: redis_user
       REDIS_PASSWORD: redis_password
-      JWT_SECRET: thinkstorm_jwt_secret_key_UlTrA_SeCuRe_KeY
-      JWT_EXPIRES_IN: 90d
-      JWT_COOKIE_EXPIRES_IN: 90
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_COOKIE_EXPIRES_IN: ${JWT_COOKIE_EXPIRES_IN}
+      ENVELOOP_API_KEY: ${ENVELOOP_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL}
     depends_on:
       postgres_db:
         condition: service_healthy
@@ -54,9 +56,11 @@ services:
       REDIS_CACHING_TTL: 3600
       REDIS_USER: redis_user
       REDIS_PASSWORD: redis_password
-      JWT_SECRET: thinkstorm_jwt_secret_key_UlTrA_SeCuRe_KeY
-      JWT_EXPIRES_IN: 90d
-      JWT_COOKIE_EXPIRES_IN: 90
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_COOKIE_EXPIRES_IN: ${JWT_COOKIE_EXPIRES_IN}
+      ENVELOOP_API_KEY: ${ENVELOOP_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL}
     depends_on:
       postgres_db:
         condition: service_healthy
@@ -78,9 +82,11 @@ services:
       REDIS_CACHING_TTL: 3600
       REDIS_USER: redis_user
       REDIS_PASSWORD: redis_password
-      JWT_SECRET: thinkstorm_jwt_secret_key_UlTrA_SeCuRe_KeY
-      JWT_EXPIRES_IN: 90d
-      JWT_COOKIE_EXPIRES_IN: 90
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_COOKIE_EXPIRES_IN: ${JWT_COOKIE_EXPIRES_IN}
+      ENVELOOP_API_KEY: ${ENVELOOP_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL}
     depends_on:
       postgres_db:
         condition: service_healthy

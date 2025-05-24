@@ -33,6 +33,12 @@ jobs:
         uses: ./.github/actions/run-tests
         with:
           build-args: '--build-arg CONTRACT_ACCESS_TOKEN=${{ secrets.NPM_TOKEN }}'
+          env-variables: |
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}
+            JWT_COOKIE_EXPIRES_IN=${{ secrets.JWT_COOKIE_EXPIRES_IN }}
+            ENVELOOP_API_KEY=${{ secrets.ENVELOOP_API_KEY }}
+            FRONTEND_URL=${{ secrets.FRONTEND_URL }}
 
       - name: Check Test Results
         if: steps.run-tests.outputs.test-success != 'true'
