@@ -61,9 +61,32 @@ check_image_exists() {
   local image_name="thinkstorm-backend-$env_type"
   if [[ "$(docker images -q $image_name:latest 2> /dev/null)" == "" ]]; then
     echo "Building the image..."
-    docker compose -f docker/docker-compose.app.yml build app-$env_type
+    docker compose -f docker/docker-compose.app.yml build app-$env_type --build-arg CONTRACT_ACCESS_TOKEN=$CONTRACT_ACCESS_TOKEN
   else
     echo "Image already exists. Skipping build."
+  fi
+}
+
+check_env_file_exists() {
+  local env_file=".env"
+  if [[ ! -f $env_file ]]; then
+    echo "Environment file does not exist."
+    read -p "Would you like to create one? (y/n): " create_env
+    if [[ $create_env =~ ^[Yy]$ ]]; then
+        cp .env_example $env_file
+        echo "Environment file created. Please fill in the values."
+        exit 1
+    else
+        echo "Cannot proceed without environment file."
+        exit 1
+    fi
+  fi
+}
+
+check_contract_access_token() {
+  if [[ -z $CONTRACT_ACCESS_TOKEN ]]; then
+    echo "Contract access token is not set. Please set the CONTRACT_ACCESS_TOKEN environment variable."
+    exit 1
   fi
 }
 
@@ -71,12 +94,15 @@ case $command in
     "start")
         # Launch docker-compose with base and environment-specific configurations
         check_image_exists $env_type
+        check_env_file_exists
+        check_contract_access_token
         case $env_type in
             "dev")
-                HOST_PORT=$host_port docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.dev.yml up -d
+                
+                export $(cat .env | xargs) HOST_PORT=$host_port && docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.dev.yml up -d 
                 ;;
             "prod")
-                HOST_PORT=$host_port docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.prod.yml up -d
+                export $(cat .env | xargs) HOST_PORT=$host_port docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.prod.yml up  -d
                 ;;
             *)
                 echo "Invalid environment type. Use 'dev' or 'prod'"
@@ -88,10 +114,10 @@ case $command in
         # Stop and remove containers based on environment
         case $env_type in
             "dev")
-                docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.dev.yml down
+                export $(cat .env | xargs) HOST_PORT=$host_port && docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.dev.yml down
                 ;;
             "prod")
-                docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.prod.yml down
+                export $(cat .env | xargs) HOST_PORT=$host_port && docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.prod.yml down
                 ;;
             *)
                 echo "Invalid environment type. Use 'dev' or 'prod'"

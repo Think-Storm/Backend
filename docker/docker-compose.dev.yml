@@ -11,10 +11,10 @@ services:
       REDIS_CACHING_TTL: 3600
       REDIS_USER: redis_user
       REDIS_PASSWORD: redis_password
-      JWT_SECRET: thinkstorm_jwt_secret_key_UlTrA_SeCuRe_KeY
-      JWT_EXPIRES_IN: 90d
-      JWT_COOKIE_EXPIRES_IN: 90
-      FRONTEND_URL: http://localhost:3000
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_COOKIE_EXPIRES_IN: ${JWT_COOKIE_EXPIRES_IN}
+      ENVELOOP_API_KEY: ${ENVELOOP_API_KEY}
     ports:
       - '${HOST_PORT:-3001}:3001'
     depends_on:

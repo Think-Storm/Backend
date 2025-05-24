@@ -38,11 +38,15 @@ inputs:
   build-image:
     description: 'Whether to build the image during test (set to false if using pre-built image)'
     required: false
-    default: 'false'
+    default: true
   build-args:
     description: 'Additional build arguments to pass to Docker Compose build'
     required: false
     default: ''
+  env-variables:
+    description: 'Path to the environment file'
+    required: true
+    default: '.env'
 
 # Define outputs from the test process
 outputs:
@@ -68,14 +72,15 @@ runs:
     # Step 2: Run Docker Compose
     - name: Run Docker Compose Tests
       shell: bash
+      env:
+        ENV_VARIABLES: ${{ inputs.env-variables }}
       run: |
         # Use the --build flag only if build-image is true
-        docker compose -f ${{ inputs.compose-file-app }} build app-prod ${{ inputs.build-args }}
+        echo "$ENV_VARIABLES" > .env
         if [ "${{ inputs.build-image }}" == "true" ]; then
-          docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up -d --force-recreate
-        else
-          docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up -d --force-recreate
+          docker compose -f ${{ inputs.compose-file-app }} build app-prod ${{ inputs.build-args }}
         fi
+        export $(cat .env | xargs) && docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up -d --force-recreate > /dev/null 2>&1
 
     # Step 3: Create logs directory
     - name: Create logs directory
@@ -116,7 +121,7 @@ runs:
         done
 
         # Wait for all test services to complete
-        if ! docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} wait "${TEST_SERVICES[@]}" > /dev/null 2>&1; then
+        if ! docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} wait "${TEST_SERVICES[@]}" ; then
           echo "⚠️ Warning: Error waiting for services to complete"
           ALL_TESTS_PASSED=false
         fi
@@ -147,4 +152,4 @@ runs:
     - name: Cleanup Docker resources
       shell: bash
       run: |
-        docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} down
+        export $(cat .env | xargs) && docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} down > /dev/null 2>&1
