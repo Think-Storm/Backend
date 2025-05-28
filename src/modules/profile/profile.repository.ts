@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UserProfile } from '@prisma/client';
 import { CreateUserProfileDto } from './dtos/createUserProfile.dto';
+import { UpdateUserProfileDto } from './dtos/updateUserProfile.dto';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { errorMessages } from '../../common/enums/errorMessages';
 
@@ -16,7 +17,7 @@ export class ProfileRepository {
    * @param createProfileDto.domain_labels - Array of domain/interest areas (e.g., "AI", "Web Development")
    * @param createProfileDto.languages - Array of language codes the user knows
    * @param createProfileDto.technical_labels - Array of technical skills/technologies
-   * @param createProfileDto.prefered_role - User's prefered role in projects
+   * @param createProfileDto.preferred_role - User's preferred role in projects
    * @param createProfileDto.profileData - Additional profile data (spread from remaining DTO fields)
    * @returns Promise resolving to the created UserProfile with all related entities included
    *
@@ -42,17 +43,18 @@ export class ProfileRepository {
       return await this.prisma.userProfile.create({
         data: {
           ...profileData,
-          preferedRole: preferred_role,
           userId,
+          preferredRole: preferred_role
+            ? {
+                create: preferred_role.map((roleName) => ({
+                  roleName,
+                })),
+              }
+            : undefined,
           interests: domain_labels
             ? {
-                create: domain_labels.map((label) => ({
-                  label: {
-                    connectOrCreate: {
-                      where: { name: label },
-                      create: { name: label },
-                    },
-                  },
+                create: domain_labels.map((labelName) => ({
+                  labelName,
                 })),
               }
             : undefined,
@@ -67,13 +69,8 @@ export class ProfileRepository {
             : undefined,
           skills: technical_labels
             ? {
-                create: technical_labels.map((label) => ({
-                  label: {
-                    connectOrCreate: {
-                      where: { name: label },
-                      create: { name: label },
-                    },
-                  },
+                create: technical_labels.map((labelName) => ({
+                  labelName,
                 })),
               }
             : undefined,
@@ -94,7 +91,11 @@ export class ProfileRepository {
               label: true,
             },
           },
-          role: true,
+          preferredRole: {
+            include: {
+              role: true,
+            },
+          },
         },
       });
     } catch (error) {
@@ -120,6 +121,160 @@ export class ProfileRepository {
     } catch (error) {
       throw ServiceException.ErrorException(
         errorMessages.ERROR_GETTING_USER_BY_ID,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Get user profile by profile ID
+   * @param profileId - ID of the profile
+   * @returns User profile if exists, null otherwise
+   */
+  async getProfileById(profileId: number): Promise<UserProfile | null> {
+    try {
+      return await this.prisma.userProfile.findUnique({
+        where: {
+          id: profileId,
+        },
+        include: {
+          interests: {
+            include: {
+              label: true,
+            },
+          },
+          languages: {
+            include: {
+              language: true,
+            },
+          },
+          skills: {
+            include: {
+              label: true,
+            },
+          },
+          preferredRole: {
+            include: {
+              role: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_GETTING_USER_BY_ID,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Update user profile
+   * @param profileId - ID of the profile to update
+   * @param updateProfileDto - Data to update
+   * @returns Updated user profile
+   */
+  async updateProfile(
+    profileId: number,
+    updateProfileDto: UpdateUserProfileDto,
+  ): Promise<UserProfile> {
+    const {
+      domain_labels,
+      languages,
+      technical_labels,
+      preferred_role,
+      ...profileData
+    } = updateProfileDto;
+
+    try {
+      return await this.prisma.userProfile.update({
+        where: {
+          id: profileId,
+        },
+        data: {
+          ...profileData,
+          preferredRole: preferred_role
+            ? {
+                deleteMany: {},
+                create: preferred_role.map((roleName) => ({
+                  roleName,
+                })),
+              }
+            : undefined,
+          interests: domain_labels
+            ? {
+                deleteMany: {},
+                create: domain_labels.map((labelName) => ({
+                  labelName,
+                })),
+              }
+            : undefined,
+          languages: languages
+            ? {
+                deleteMany: {},
+                create: languages.map((code) => ({
+                  language: {
+                    connect: { code },
+                  },
+                })),
+              }
+            : undefined,
+          skills: technical_labels
+            ? {
+                deleteMany: {},
+                create: technical_labels.map((labelName) => ({
+                  labelName,
+                })),
+              }
+            : undefined,
+        },
+        include: {
+          interests: {
+            include: {
+              label: true,
+            },
+          },
+          languages: {
+            include: {
+              language: true,
+            },
+          },
+          skills: {
+            include: {
+              label: true,
+            },
+          },
+          preferredRole: {
+            include: {
+              role: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_UPDATING_USER_PROFILE,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Delete user profile
+   * @param profileId - ID of the profile to delete
+   * @returns Deleted user profile
+   */
+  async deleteProfile(profileId: number): Promise<UserProfile> {
+    try {
+      return await this.prisma.userProfile.delete({
+        where: {
+          id: profileId,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_DELETING_USER_PROFILE,
         error,
       );
     }
