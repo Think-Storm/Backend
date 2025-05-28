@@ -1,16 +1,17 @@
 import { UserProfile } from '@prisma/client';
-import { LanguageCode } from '@think-storm/contracts';
+import { LanguageCode, UserRole } from '@think-storm/contracts';
 import { CreateUserProfileDto } from '../../src/modules/profile/dtos/createUserProfile.dto';
+import { UpdateUserProfileDto } from '../../src/modules/profile/dtos/updateUserProfile.dto';
 
 export const defaultCreateProfileDto: CreateUserProfileDto = {
   avatar: 'https://example.com/avatar.jpg',
   bio: 'Test bio',
-  preferred_role: 'Backend Developer',
+  preferred_role: [UserRole.BackendDeveloper],
   location: 'Test Location',
   website: 'https://example.com',
   domain_labels: ['Web Development'],
   languages: [LanguageCode.EN],
-  technical_labels: ['NestJS'],
+  technical_labels: ['nestjs'],
 };
 
 export const defaultProfileResponse = {
@@ -20,7 +21,7 @@ export const defaultProfileResponse = {
     userId: 1,
     avatar: 'https://example.com/avatar.jpg',
     bio: 'Test bio',
-    preferedRole: 'Backend Developer',
+    preferredRole: [UserRole.BackendDeveloper],
     location: 'Test Location',
     website: 'https://example.com',
   },
@@ -31,7 +32,6 @@ export const defaultMockUserProfile: UserProfile = {
   userId: 1,
   avatar: defaultCreateProfileDto.avatar,
   bio: defaultCreateProfileDto.bio,
-  preferedRole: defaultCreateProfileDto.preferred_role,
   location: defaultCreateProfileDto.location,
   website: defaultCreateProfileDto.website,
 };
@@ -53,16 +53,23 @@ export const defaultProfileWithAssociations = {
   ...defaultMockUserProfile,
   interests: [{ label: { name: 'Web Development' } }],
   languages: [{ language: { code: LanguageCode.EN } }],
-  skills: [{ label: { name: 'NestJS' } }],
+  skills: [{ label: { name: 'nestjs' } }],
 };
 
 export const defaultE2ECreateProfileDto = {
   avatar: 'https://example.com/avatar.jpg',
   bio: 'Test bio',
-  preferred_role: 'Backend Developer',
+  preferred_role: [UserRole.BackendDeveloper],
   location: 'Test Location',
   website: 'https://example.com',
   domain_labels: ['Web Development', 'Cloud Computing'],
-  languages: ['EN', 'KR'],
-  technical_labels: ['NestJS', 'TypeScript', 'PostgreSQL'],
+  languages: [LanguageCode.EN, LanguageCode.KR],
+  technical_labels: ['nestjs', 'typescript', 'postgresql'],
+};
+
+export const defaultUpdateProfileDto: UpdateUserProfileDto = {
+  domain_labels: ['AI', 'ML'],
+  languages: [LanguageCode.EN],
+  technical_labels: ['python'],
+  preferred_role: [UserRole.DataScientist],
 };
