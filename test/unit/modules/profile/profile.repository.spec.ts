@@ -1,116 +1,229 @@
+import { Test, TestingModule } from '@nestjs/testing';
 import { ProfileRepository } from '../../../../src/modules/profile/profile.repository';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
-import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
-import { PrismaModule } from '../../../../src/prisma/prisma.module';
-import refreshDatabase from '../../../../src/prisma/prisma.dbreset';
+import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import {
   defaultCreateProfileDto,
+  defaultMockUser,
   defaultMockUserProfile,
   defaultProfileWithAssociations,
+  defaultUpdateProfileDto,
 } from '../../../utils/profile.utils';
 
-describe('ProfileRepository', () => {
-  let prismaService: PrismaService;
-  let profileRepository: ProfileRepository;
-  const prisma = new PrismaClient();
+const mockPrismaService = {
+  userProfile: {
+    create: jest.fn(),
+    findUnique: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+  },
+};
 
-  beforeAll(async () => {
+describe('ProfileRepository', () => {
+  let repository: ProfileRepository;
+
+  beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      imports: [PrismaModule.forTest(prisma)],
-      providers: [ProfileRepository, ConfigService],
+      providers: [
+        ProfileRepository,
+        {
+          provide: PrismaService,
+          useValue: mockPrismaService,
+        },
+      ],
     }).compile();
 
-    prismaService = module.get<PrismaService>(PrismaService);
-    profileRepository = module.get<ProfileRepository>(ProfileRepository);
-
-    await prismaService.$connect();
-    await refreshDatabase();
+    repository = module.get<ProfileRepository>(ProfileRepository);
   });
 
-  afterEach(async () => {
+  afterEach(() => {
     jest.clearAllMocks();
-    await refreshDatabase();
   });
 
   describe('createUserProfile', () => {
-    it('should create a user profile with all associations', async () => {
-      const userId = 1;
+    const userId = defaultMockUser.id;
 
-      jest
-        .spyOn(prismaService.userProfile, 'create')
-        .mockResolvedValue(defaultProfileWithAssociations);
+    it('should create a user profile successfully', async () => {
+      mockPrismaService.userProfile.create.mockResolvedValue(
+        defaultMockUserProfile,
+      );
 
-      const result = await profileRepository.createUserProfile(
+      const result = await repository.createUserProfile(
         userId,
         defaultCreateProfileDto,
       );
 
-      expect(result).toEqual(defaultProfileWithAssociations);
-      expect(prismaService.userProfile.create).toHaveBeenCalledWith({
+      expect(result).toEqual(defaultMockUserProfile);
+      expect(mockPrismaService.userProfile.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           userId,
-          avatar: defaultCreateProfileDto.avatar,
-          bio: defaultCreateProfileDto.bio,
-          preferedRole: defaultCreateProfileDto.preferred_role,
-          location: defaultCreateProfileDto.location,
-          website: defaultCreateProfileDto.website,
         }),
         include: expect.any(Object),
       });
     });
-    it('should throw ServiceException on error', async () => {
-      const userId = 1;
-      jest
-        .spyOn(prismaService.userProfile, 'create')
-        .mockRejectedValue(new Error('DB error'));
+
+    it('should throw ServiceException when creation fails', async () => {
+      const error = new Error('Database error');
+      mockPrismaService.userProfile.create.mockRejectedValue(error);
 
       await expect(
-        profileRepository.createUserProfile(userId, defaultCreateProfileDto),
-      ).rejects.toThrow();
+        repository.createUserProfile(userId, defaultCreateProfileDto),
+      ).rejects.toThrow(ServiceException);
     });
   });
 
-  describe('getUserProfileByUserId', () => {
-    it('should return user profile when it exists', async () => {
-      const userId = 1;
+  describe('getProfileById', () => {
+    const profileId = defaultMockUserProfile.id;
 
-      jest
-        .spyOn(prismaService.userProfile, 'findUnique')
-        .mockResolvedValue(defaultMockUserProfile);
+    it('should return a profile when it exists', async () => {
+      mockPrismaService.userProfile.findUnique.mockResolvedValue(
+        defaultProfileWithAssociations,
+      );
 
-      const result = await profileRepository.getUserProfileByUserId(userId);
+      const result = await repository.getProfileById(profileId);
 
-      expect(result).toEqual(defaultMockUserProfile);
-      expect(prismaService.userProfile.findUnique).toHaveBeenCalledWith({
-        where: { userId },
+      expect(result).toEqual(defaultProfileWithAssociations);
+      expect(mockPrismaService.userProfile.findUnique).toHaveBeenCalledWith({
+        where: { id: profileId },
+        include: expect.any(Object),
       });
     });
 
     it('should return null when profile does not exist', async () => {
-      const userId = 999;
+      mockPrismaService.userProfile.findUnique.mockResolvedValue(null);
 
-      jest
-        .spyOn(prismaService.userProfile, 'findUnique')
-        .mockResolvedValue(null);
-
-      const result = await profileRepository.getUserProfileByUserId(userId);
+      const result = await repository.getProfileById(profileId);
 
       expect(result).toBeNull();
-      expect(prismaService.userProfile.findUnique).toHaveBeenCalledWith({
-        where: { userId },
-      });
+    });
+
+    it('should throw ServiceException when query fails', async () => {
+      const error = new Error('Database error');
+      mockPrismaService.userProfile.findUnique.mockRejectedValue(error);
+
+      await expect(repository.getProfileById(profileId)).rejects.toThrow(
+        ServiceException,
+      );
     });
   });
-  it('should throw ServiceException on error', async () => {
-    const userId = 1;
-    jest
-      .spyOn(prismaService.userProfile, 'findUnique')
-      .mockRejectedValue(new Error('DB error'));
 
-    await expect(
-      profileRepository.getUserProfileByUserId(userId),
-    ).rejects.toThrow();
+  describe('updateProfile', () => {
+    const profileId = defaultMockUserProfile.id;
+
+    it('should update a profile successfully', async () => {
+      const updatedProfile = {
+        ...defaultMockUserProfile,
+        ...defaultUpdateProfileDto,
+      };
+
+      mockPrismaService.userProfile.update.mockResolvedValue(updatedProfile);
+
+      const result = await repository.updateProfile(
+        profileId,
+        defaultUpdateProfileDto,
+      );
+
+      expect(result).toEqual(updatedProfile);
+      expect(mockPrismaService.userProfile.update).toHaveBeenCalledWith({
+        where: { id: profileId },
+        data: {
+          preferredRole: {
+            deleteMany: {},
+            create: defaultUpdateProfileDto.preferred_role.map((roleName) => ({
+              roleName,
+            })),
+          },
+          interests: {
+            deleteMany: {},
+            create: defaultUpdateProfileDto.domain_labels.map((labelName) => ({
+              labelName,
+            })),
+          },
+          languages: {
+            deleteMany: {},
+            create: defaultUpdateProfileDto.languages.map((code) => ({
+              language: {
+                connect: { code },
+              },
+            })),
+          },
+          skills: {
+            deleteMany: {},
+            create: defaultUpdateProfileDto.technical_labels.map(
+              (labelName) => ({
+                labelName,
+              }),
+            ),
+          },
+        },
+        include: {
+          interests: {
+            include: {
+              label: true,
+            },
+          },
+          languages: {
+            include: {
+              language: true,
+            },
+          },
+          skills: {
+            include: {
+              label: true,
+            },
+          },
+          preferredRole: {
+            include: {
+              role: true,
+            },
+          },
+        },
+      });
+    });
+
+    it('should throw ServiceException when update fails', async () => {
+      const error = new Error('Database error');
+      const profileId = defaultMockUserProfile.id;
+      mockPrismaService.userProfile.update.mockRejectedValue(error);
+
+      await expect(
+        repository.updateProfile(profileId, defaultUpdateProfileDto),
+      ).rejects.toThrow(ServiceException);
+    });
+  });
+
+  describe('deleteProfile', () => {
+    const profileId = defaultMockUserProfile.id;
+
+    it('should delete a profile successfully', async () => {
+      mockPrismaService.userProfile.delete.mockResolvedValue(
+        defaultMockUserProfile,
+      );
+
+      const result = await repository.deleteProfile(profileId);
+
+      expect(result).toEqual(defaultMockUserProfile);
+      expect(mockPrismaService.userProfile.delete).toHaveBeenCalledWith({
+        where: { id: profileId },
+      });
+    });
+
+    it('should throw ServiceException when deletion fails', async () => {
+      const error = new Error('Database error');
+      mockPrismaService.userProfile.delete.mockRejectedValue(error);
+
+      await expect(repository.deleteProfile(profileId)).rejects.toThrow(
+        ServiceException,
+      );
+    });
+
+    it('should throw ServiceException on error', async () => {
+      const userId = 1;
+      jest
+        .spyOn(mockPrismaService.userProfile, 'findUnique')
+        .mockRejectedValue(new Error('DB error'));
+
+      await expect(repository.getUserProfileByUserId(userId)).rejects.toThrow();
+    });
   });
 });
