@@ -7,15 +7,17 @@ import * as cookieParser from 'cookie-parser';
 import { defaultCreateUserDto } from '../utils/user.utils';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { ServiceException } from '../../src/common/exception-filter/serviceException';
-import prisma from '../../src/prisma/prisma.client';
 import { PrismaModule } from '../../src/prisma/prisma.module';
 import { ConfigService } from '@nestjs/config';
-import refreshDatabase from '../../src/prisma/prisma.dbreset';
 import { AuthModule } from '../../src/modules/auth/auth.module';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { RedisThrottlerStorageService } from '../../src/common/throttler/redisThrottlerStorage.service';
-import { AppModule } from '../../src/app.module';
 import { defaultE2ECreateProfileDto } from '../utils/profile.utils';
+import { errorMessages } from '../../src/common/enums/errorMessages';
+import { UserRole, LanguageCode } from '@think-storm/contracts';
+import refreshDatabase from '../../src/prisma/prisma.dbreset';
+import prisma from '../../src/prisma/prisma.client';
+import { AppModule } from '../../src/app.module';
 
 describe('/profiles', () => {
   let app: INestApplication;
@@ -33,9 +35,7 @@ describe('/profiles', () => {
       providers: [ConfigService],
     })
       .overrideProvider(ThrottlerGuard)
-      .useValue({
-        canActivate: () => true,
-      })
+      .useValue({ canActivate: () => true })
       .overrideProvider(RedisThrottlerStorageService)
       .useValue({
         get: jest.fn().mockResolvedValue(null),
@@ -47,27 +47,22 @@ describe('/profiles', () => {
     app = moduleFixture.createNestApplication();
 
     app.use(cookieParser());
-
     app.useGlobalPipes(
       new ValidationPipe({
-        exceptionFactory: (errors) => {
-          const errMsg = errors
-            .map((error) => Object.values(error.constraints).join(''))
-            .filter((error) => error)
-            .join('. ');
-
-          return new ServiceException(`${errMsg}.`, 400, errors);
-        },
-        stopAtFirstError: true,
+        transform: true,
         whitelist: true,
         forbidNonWhitelisted: true,
-        transform: true,
+        exceptionFactory: (errors) => {
+          const messages = errors
+            .map((err) => Object.values(err.constraints))
+            .flat()
+            .join('. ');
+          return new ServiceException(messages, 400, errors);
+        },
       }),
     );
 
     await app.init();
-    await prismaService.$connect();
-    await refreshDatabase();
   });
 
   beforeEach(async () => {
@@ -127,15 +122,22 @@ describe('/profiles', () => {
       expect(createProfileResponse.body.data.bio).toBe(
         defaultE2ECreateProfileDto.bio,
       );
-      expect(createProfileResponse.body.data.preferedRole).toBe(
-        defaultE2ECreateProfileDto.preferred_role,
-      );
       expect(createProfileResponse.body.data.location).toBe(
         defaultE2ECreateProfileDto.location,
       );
       expect(createProfileResponse.body.data.website).toBe(
         defaultE2ECreateProfileDto.website,
       );
+      // Test roles
+      expect(createProfileResponse.body.data.preferredRole).toHaveLength(1);
+      createProfileResponse.body.data.preferredRole.forEach((role) => {
+        expect(role.roleName).toBe(
+          defaultE2ECreateProfileDto.preferred_role[0],
+        );
+        expect(defaultE2ECreateProfileDto.preferred_role).toContain(
+          role.roleName,
+        );
+      });
 
       // Test interests (domain_labels)
       expect(createProfileResponse.body.data.interests).toHaveLength(2);
@@ -195,17 +197,17 @@ describe('/profiles', () => {
           ...defaultE2ECreateProfileDto,
           avatar: 'https://example.com/avatar2.jpg',
           bio: 'Another bio',
-          preferred_role: 'Frontend Developer',
+          preferred_role: [UserRole.FrontendDeveloper],
           location: 'Another Location',
           website: 'https://example2.com',
           domain_labels: ['Mobile Development'],
-          languages: ['KR'],
-          technical_labels: ['React'],
+          languages: [LanguageCode.KR],
+          technical_labels: ['react'],
         });
 
       expect(duplicateProfileResponse.status).toBe(400);
       expect(duplicateProfileResponse.body.message).toBe(
-        'User profile already exists. Use update endpoint instead.',
+        'User profile already exists.',
       );
     });
 
@@ -234,6 +236,298 @@ describe('/profiles', () => {
       expect(unauthorizedProfileResponse.status).toBe(403);
       expect(unauthorizedProfileResponse.body.message).toBe(
         'Forbidden. You can only create a profile for your own user account',
+      );
+    });
+  });
+
+  describe('profiles/:id GET (Get User Profile)', () => {
+    it('should return 200 and profile data when profile exists', async () => {
+      // Create User and Profile
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      const cookies = registerResponse.headers['set-cookie'];
+      const authHeader = registerResponse.headers.authorization;
+
+      await request(app.getHttpServer())
+        .post(`/profiles/${registerResponse.body.data.id}`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader)
+        .send(defaultE2ECreateProfileDto);
+
+      // Get Profile
+      const getProfileResponse = await request(app.getHttpServer())
+        .get(`/profiles/${registerResponse.body.data.id}`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader);
+
+      expect(getProfileResponse.status).toBe(200);
+      expect(getProfileResponse.body.message).toBe('Get User Profile Success');
+      expect(getProfileResponse.body.data.userId).toBe(1);
+      expect(getProfileResponse.body.data.avatar).toBe(
+        defaultE2ECreateProfileDto.avatar,
+      );
+      expect(getProfileResponse.body.data.bio).toBe(
+        defaultE2ECreateProfileDto.bio,
+      );
+      expect(getProfileResponse.body.data.location).toBe(
+        defaultE2ECreateProfileDto.location,
+      );
+      expect(getProfileResponse.body.data.website).toBe(
+        defaultE2ECreateProfileDto.website,
+      );
+
+      // Verify associations
+      expect(getProfileResponse.body.data.preferredRole[0].roleName).toBe(
+        defaultE2ECreateProfileDto.preferred_role[0],
+      );
+      expect(getProfileResponse.body.data.interests).toHaveLength(2);
+      expect(getProfileResponse.body.data.languages).toHaveLength(2);
+      expect(getProfileResponse.body.data.skills).toHaveLength(3);
+    });
+
+    it('should return 403 when trying to access another user profile', async () => {
+      // Create first user and profile
+      const firstUserResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      await request(app.getHttpServer())
+        .post(`/profiles/${firstUserResponse.body.data.id}`)
+        .set('Cookie', firstUserResponse.headers['set-cookie'])
+        .set('Authorization', firstUserResponse.headers.authorization)
+        .send(defaultE2ECreateProfileDto);
+
+      // Create second user
+      const secondUserResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send({
+          ...defaultCreateUserDto,
+          email: 'another@example.com',
+          username: 'anotheruser',
+        });
+
+      // Try to get first user's profile while authenticated as second user
+      const unauthorizedResponse = await request(app.getHttpServer())
+        .get(`/profiles/${firstUserResponse.body.data.id}`)
+        .set('Cookie', secondUserResponse.headers['set-cookie'])
+        .set('Authorization', secondUserResponse.headers.authorization);
+
+      expect(unauthorizedResponse.status).toBe(403);
+      expect(unauthorizedResponse.body.message).toBe(
+        'Forbidden. You can only view your own profile',
+      );
+    });
+
+    it('should return 404 when profile does not exist', async () => {
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      const nonExistentProfileResponse = await request(app.getHttpServer())
+        .get('/profiles/999')
+        .set('Cookie', registerResponse.headers['set-cookie'])
+        .set('Authorization', registerResponse.headers.authorization);
+
+      expect(nonExistentProfileResponse.status).toBe(404);
+      expect(nonExistentProfileResponse.body.message).toBe(
+        errorMessages.ENTITY_NOT_FOUND('Profile', '999'),
+      );
+    });
+  });
+
+  describe('profiles/:id PATCH (Update User Profile)', () => {
+    it('should return 200 and updated profile data when update is successful', async () => {
+      // Create User and Profile
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      const cookies = registerResponse.headers['set-cookie'];
+      const authHeader = registerResponse.headers.authorization;
+
+      await request(app.getHttpServer())
+        .post(`/profiles/${registerResponse.body.data.id}`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader)
+        .send(defaultE2ECreateProfileDto);
+
+      // Update Profile
+      const updateData = {
+        avatar: 'https://example.com/new-avatar.jpg',
+        bio: 'Updated bio',
+        preferred_role: [UserRole.FullStackDeveloper],
+        location: 'New Location',
+        website: 'https://example.com/new',
+        domain_labels: ['Cloud Computing', 'DevOps'],
+        languages: [LanguageCode.KR, LanguageCode.JA],
+        technical_labels: ['docker', 'kubernetes'],
+      };
+
+      const updateResponse = await request(app.getHttpServer())
+        .patch(`/profiles/${registerResponse.body.data.id}`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader)
+        .send(updateData);
+
+      expect(updateResponse.status).toBe(200);
+      expect(updateResponse.body.message).toBe('Update User Profile Success');
+      expect(updateResponse.body.data.avatar).toBe(updateData.avatar);
+      expect(updateResponse.body.data.bio).toBe(updateData.bio);
+      expect(updateResponse.body.data.location).toBe(updateData.location);
+      expect(updateResponse.body.data.website).toBe(updateData.website);
+
+      // Verify updated associations
+      expect(updateResponse.body.data.preferredRole).toHaveLength(1);
+      expect(updateResponse.body.data.preferredRole[0].roleName).toBe(
+        updateData.preferred_role[0],
+      );
+      expect(updateResponse.body.data.interests).toHaveLength(2);
+      expect(updateResponse.body.data.interests[0].labelName).toBe(
+        updateData.domain_labels[0],
+      );
+      expect(updateResponse.body.data.languages).toHaveLength(2);
+      expect(updateResponse.body.data.skills).toHaveLength(2);
+    });
+
+    it('should return 403 when trying to update another user profile', async () => {
+      // Create first user and profile
+      const firstUserResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      await request(app.getHttpServer())
+        .post(`/profiles/${firstUserResponse.body.data.id}`)
+        .set('Cookie', firstUserResponse.headers['set-cookie'])
+        .set('Authorization', firstUserResponse.headers.authorization)
+        .send(defaultE2ECreateProfileDto);
+
+      // Create second user
+      const secondUserResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send({
+          ...defaultCreateUserDto,
+          email: 'another@example.com',
+          username: 'anotheruser',
+        });
+
+      // Try to update first user's profile while authenticated as second user
+      const unauthorizedResponse = await request(app.getHttpServer())
+        .patch(`/profiles/${firstUserResponse.body.data.id}`)
+        .set('Cookie', secondUserResponse.headers['set-cookie'])
+        .set('Authorization', secondUserResponse.headers.authorization)
+        .send({
+          bio: 'Unauthorized update',
+        });
+
+      expect(unauthorizedResponse.status).toBe(403);
+      expect(unauthorizedResponse.body.message).toBe(
+        'Forbidden. You can only update your own profile',
+      );
+    });
+
+    it('should return 404 when profile does not exist', async () => {
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      const nonExistentProfileResponse = await request(app.getHttpServer())
+        .patch('/profiles/999')
+        .set('Cookie', registerResponse.headers['set-cookie'])
+        .set('Authorization', registerResponse.headers.authorization)
+        .send({
+          bio: 'Update attempt',
+        });
+
+      expect(nonExistentProfileResponse.status).toBe(404);
+      expect(nonExistentProfileResponse.body.message).toBe(
+        errorMessages.ENTITY_NOT_FOUND('Profile', '999'),
+      );
+    });
+  });
+
+  describe('profiles/:id DELETE (Delete User Profile)', () => {
+    it('should return 200 and deleted profile data when deletion is successful', async () => {
+      // Create User and Profile
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      const cookies = registerResponse.headers['set-cookie'];
+      const authHeader = registerResponse.headers.authorization;
+
+      await request(app.getHttpServer())
+        .post(`/profiles/${registerResponse.body.data.id}`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader)
+        .send(defaultE2ECreateProfileDto);
+
+      // Delete Profile
+      const deleteResponse = await request(app.getHttpServer())
+        .delete(`/profiles/${registerResponse.body.data.id}`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader);
+
+      expect(deleteResponse.status).toBe(200);
+      expect(deleteResponse.body.message).toBe('Delete User Profile Success');
+      expect(deleteResponse.body.data.userId).toBe(1);
+
+      // Verify profile is actually deleted
+      const getProfileResponse = await request(app.getHttpServer())
+        .get(`/profiles/${registerResponse.body.data.id}`)
+        .set('Cookie', cookies)
+        .set('Authorization', authHeader);
+
+      expect(getProfileResponse.status).toBe(404);
+    });
+
+    it('should return 403 when trying to delete another user profile', async () => {
+      // Create first user and profile
+      const firstUserResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      await request(app.getHttpServer())
+        .post(`/profiles/${firstUserResponse.body.data.id}`)
+        .set('Cookie', firstUserResponse.headers['set-cookie'])
+        .set('Authorization', firstUserResponse.headers.authorization)
+        .send(defaultE2ECreateProfileDto);
+
+      // Create second user
+      const secondUserResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send({
+          ...defaultCreateUserDto,
+          email: 'another@example.com',
+          username: 'anotheruser',
+        });
+
+      // Try to delete first user's profile while authenticated as second user
+      const unauthorizedResponse = await request(app.getHttpServer())
+        .delete(`/profiles/${firstUserResponse.body.data.id}`)
+        .set('Cookie', secondUserResponse.headers['set-cookie'])
+        .set('Authorization', secondUserResponse.headers.authorization);
+
+      expect(unauthorizedResponse.status).toBe(403);
+      expect(unauthorizedResponse.body.message).toBe(
+        'Forbidden. You can only delete your own profile',
+      );
+    });
+
+    it('should return 404 when profile does not exist', async () => {
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto);
+
+      const nonExistentProfileResponse = await request(app.getHttpServer())
+        .delete('/profiles/999')
+        .set('Cookie', registerResponse.headers['set-cookie'])
+        .set('Authorization', registerResponse.headers.authorization);
+
+      expect(nonExistentProfileResponse.status).toBe(404);
+      expect(nonExistentProfileResponse.body.message).toBe(
+        errorMessages.ENTITY_NOT_FOUND('Profile', '999'),
       );
     });
   });
