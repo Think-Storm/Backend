@@ -1,59 +1,44 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProfileController } from '../../../../src/modules/profile/profile.controller';
 import { ProfileService } from '../../../../src/modules/profile/profile.service';
-import { ProfileRepository } from '../../../../src/modules/profile/profile.repository';
-import { UserRepository } from '../../../../src/modules/user/user.repository';
-import { JwtAuthGuard } from '../../../../src/modules/auth/jwt/jwt.guard';
-import { ExecutionContext } from '@nestjs/common';
-import { mockGuardContext } from '../../../../test/utils/auth.utils';
-import { defaultUserResponseDto } from '../../../utils/user.utils';
-import { PrismaService } from '../../../../src/prisma/prisma.service';
-import { ConfigService } from '@nestjs/config';
+import { UpdateUserProfileDto } from '../../../../src/modules/profile/dtos/updateUserProfile.dto';
 import {
   defaultCreateProfileDto,
-  defaultProfileResponse,
+  defaultMockUser,
+  defaultMockUserProfile,
+  defaultProfileWithAssociations,
 } from '../../../utils/profile.utils';
+import { mockJwtToken } from '../../../utils/jwt.utils';
+import { createAuthHeader } from '../../../utils/auth.utils';
+import { LanguageCode, UserRole } from '@think-storm/contracts';
 
 describe('ProfileController', () => {
-  let profileController: ProfileController;
-  let profileService: ProfileService;
+  let controller: ProfileController;
 
-  beforeAll(async () => {
-    const app: TestingModule = await Test.createTestingModule({
+  const mockProfileService = {
+    createUserProfile: jest.fn(),
+    getProfileById: jest.fn(),
+    updateProfile: jest.fn(),
+    deleteProfile: jest.fn(),
+  };
+
+  const mockRequest = {
+    user: defaultMockUserProfile,
+    headers: createAuthHeader(mockJwtToken),
+  };
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
       controllers: [ProfileController],
       providers: [
-        ProfileService,
-        ProfileRepository,
-        UserRepository,
-        PrismaService,
         {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn((key: string) => {
-              switch (key) {
-                case 'DATABASE_URL':
-                  return 'postgresql://test:test@localhost:5432/test';
-                default:
-                  return undefined;
-              }
-            }),
-          },
+          provide: ProfileService,
+          useValue: mockProfileService,
         },
       ],
-    })
-      .overrideGuard(JwtAuthGuard)
-      .useValue({
-        canActivate: (context: ExecutionContext) => {
-          context = mockGuardContext(defaultUserResponseDto);
-          const request = context.switchToHttp().getRequest();
-          request['user'] = { id: defaultUserResponseDto.id };
-          return true;
-        },
-      })
-      .compile();
+    }).compile();
 
-    profileController = app.get<ProfileController>(ProfileController);
-    profileService = app.get<ProfileService>(ProfileService);
+    controller = module.get<ProfileController>(ProfileController);
   });
 
   afterEach(() => {
@@ -61,22 +46,108 @@ describe('ProfileController', () => {
   });
 
   describe('createUserProfile', () => {
-    it('should create a user profile', async () => {
-      const userId = 1;
-      const mockRequest = {
-        user: { id: userId },
-      };
+    const userId = defaultMockUser.id;
 
-      jest
-        .spyOn(profileService, 'createUserProfile')
-        .mockResolvedValue(defaultProfileResponse.data);
+    it('should create a profile successfully', async () => {
+      mockProfileService.createUserProfile.mockResolvedValue(
+        defaultMockUserProfile,
+      );
 
-      const result = await profileController.createUserProfile(
+      const result = await controller.createUserProfile(
         userId,
         defaultCreateProfileDto,
-        mockRequest,
+        mockRequest.user,
       );
-      expect(result).toEqual(defaultProfileResponse);
+
+      expect(result).toEqual({
+        message: 'Create User Profile Success',
+        data: defaultMockUserProfile,
+      });
+      expect(mockProfileService.createUserProfile).toHaveBeenCalledWith(
+        userId,
+        defaultCreateProfileDto,
+        defaultMockUserProfile.id,
+      );
+    });
+  });
+
+  describe('getProfile', () => {
+    const profileId = defaultMockUserProfile.id;
+
+    it('should get a profile successfully', async () => {
+      mockProfileService.getProfileById.mockResolvedValue(
+        defaultProfileWithAssociations,
+      );
+
+      const result = await controller.getProfile(profileId, mockRequest.user);
+
+      expect(result).toEqual({
+        message: 'Get User Profile Success',
+        data: defaultProfileWithAssociations,
+      });
+      expect(mockProfileService.getProfileById).toHaveBeenCalledWith(
+        profileId,
+        defaultMockUserProfile.id,
+      );
+    });
+  });
+
+  describe('updateProfile', () => {
+    const profileId = defaultMockUserProfile.id;
+    const updateProfileDto: UpdateUserProfileDto = {
+      domain_labels: ['AI', 'ML'],
+      languages: [LanguageCode.EN],
+      technical_labels: ['Python'],
+      preferred_role: [UserRole.DataScientist],
+    };
+
+    it('should update a profile successfully', async () => {
+      const updatedProfile = {
+        ...defaultMockUserProfile,
+        ...updateProfileDto,
+      };
+
+      mockProfileService.updateProfile.mockResolvedValue(updatedProfile);
+
+      const result = await controller.updateProfile(
+        profileId,
+        updateProfileDto,
+        mockRequest.user,
+      );
+
+      expect(result).toEqual({
+        message: 'Update User Profile Success',
+        data: updatedProfile,
+      });
+      expect(mockProfileService.updateProfile).toHaveBeenCalledWith(
+        profileId,
+        updateProfileDto,
+        defaultMockUserProfile.id,
+      );
+    });
+  });
+
+  describe('deleteProfile', () => {
+    const profileId = defaultMockUserProfile.id;
+
+    it('should delete a profile successfully', async () => {
+      mockProfileService.deleteProfile.mockResolvedValue(
+        defaultMockUserProfile,
+      );
+
+      const result = await controller.deleteProfile(
+        profileId,
+        mockRequest.user,
+      );
+
+      expect(result).toEqual({
+        message: 'Delete User Profile Success',
+        data: defaultMockUserProfile,
+      });
+      expect(mockProfileService.deleteProfile).toHaveBeenCalledWith(
+        profileId,
+        defaultMockUserProfile.id,
+      );
     });
   });
 });
