@@ -43,14 +43,13 @@ model UserProfile {
   userId       Int                         @unique @map("user_id")
   avatar       String?
   bio          String?
-  preferedRole String?                     @map("prefered_role")
+  preferredRole UserProfileRole[]                  
   location     String?
   website      String?
   interests    UserProfileDomainLabel[]
   skills       UserProfileTechnicalLabel[]
   user         User                        @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
-  languages    UserProfileLanguage[]
-  role         Role?                       @relation(fields: [preferedRole], references: [name], onUpdate: Cascade)
+  languages    UserProfileLanguage[]          
 
   @@map("user_profiles")
 }
@@ -111,8 +110,8 @@ model DomainLabel {
 model UserProfileDomainLabel {
   userId      Int          @map("user_id")
   labelName   String       @map("label_name")
-  label       DomainLabel  @relation(fields: [labelName], references: [name], onUpdate: Cascade)
-  userProfile UserProfile? @relation(fields: [userId], references: [userId], onUpdate: Cascade)
+  label       DomainLabel  @relation(fields: [labelName], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  userProfile UserProfile? @relation(fields: [userId], references: [userId], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([userId, labelName])
   @@map("user_profile_domain_labels")
@@ -121,11 +120,21 @@ model UserProfileDomainLabel {
 model UserProfileTechnicalLabel {
   userId      Int            @map("user_id")
   labelName   String         @map("label_name")
-  label       TechnicalLabel @relation(fields: [labelName], references: [name], onUpdate: Cascade)
-  userProfile UserProfile?   @relation(fields: [userId], references: [userId], onUpdate: Cascade)
+  label       TechnicalLabel @relation(fields: [labelName], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  userProfile UserProfile?   @relation(fields: [userId], references: [userId], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([userId, labelName])
   @@map("user_profile_technical_labels")
+}
+
+model UserProfileRole {
+  userId      Int            @map("user_id")
+  roleName    String         @map("role_name")
+  role        Role           @relation(fields: [roleName], references: [name], onUpdate: Cascade, onDelete: Cascade)
+  userProfile UserProfile?   @relation(fields: [userId], references: [userId], onUpdate: Cascade, onDelete: Cascade)
+
+  @@id([userId, roleName])
+  @@map("user_profile_roles")
 }
 
 model ProjectDomainLabel {
@@ -200,7 +209,7 @@ model Role {
   lastUpdatedAt DateTime      @updatedAt @map("last_updated_at")
   joinRequests  JoinRequest[]
   Involvement   Involvement[]
-  UserProfile   UserProfile[]
+  UserProfiles  UserProfileRole[]
 
   @@map("roles")
 }
@@ -208,8 +217,8 @@ model Role {
 model UserProfileLanguage {
   userId       Int          @map("user_id")
   languageCode String @map("language_code")
-  language     Language     @relation(fields: [languageCode], references: [code], onUpdate: Cascade)
-  userProfile  UserProfile? @relation(fields: [userId], references: [userId], onUpdate: Cascade)
+  language     Language     @relation(fields: [languageCode], references: [code], onUpdate: Cascade, onDelete: Cascade)
+  userProfile  UserProfile? @relation(fields: [userId], references: [userId], onUpdate: Cascade, onDelete: Cascade)
 
   @@id([userId, languageCode])
   @@map("user_profile_languages")
