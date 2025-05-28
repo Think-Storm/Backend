@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsOptional, IsUrl, IsArray, IsEnum } from 'class-validator';
-import { LanguageCode, CreateProfile } from '@think-storm/contracts';
+import { LanguageCode, CreateProfile, UserRole } from '@think-storm/contracts';
 
 export class CreateUserProfileDto implements CreateProfile {
   @ApiProperty({
@@ -20,12 +20,15 @@ export class CreateUserProfileDto implements CreateProfile {
   bio?: string;
 
   @ApiProperty({
-    description: 'Preferred role in projects',
+    description: 'Preferred roles in projects',
     required: false,
+    enum: UserRole,
+    isArray: true,
   })
   @IsOptional()
-  @IsString()
-  preferred_role?: string;
+  @IsArray()
+  @IsEnum(UserRole, { each: true })
+  preferred_role?: UserRole[];
 
   @ApiProperty({
     description: 'User location',

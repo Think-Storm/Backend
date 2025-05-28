@@ -50,4 +50,6 @@ export const errorMessages = {
   ERROR_FINDING_NOTIFICATION: 'An error occurred while finding notification.',
   ERROR_UPDATING_NOTIFICATION: 'Error updating notification',
   ERROR_DELETING_USER: 'An error occurred while deleting user.',
+  ERROR_UPDATING_USER_PROFILE: 'An error occurred while updating user profile.',
+  ERROR_DELETING_USER_PROFILE: 'An error occurred while deleting user profile.',
 };
