@@ -24,12 +24,6 @@ jobs:
           node-version: '20'
           cache-key-suffix: '-v1'
           contract-access-token: ${{ secrets.NPM_TOKEN }}
-          env-variables: |
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}
-            JWT_COOKIE_EXPIRES_IN=${{ secrets.JWT_COOKIE_EXPIRES_IN }}
-            ENVELOOP_API_KEY=${{ secrets.ENVELOOP_API_KEY }}
-            FRONTEND_URL=${{ secrets.FRONTEND_URL }}
 
       - name: Lint
         uses: ./.github/actions/lint
@@ -62,4 +56,4 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
-          flyctl deploy
+          flyctl deploy --build-arg CONTRACT_ACCESS_TOKEN=${{ secrets.NPM_TOKEN }}
