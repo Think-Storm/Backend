@@ -8,7 +8,12 @@ export function throttlerConfig(configService: ConfigService) {
   //   username: configService.get<string>('REDIS_USER'),
   //   password: configService.get<string>('REDIS_PASSWORD'),
   // };
-  return configService.get<string>('REDIS_THROTTLER_URL');
+  return {
+    url: configService.get<string>('REDIS_THROTTLER_URL'),
+    maxRetriesPerRequest: null,
+    enableReadyCheck: true,
+    family: 6,
+  };
 }
 
 export function cachingConfig(configService: ConfigService) {
@@ -21,5 +26,12 @@ export function cachingConfig(configService: ConfigService) {
   //   ttl: configService.get<number>('REDIS_CACHING_TTL'),
   //   retryStrategy: (times) => Math.min(times * 50, 2000),
   // };
-  return configService.get<string>('REDIS_CACHING_URL');
+  return {
+    url: configService.get<string>('REDIS_CACHING_URL'),
+    ttl: configService.get<number>('REDIS_CACHING_TTL'),
+    retryStrategy: (times) => Math.min(times * 50, 2000),
+    maxRetriesPerRequest: null,
+    enableReadyCheck: true,
+    family: 6,
+  };
 }
