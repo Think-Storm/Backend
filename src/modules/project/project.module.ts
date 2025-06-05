@@ -21,7 +21,7 @@ import { RedisService } from '../../common/caching/redisCaching.service';
     CacheModule.registerAsync({
       useFactory: (config: ConfigService) => ({
         store: redisStore,
-        ...cachingConfig(config),
+        url: cachingConfig(config),
       }),
       inject: [ConfigService],
     }),

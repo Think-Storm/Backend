@@ -50,7 +50,7 @@ import { AppController } from './app.controller';
     CacheModule.registerAsync({
       useFactory: (config: ConfigService) => ({
         store: redisStore,
-        ...cachingConfig(config),
+        url: cachingConfig(config),
       }),
       inject: [ConfigService],
     }),

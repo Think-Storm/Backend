@@ -2,45 +2,36 @@ import {
   throttlerConfig,
   cachingConfig,
 } from '../../../../src/common/redis/redis.config';
+import { ConfigService } from '@nestjs/config';
 
 describe('redis.config', () => {
   const mockConfigService = {
     get: jest.fn((key: string) => {
       const map = {
-        REDIS_HOST: 'localhost',
-        REDIS_PORT: 6379,
-        REDIS_THROTTLER_DB: 1,
-        REDIS_USER: 'user',
-        REDIS_PASSWORD: 'pass',
-        REDIS_CACHING_DB: 2,
-        REDIS_CACHING_TTL: 3600,
+        REDIS_THROTTLER_URL: 'redis://:pass@localhost:6379/1',
+        REDIS_CACHING_URL: 'redis://:pass@localhost:6379/2',
       };
       return map[key];
     }),
-  } as any;
+  } as unknown as jest.Mocked<ConfigService>;
 
-  it('should return throttler config', () => {
-    const config = throttlerConfig(mockConfigService);
-    expect(config).toEqual({
-      host: 'localhost',
-      port: 6379,
-      db: 1,
-      username: 'user',
-      password: 'pass',
+  describe('throttlerConfig', () => {
+    it('should return throttler URL from config', () => {
+      const config = throttlerConfig(mockConfigService);
+      expect(config).toBe('redis://:pass@localhost:6379/1');
+      expect(mockConfigService.get).toHaveBeenCalledWith('REDIS_THROTTLER_URL');
     });
   });
 
-  it('should return caching config and cover retryStrategy', () => {
-    const config = cachingConfig(mockConfigService);
-    expect(config.host).toBe('localhost');
-    expect(config.port).toBe(6379);
-    expect(config.username).toBe('user');
-    expect(config.password).toBe('pass');
-    expect(config.db).toBe(2);
-    expect(config.ttl).toBe(3600);
+  describe('cachingConfig', () => {
+    it('should return caching URL from config', () => {
+      const config = cachingConfig(mockConfigService);
+      expect(config).toBe('redis://:pass@localhost:6379/2');
+      expect(mockConfigService.get).toHaveBeenCalledWith('REDIS_CACHING_URL');
+    });
+  });
 
-    // Cover retryStrategy
-    expect(config.retryStrategy(1)).toBe(50);
-    expect(config.retryStrategy(100)).toBe(2000);
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 });
