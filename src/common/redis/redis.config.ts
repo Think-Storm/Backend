@@ -21,5 +21,9 @@ export function cachingConfig(configService: ConfigService) {
   //   ttl: configService.get<number>('REDIS_CACHING_TTL'),
   //   retryStrategy: (times) => Math.min(times * 50, 2000),
   // };
-  return configService.get<string>('REDIS_CACHING_URL');
+  return {
+    url: configService.get<string>('REDIS_CACHING_URL'),
+    ttl: configService.get<number>('REDIS_CACHING_TTL'),
+    retryStrategy: (times) => Math.min(times * 50, 2000),
+  };
 }

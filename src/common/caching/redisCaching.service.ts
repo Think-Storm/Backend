@@ -10,7 +10,7 @@ export class RedisService {
   private redis: Redis;
 
   constructor(configService: ConfigService) {
-    this.redis = new Redis(cachingConfig(configService));
+    this.redis = new Redis(cachingConfig(configService).url);
   }
 
   getClient(): Redis {
@@ -95,7 +95,7 @@ export class RedisService {
 
   async OnModuleInit(configService: ConfigService) {
     if (!this.redis) {
-      this.redis = new Redis(cachingConfig(configService));
+      this.redis = new Redis(cachingConfig(configService).url);
     }
 
     await this.ping();

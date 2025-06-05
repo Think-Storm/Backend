@@ -46,7 +46,7 @@ describe('ProjectController', () => {
           imports: [ConfigModule],
           useFactory: (config: ConfigService) => ({
             store: redisStore,
-            url: cachingConfig(config),
+            ...cachingConfig(config),
           }),
           inject: [ConfigService],
         }),
