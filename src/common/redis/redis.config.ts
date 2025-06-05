@@ -1,23 +1,25 @@
 import { ConfigService } from '@nestjs/config';
 
 export function throttlerConfig(configService: ConfigService) {
-  return {
-    host: configService.get<string>('REDIS_HOST'), // Use ConfigService to get environment variables
-    port: configService.get<number>('REDIS_PORT'),
-    db: configService.get<number>('REDIS_THROTTLER_DB'),
-    username: configService.get<string>('REDIS_USER'),
-    password: configService.get<string>('REDIS_PASSWORD'),
-  };
+  // return {
+  //   host: configService.get<string>('REDIS_HOST'), // Use ConfigService to get environment variables
+  //   port: configService.get<number>('REDIS_PORT'),
+  //   db: configService.get<number>('REDIS_THROTTLER_DB'),
+  //   username: configService.get<string>('REDIS_USER'),
+  //   password: configService.get<string>('REDIS_PASSWORD'),
+  // };
+  return configService.get<string>('REDIS_THROTTLER_URL');
 }
 
 export function cachingConfig(configService: ConfigService) {
-  return {
-    host: configService.get<string>('REDIS_HOST'), // Use ConfigService to get environment variables
-    port: configService.get<number>('REDIS_PORT'),
-    username: configService.get<string>('REDIS_USER'),
-    password: configService.get<string>('REDIS_PASSWORD'),
-    db: configService.get<number>('REDIS_CACHING_DB'),
-    ttl: configService.get<number>('REDIS_CACHING_TTL'),
-    retryStrategy: (times) => Math.min(times * 50, 2000),
-  };
+  // return {
+  //   host: configService.get<string>('REDIS_HOST'), // Use ConfigService to get environment variables
+  //   port: configService.get<number>('REDIS_PORT'),
+  //   username: configService.get<string>('REDIS_USER'),
+  //   password: configService.get<string>('REDIS_PASSWORD'),
+  //   db: configService.get<number>('REDIS_CACHING_DB'),
+  //   ttl: configService.get<number>('REDIS_CACHING_TTL'),
+  //   retryStrategy: (times) => Math.min(times * 50, 2000),
+  // };
+  return configService.get<string>('REDIS_CACHING_URL');
 }
