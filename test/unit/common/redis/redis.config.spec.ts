@@ -25,10 +25,15 @@ describe('redis.config', () => {
   });
 
   describe('throttlerConfig', () => {
-    it('should return throttler URL string', () => {
+    it('should return throttler config object', () => {
       const config = throttlerConfig(mockConfigService);
 
-      expect(config).toBe('redis://:pass@localhost:6379/1');
+      expect(config).toEqual({
+        url: 'redis://:pass@localhost:6379/1',
+        maxRetriesPerRequest: null,
+        enableReadyCheck: true,
+        family: 6,
+      });
       expect(mockConfigService.get).toHaveBeenCalledWith('REDIS_THROTTLER_URL');
     });
   });
@@ -41,6 +46,9 @@ describe('redis.config', () => {
         url: 'redis://:pass@localhost:6379/2',
         ttl: 3600,
         retryStrategy: expect.any(Function),
+        maxRetriesPerRequest: null,
+        enableReadyCheck: true,
+        family: 6,
       });
 
       expect(mockConfigService.get).toHaveBeenCalledWith('REDIS_CACHING_URL');
