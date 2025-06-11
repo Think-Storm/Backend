@@ -76,7 +76,7 @@ runs:
         ENV_VARIABLES: ${{ inputs.env-variables }}
       run: |
         # Use the --build flag only if build-image is true
-        cp "${{ inputs.env-variables }}" .env
+        echo "${{ inputs.env-variables }}" > .env
         echo "----- Loaded .env -----"
         cat .env
         echo "------------------------"
