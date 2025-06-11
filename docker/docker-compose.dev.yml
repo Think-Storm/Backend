@@ -4,9 +4,9 @@ services:
     environment:
       TYPE: development
       DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/postgres'
-      REDIS_CACHING_TTL: 3600
-      REDIS_THROTTLER_URL: 'redis://redis_user:redis_password@thinkstorm-redis-db:6379/0'
-      REDIS_CACHING_URL: 'redis://redis_user:redis_password@thinkstorm-redis-db:6379/1'
+      REDIS_CACHING_TTL: ${REDIS_CACHING_TTL}
+      REDIS_THROTTLER_URL: ${REDIS_THROTTLER_URL}
+      REDIS_CACHING_URL: ${REDIS_CACHING_URL}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       JWT_COOKIE_EXPIRES_IN: ${JWT_COOKIE_EXPIRES_IN}
