@@ -23,13 +23,9 @@ services:
     environment:
       DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/unit_test_db'
       TYPE: 'unit'
-      REDIS_HOST: thinkstorm-redis-db
-      REDIS_PORT: 6379
-      REDIS_THROTTLER_DB: 2
-      REDIS_CACHING_DB: 3
-      REDIS_CACHING_TTL: 3600
-      REDIS_USER: redis_user
-      REDIS_PASSWORD: redis_password
+      REDIS_CACHING_TTL: ${REDIS_CACHING_TTL}
+      REDIS_THROTTLER_URL: ${REDIS_THROTTLER_URL}
+      REDIS_CACHING_URL: ${REDIS_CACHING_URL}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       JWT_COOKIE_EXPIRES_IN: ${JWT_COOKIE_EXPIRES_IN}
@@ -49,13 +45,9 @@ services:
     environment:
       DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/e2e_test_db'
       TYPE: 'e2e'
-      REDIS_HOST: thinkstorm-redis-db
-      REDIS_PORT: 6379
-      REDIS_THROTTLER_DB: 0
-      REDIS_CACHING_DB: 1
-      REDIS_CACHING_TTL: 3600
-      REDIS_USER: redis_user
-      REDIS_PASSWORD: redis_password
+      REDIS_CACHING_TTL: ${REDIS_CACHING_TTL}
+      REDIS_THROTTLER_URL: ${REDIS_THROTTLER_URL}
+      REDIS_CACHING_URL: ${REDIS_CACHING_URL}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       JWT_COOKIE_EXPIRES_IN: ${JWT_COOKIE_EXPIRES_IN}
@@ -75,13 +67,9 @@ services:
     environment:
       DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/coverage_test_db'
       TYPE: 'coverage'
-      REDIS_HOST: thinkstorm-redis-db
-      REDIS_PORT: 6379
-      REDIS_THROTTLER_DB: 4
-      REDIS_CACHING_DB: 5
-      REDIS_CACHING_TTL: 3600
-      REDIS_USER: redis_user
-      REDIS_PASSWORD: redis_password
+      REDIS_CACHING_TTL: ${REDIS_CACHING_TTL}
+      REDIS_THROTTLER_URL: ${REDIS_THROTTLER_URL}
+      REDIS_CACHING_URL: ${REDIS_CACHING_URL}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       JWT_COOKIE_EXPIRES_IN: ${JWT_COOKIE_EXPIRES_IN}
