@@ -45,7 +45,7 @@ jobs:
             FRONTEND_URL=${{ secrets.FRONTEND_URL }}
             REDIS_CACHING_TTL=${{ secrets.REDIS_CACHING_TTL }}
             REDIS_THROTTLER_URL=${{ secrets.REDIS_THROTTLER_URL }}
-            REDIS_CACHING_URL${{ secrets.REDIS_CACHING_URL }}
+            REDIS_CACHING_URL=${{ secrets.REDIS_CACHING_URL }}
 
   deploy:
     runs-on: ubuntu-latest
