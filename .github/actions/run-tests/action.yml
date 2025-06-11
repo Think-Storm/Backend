@@ -76,7 +76,7 @@ runs:
         ENV_VARIABLES: ${{ inputs.env-variables }}
       run: |
         # Use the --build flag only if build-image is true
-        echo "$ENV_VARIABLES" > .env
+        cp ${{ inputs.env-variables }} .env
         if [ "${{ inputs.build-image }}" == "true" ]; then
           docker compose -f ${{ inputs.compose-file-app }} build app-prod ${{ inputs.build-args }}
         fi
