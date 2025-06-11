@@ -43,6 +43,9 @@ jobs:
             JWT_COOKIE_EXPIRES_IN=${{ secrets.JWT_COOKIE_EXPIRES_IN }}
             ENVELOOP_API_KEY=${{ secrets.ENVELOOP_API_KEY }}
             FRONTEND_URL=${{ secrets.FRONTEND_URL }}
+            REDIS_CACHING_TTL=3600
+            REDIS_THROTTLER_URL=redis://:redis_password@localhost:6379/0
+            REDIS_CACHING_URL=redis://:redis_password@localhost:6379/1
 
       - name: Check Test Results
         if: steps.run-tests.outputs.test-success != 'true'
