@@ -81,9 +81,9 @@ runs:
         cat .env
         echo "------------------------"
         if [ "${{ inputs.build-image }}" == "true" ]; then
-          docker compose -f ${{ inputs.compose-file-app }} build app-prod ${{ inputs.build-args }}
+          docker compose --env-file .env -f ${{ inputs.compose-file-app }} build app-prod ${{ inputs.build-args }}
         fi
-        export $(cat .env | xargs) && docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up -d --force-recreate > /dev/null 2>&1
+        export $(cat .env | xargs) && docker compose --env-file .env -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up -d --force-recreate > /dev/null 2>&1
 
     # Step 3: Create logs directory
     - name: Create logs directory
@@ -101,7 +101,7 @@ runs:
         # Capture logs for each service
         for service in "${SERVICES[@]}"; do
           echo "Capturing logs for $service"
-          docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} logs $service -f -t --no-color --no-log-prefix> ${{ inputs.logs-directory }}/${service}.log &
+          docker compose --env-file .env -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} logs $service -f -t --no-color --no-log-prefix> ${{ inputs.logs-directory }}/${service}.log &
         done
 
     # Step 5: Check test container exit codes
@@ -124,14 +124,14 @@ runs:
         done
 
         # Wait for all test services to complete
-        if ! docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} wait "${TEST_SERVICES[@]}" ; then
+        if ! docker compose --env-file .env -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} wait "${TEST_SERVICES[@]}" ; then
           echo "⚠️ Warning: Error waiting for services to complete"
           ALL_TESTS_PASSED=false
         fi
 
         # Check exit codes for all test services
         for service in "${TEST_SERVICES[@]}"; do
-          EXIT_CODE=$(docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} ps -q $service | xargs docker inspect $service -f '{{.State.ExitCode}}')
+          EXIT_CODE=$(docker compose --env-file .env -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} ps -q $service | xargs docker inspect $service -f '{{.State.ExitCode}}')
           if [ "$EXIT_CODE" -eq 0 ]; then
             echo "✅ Tests in $service passed"
           else
@@ -155,4 +155,4 @@ runs:
     - name: Cleanup Docker resources
       shell: bash
       run: |
-        export $(cat .env | xargs) && docker compose -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} down > /dev/null 2>&1
+        export $(cat .env | xargs) && docker compose --env-file .env -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} down > /dev/null 2>&1
