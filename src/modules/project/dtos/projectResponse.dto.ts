@@ -100,4 +100,10 @@ export class ProjectResponseDto implements ProjectResponse {
     description: 'The last update date of the project',
   })
   lastUpdatedAt: Date;
+
+  @Expose()
+  @ApiProperty({
+    description: 'The users array that saved current project',
+  })
+  savedByUsers?: User[];
 }

@@ -6,6 +6,8 @@ import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
 import { SearchProjectDto } from './dtos/searchProject.dto';
+import { ProjectWithRelations } from './types/project.types';
+import { SaveProjectRequestDto } from './dtos/saveProjectRequest.dto';
 
 @Injectable()
 export class ProjectRepository {
@@ -16,7 +18,7 @@ export class ProjectRepository {
    * @param id - The id of the Project to find
    * @returns A promise resolving to a Project object or null
    */
-  async findProjectById(id: number): Promise<Project> {
+  async findProjectById(id: number): Promise<ProjectWithRelations | null> {
     try {
       return await this.prisma.project.findUnique({
         where: {
@@ -30,6 +32,17 @@ export class ProjectRepository {
               password: true,
               passwordSalt: true,
               passwordChangedAt: true,
+            },
+          },
+          savedByUsers: {
+            include: {
+              user: {
+                omit: {
+                  password: true,
+                  passwordSalt: true,
+                  passwordChangedAt: true,
+                },
+              },
             },
           },
         },
@@ -321,6 +334,80 @@ export class ProjectRepository {
     } catch (error) {
       throw ServiceException.ErrorException(
         errorMessages.ERROR_DELETING_PROJECTS,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Save a Project by userId
+   * @param projectId - The id of the Project to save
+   * @param saveProjectDto - The data transfer object containing saved users Id
+   * @returns A promise resolving to a Project object or null
+   */
+  async saveProject(
+    projectId: number,
+    saveProjectDto: SaveProjectRequestDto,
+  ): Promise<ProjectWithRelations | null> {
+    const { saved_by_users } = saveProjectDto;
+    try {
+      return await this.prisma.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          savedByUsers: {
+            deleteMany: {},
+            create: saved_by_users.map((userId) => ({
+              user: { connect: { id: userId } },
+            })),
+          },
+        },
+        include: {
+          language: true,
+          users: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
+          founder: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
+          domainLabels: {
+            include: {
+              label: true,
+            },
+          },
+          technicalLabels: {
+            include: {
+              label: true,
+            },
+          },
+          like: true,
+          involvement: true,
+          joinRequest: true,
+          savedByUsers: {
+            include: {
+              user: {
+                omit: {
+                  password: true,
+                  passwordSalt: true,
+                  passwordChangedAt: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_SAVING_PROJECTS,
         error,
       );
     }

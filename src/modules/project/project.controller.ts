@@ -26,6 +26,7 @@ import {
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
 import { GetUser } from '../auth/decorators/getUser.decorator';
 import { SearchProjectResponseDto } from './dtos/searchProjectResponse.dto';
+import { SaveProjectRequestDto } from './dtos/saveProjectRequest.dto';
 
 @ApiTags('projects')
 @Controller()
@@ -35,6 +36,7 @@ export class ProjectController {
   @HttpCode(200)
   @Get('search')
   @ApiOperation({ summary: 'Get projects filtered by query string' })
+  @ApiBody({ type: SearchProjectDto })
   @ApiResponse({
     status: 200,
     description: 'Get projects filtered by query success',
@@ -138,5 +140,36 @@ export class ProjectController {
     @GetUser() user: any,
   ) {
     return await this.projectService.deleteProject(deleteProjectDto, user.id);
+  }
+
+  @HttpCode(201)
+  @Post(':id/save')
+  @ApiOperation({ summary: 'Save projects' })
+  @ApiParam({ name: 'id', required: true, description: 'Project ID' })
+  @ApiBody({ type: UpdateProjectRequestDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Save project success',
+    type: ProjectResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. User can save the project only once.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project or User not found',
+  })
+  @UseGuards(JwtAuthGuard)
+  async saveProject(
+    @Param('id') projectId: number,
+    @Body() saveProjectDto: SaveProjectRequestDto,
+    @GetUser() user: any,
+  ): Promise<ProjectResponseDto> {
+    return await this.projectService.saveProject(
+      +projectId,
+      saveProjectDto,
+      user.id,
+    );
   }
 }
