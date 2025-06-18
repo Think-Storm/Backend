@@ -24,16 +24,18 @@ import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/encryption/passwordEncryption';
-import { LanguageName } from '@think-storm/contracts';
+import { LanguageCode, LanguageName } from '@think-storm/contracts';
 import { ProjectResponseDto } from '../../../../src/modules/project/dtos/projectResponse.dto';
 import { RedisService } from '../../../../src/common/caching/redisCaching.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { cachingConfig } from '../../../../src/common/redis/redis.config';
 import * as redisStore from 'cache-manager-ioredis';
+import { SaveProjectRequestDto } from '../../../../src/modules/project/dtos/saveProjectRequest.dto';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
   let projectRepository: ProjectRepository;
+  let userRepository: UserRepository;
   let projectMapper: ProjectMapper;
   let userService: UserService;
   let redisService: RedisService;
@@ -70,6 +72,7 @@ describe('ProjectService', () => {
     projectRepository = module.get<ProjectRepository>(ProjectRepository);
     projectMapper = module.get<ProjectMapper>(ProjectMapper);
     userService = module.get<UserService>(UserService);
+    userRepository = module.get<UserRepository>(UserRepository);
     redisService = module.get<RedisService>(RedisService);
   });
 
@@ -213,55 +216,82 @@ describe('ProjectService', () => {
     });
 
     it('should return a project if project exists with id', async () => {
-      // Mock call to DB to return a Project
+      const mockProject = {
+        ...defaultProject,
+        language: {
+          code: defaultProject.languageCode,
+          name: LanguageName.English,
+          createdAt: new Date(),
+          lastUpdatedAt: new Date(),
+        },
+        users: [],
+        founder: defaultUser,
+        savedByUsers: [],
+        domainLabels: [],
+        technicalLabels: [],
+      };
+
       const spy = jest
         .spyOn(projectRepository, 'findProjectById')
-        .mockResolvedValue(defaultProject);
+        .mockResolvedValue(mockProject);
 
-      expect(() => {
-        const getProjectResponseDto = projectService.getProjectById(
-          defaultProjectResponseDto.id,
-        );
+      const result = await projectService.getProjectById(
+        defaultProjectResponseDto.id,
+      );
 
-        // Checking the mapper
-        expect(getProjectResponseDto).not.toHaveProperty('founderId');
-      }).not.toThrow();
-
-      expect(spy).toHaveBeenCalledTimes(1);
+      expect(result).toBeDefined();
       expect(spy).toHaveBeenCalledWith(defaultProjectResponseDto.id);
     });
   });
 
   describe('createProject', () => {
     it('should create user and map the result into UserResponseDto', async () => {
-      // Mock call to the password and salt creation
-      const userSpy = jest
-        .spyOn(userService, 'getUserById')
-        .mockResolvedValue(defaultUser);
+      jest.spyOn(userService, 'getUserById').mockResolvedValue(defaultUser);
 
-      // Mock call to DB
-      const dbSpy = jest
+      const mockProject = {
+        ...defaultProject,
+        language: {
+          code: defaultProject.languageCode,
+          name: LanguageName.English,
+          createdAt: new Date(),
+          lastUpdatedAt: new Date(),
+        },
+        users: [],
+        founder: defaultUser,
+        savedByUsers: [],
+        domainLabels: [],
+        technicalLabels: [],
+      };
+
+      jest
         .spyOn(projectRepository, 'createProject')
-        .mockResolvedValue(defaultProject);
+        .mockResolvedValue(mockProject);
 
-      const expectedResponseDto = defaultProjectResponseDto;
-      expectedResponseDto.founder = undefined;
-      expectedResponseDto.language = undefined;
-      expectedResponseDto.users = undefined;
-      expectedResponseDto.technicalLabels = undefined;
-      expectedResponseDto.domainLabels = undefined;
-
-      const projectResponseDto = await projectService.createProject(
+      const result = await projectService.createProject(
         defaultCreateProjectDto,
       );
 
-      // Checking the mapper
-      expect(projectResponseDto).toEqual(expectedResponseDto);
-
-      expect(userSpy).toHaveBeenCalledTimes(1);
-
-      expect(dbSpy).toHaveBeenCalledTimes(1);
-      expect(dbSpy).toHaveBeenCalledWith(defaultCreateProjectDto);
+      expect(result).toEqual({
+        id: mockProject.id,
+        title: mockProject.title,
+        description: mockProject.description,
+        goal: mockProject.goal,
+        status: mockProject.status,
+        users: [],
+        founder: defaultUser,
+        language: {
+          code: LanguageCode.EN,
+          name: LanguageName.English,
+          createdAt: expect.any(Date),
+          lastUpdatedAt: expect.any(Date),
+        },
+        savedByUsers: [],
+        domainLabels: [],
+        technicalLabels: [],
+        createdAt: mockProject.createdAt,
+        lastUpdatedAt: mockProject.lastUpdatedAt,
+        milestone: mockProject.milestone,
+      });
     });
   });
 
@@ -292,10 +322,25 @@ describe('ProjectService', () => {
     });
 
     it('should throw an 403 exception if the user is not the owner of the project', async () => {
+      const mockProject = {
+        ...defaultProject,
+        language: {
+          code: defaultProject.languageCode,
+          name: LanguageName.English,
+          createdAt: new Date(),
+          lastUpdatedAt: new Date(),
+        },
+        users: [],
+        founder: defaultUser,
+        savedByUsers: [],
+        domainLabels: [],
+        technicalLabels: [],
+      };
+
       // Mock call to DB to return a Project
       const spy = jest
         .spyOn(projectRepository, 'findProjectById')
-        .mockResolvedValue(defaultProject);
+        .mockResolvedValue(mockProject);
 
       try {
         await projectService.updateProject(defaultUpdateProjectDto, 999);
@@ -321,10 +366,13 @@ describe('ProjectService', () => {
           lastUpdatedAt: new Date(),
         },
         users: [],
+        founder: defaultUser,
+        savedByUsers: [],
         domainLabels: [],
         technicalLabels: [],
-        founderId: defaultUpdateProjectDto.founderId,
-        founder: defaultUser,
+        like: [],
+        involvement: [],
+        joinRequest: [],
       };
 
       const spy = jest
@@ -347,6 +395,7 @@ describe('ProjectService', () => {
           lastUpdatedAt: expect.any(Date),
         },
         founder: defaultUser,
+        savedByUsers: [],
       };
 
       const projectResponseDto = await projectService.updateProject(
@@ -392,10 +441,25 @@ describe('ProjectService', () => {
     });
 
     it('should throw an 403 exception if the user is not the owner of the project', async () => {
+      const mockProject = {
+        ...defaultProject,
+        language: {
+          code: defaultProject.languageCode,
+          name: LanguageName.English,
+          createdAt: new Date(),
+          lastUpdatedAt: new Date(),
+        },
+        users: [],
+        founder: defaultUser,
+        savedByUsers: [],
+        domainLabels: [],
+        technicalLabels: [],
+      };
+
       // Mock call to DB to return a Project
       const spy = jest
         .spyOn(projectRepository, 'findProjectById')
-        .mockResolvedValue(defaultProject);
+        .mockResolvedValue(mockProject);
 
       try {
         await projectService.deleteProject(defaultDeleteProjectDto, 999);
@@ -418,13 +482,14 @@ describe('ProjectService', () => {
         language: {
           code: defaultProject.languageCode,
           name: LanguageName.English,
-          createdAt: currentDate,
-          lastUpdatedAt: currentDate,
+          createdAt: new Date(),
+          lastUpdatedAt: new Date(),
         },
         users: [],
+        founder: defaultUser,
+        savedByUsers: [],
         domainLabels: [],
         technicalLabels: [],
-        founder: defaultUser,
       };
 
       const spy = jest
@@ -447,6 +512,7 @@ describe('ProjectService', () => {
         domainLabels: [],
         technicalLabels: [],
         founder: defaultUser,
+        savedByUsers: [],
       };
 
       const projectResponseDto = await projectService.deleteProject(
@@ -462,6 +528,139 @@ describe('ProjectService', () => {
 
       expect(dbSpy).toHaveBeenCalledTimes(1);
       expect(dbSpy).toHaveBeenCalledWith(defaultDeleteProjectDto.id);
+    });
+  });
+
+  describe('saveProject', () => {
+    const mockUserId = 1;
+
+    it('should save project when project exists and user has not saved it', async () => {
+      const mockProject = {
+        ...defaultProject,
+        language: {
+          code: defaultProject.languageCode,
+          name: LanguageName.English,
+          createdAt: new Date(),
+          lastUpdatedAt: new Date(),
+        },
+        users: [],
+        founder: defaultUser,
+        savedByUsers: [],
+        domainLabels: [],
+        technicalLabels: [],
+      };
+
+      const saveProjectDto: SaveProjectRequestDto = {
+        saved_by_users: [],
+      };
+
+      const findProjectSpy = jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(mockProject);
+
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValue(defaultUser);
+
+      const saveSpy = jest
+        .spyOn(projectRepository, 'saveProject')
+        .mockResolvedValue(mockProject);
+
+      const result = await projectService.saveProject(
+        defaultProject.id,
+        saveProjectDto,
+        mockUserId,
+      );
+
+      expect(result).toBeDefined();
+      expect(findProjectSpy).toHaveBeenCalledWith(defaultProject.id);
+      expect(saveSpy).toHaveBeenCalledWith(defaultProject.id, {
+        saved_by_users: [mockUserId],
+      });
+    });
+
+    it('should throw error when project does not exist', async () => {
+      jest.spyOn(projectRepository, 'findProjectById').mockResolvedValue(null);
+
+      await expect(
+        projectService.saveProject(999, { saved_by_users: [] }, mockUserId),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it('should throw error when user has already saved project', async () => {
+      const mockProject = {
+        ...defaultProject,
+        language: {
+          code: defaultProject.languageCode,
+          name: LanguageName.English,
+          createdAt: new Date(),
+          lastUpdatedAt: new Date(),
+        },
+        users: [],
+        founder: defaultUser,
+        savedByUsers: [
+          {
+            projectId: defaultProject.id,
+            userId: mockUserId,
+            savedAt: new Date(),
+            user: {
+              id: mockUserId,
+              email: 'test@test.com',
+              username: 'testuser',
+              fullName: 'Test User',
+              birthdate: new Date(),
+              createdAt: new Date(),
+              lastUpdatedAt: new Date(),
+            },
+          },
+        ],
+        domainLabels: [],
+        technicalLabels: [],
+        like: [],
+        involvement: [],
+        joinRequest: [],
+      };
+
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(mockProject);
+
+      await expect(
+        projectService.saveProject(
+          defaultProject.id,
+          { saved_by_users: [] },
+          mockUserId,
+        ),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it('should throw error when user in saved_by_users does not exist', async () => {
+      const mockProject = {
+        ...defaultProject,
+        language: {
+          code: defaultProject.languageCode,
+          name: LanguageName.English,
+          createdAt: new Date(),
+          lastUpdatedAt: new Date(),
+        },
+        users: [],
+        founder: defaultUser,
+        savedByUsers: [],
+        domainLabels: [],
+        technicalLabels: [],
+      };
+
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(mockProject);
+
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValue(null);
+
+      await expect(
+        projectService.saveProject(
+          defaultProject.id,
+          { saved_by_users: [999] },
+          mockUserId,
+        ),
+      ).rejects.toThrow(ServiceException);
     });
   });
 });

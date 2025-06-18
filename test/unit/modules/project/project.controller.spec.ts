@@ -6,6 +6,7 @@ import { ProjectMapper } from '../../../../src/modules/project/dtos/project.mapp
 import {
   defaultCreateProjectDto,
   defaultDeleteProjectDto,
+  defaultProject,
   defaultProjectResponseDto,
   defaultSearchProjectDto,
   defaultUpdateProjectDto,
@@ -20,7 +21,7 @@ import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/encryption/passwordEncryption';
 import { mockJwtToken } from '../../../utils/jwt.utils';
-import { defaultUserResponseDto } from '../../../utils/user.utils';
+import { defaultUser, defaultUserResponseDto } from '../../../utils/user.utils';
 import { createMockRequestWithUser } from '../../../utils/jwt.utils';
 import { JwtAuthGuard } from '../../../../src/modules/auth/jwt/jwt.guard';
 import { PrismaService } from '../../../../src/prisma/prisma.service';
@@ -31,6 +32,9 @@ import { RedisService } from '../../../../src/common/caching/redisCaching.servic
 import { CacheModule } from '@nestjs/cache-manager';
 import { cachingConfig } from '../../../../src/common/redis/redis.config';
 import * as redisStore from 'cache-manager-ioredis';
+import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
+import { SaveProjectRequestDto } from '../../../../src/modules/project/dtos/saveProjectRequest.dto';
+import { errorMessages } from '../../../../src/common/enums/errorMessages';
 
 describe('ProjectController', () => {
   let projectController: ProjectController;
@@ -201,6 +205,60 @@ describe('ProjectController', () => {
         defaultDeleteProjectDto, // Body parameter
         mockRequest.user.id, // User ID from request
       );
+    });
+  });
+
+  describe('saveProject', () => {
+    it('should save project successfully', async () => {
+      const mockRequest = createMockRequestWithUser(
+        defaultUserResponseDto,
+      ) as any;
+      mockRequest.headers = createAuthHeader(mockJwtToken);
+      mockRequest.user = { id: defaultUser.id };
+
+      const saveProjectDto: SaveProjectRequestDto = {
+        saved_by_users: [],
+      };
+
+      const serviceSpy = jest
+        .spyOn(projectService, 'saveProject')
+        .mockResolvedValue(defaultProjectResponseDto);
+
+      const result = await projectController.saveProject(
+        defaultProject.id,
+        saveProjectDto,
+        mockRequest.user,
+      );
+
+      expect(result).toEqual(defaultProjectResponseDto);
+      expect(serviceSpy).toHaveBeenCalledWith(
+        defaultProject.id,
+        saveProjectDto,
+        mockRequest.user.id,
+      );
+    });
+
+    it('should handle errors from service layer', async () => {
+      const mockRequest = createMockRequestWithUser(
+        defaultUserResponseDto,
+      ) as any;
+      mockRequest.user = { id: defaultUser.id };
+
+      jest
+        .spyOn(projectService, 'saveProject')
+        .mockRejectedValue(
+          ServiceException.EntityNotFoundException(
+            errorMessages.ENTITY_NOT_FOUND('project', '999'),
+          ),
+        );
+
+      await expect(
+        projectController.saveProject(
+          999,
+          { saved_by_users: [] },
+          mockRequest.user,
+        ),
+      ).rejects.toThrow(ServiceException);
     });
   });
 });
