@@ -3,11 +3,12 @@ import {
   JoinRequest,
   Language,
   Like,
+  Prisma,
   Project,
   ProjectDomainLabel,
   ProjectTechnicalLabel,
-  User,
 } from '@prisma/client';
+import { UserWithoutSensitiveData } from '../../../../src/modules/user/types/user.types';
 
 export type ProjectWithLabels = Project & {
   domainLabels?: (ProjectDomainLabel & {
@@ -17,9 +18,44 @@ export type ProjectWithLabels = Project & {
     label: { name: string };
   })[];
   language?: Language;
-  users?: User[];
-  founder?: User;
+  users?: UserWithoutSensitiveData[];
+  founder?: UserWithoutSensitiveData;
   like?: Like[];
   involvement?: Involvement[];
   joinRequest?: JoinRequest[];
+  savedByUsers?: {
+    savedAt: Date;
+    user: UserWithoutSensitiveData;
+  }[];
 };
+
+export type ProjectWithRelations = Prisma.ProjectGetPayload<{
+  include: {
+    language: true;
+    users: {
+      omit: {
+        password: true;
+        passwordSalt: true;
+        passwordChangedAt: true;
+      };
+    };
+    founder: {
+      omit: {
+        password: true;
+        passwordSalt: true;
+        passwordChangedAt: true;
+      };
+    };
+    savedByUsers: {
+      include: {
+        user: {
+          omit: {
+            password: true;
+            passwordSalt: true;
+            passwordChangedAt: true;
+          };
+        };
+      };
+    };
+  };
+}>;

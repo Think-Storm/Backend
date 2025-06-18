@@ -10,6 +10,8 @@ export const errorMessages = {
   ERROR_UPDATING_PROJECTS: 'An error occurred while updating project.',
   ERROR_DELETING_PROJECTS: 'An error occurred while deleting project.',
   ERROR_FINDING_PROJECTS: 'An error occurred while finding projects.',
+  ERROR_SAVING_PROJECTS: 'An error occurred while saving projects.',
+  USER_ALREADY_SAVED_PROJECT: 'User already saved the project.',
   ERROR_GETTING_USER_BY_EMAIL: 'An error occurred while getting user by email.',
   ERROR_GETTING_USER_BY_ID: 'An error occurred while getting user by id.',
   ERROR_CREATING_USER: 'An error occurred while creating user.',
