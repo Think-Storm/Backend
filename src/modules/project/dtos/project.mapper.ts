@@ -1,33 +1,10 @@
-import {
-  Project,
-  ProjectDomainLabel,
-  ProjectTechnicalLabel,
-  User,
-  Language,
-  Like,
-  Involvement,
-  JoinRequest,
-} from '@prisma/client';
+import { Project } from '@prisma/client';
 import { stringToEnum, Goal, ProjectStatus } from '@think-storm/contracts';
 import { ProjectResponseDto } from './projectResponse.dto';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { SearchProjectResponseDto } from './searchProjectResponse.dto';
-
-type ProjectWithLabels = Project & {
-  domainLabels?: (ProjectDomainLabel & {
-    label: { name: string };
-  })[];
-  technicalLabels?: (ProjectTechnicalLabel & {
-    label: { name: string };
-  })[];
-  language?: Language;
-  users?: User[];
-  founder?: User;
-  like?: Like[];
-  involvement?: Involvement[];
-  joinRequest?: JoinRequest[];
-};
+import { ProjectWithLabels } from '../types/project.types';
 
 export class ProjectMapper {
   /**
@@ -67,6 +44,11 @@ export class ProjectMapper {
     // Transform string status to enum
     if (plainProject.status) {
       plainProject.status = stringToEnum(plainProject.status, ProjectStatus);
+    }
+
+    // Transform saved by users array if they exist and have the complex structure
+    if (project.savedByUsers?.length > 0 && 'user' in project.savedByUsers[0]) {
+      plainProject.savedByUsers = project.savedByUsers.map((user) => user.user);
     }
 
     return plainToInstance(ProjectResponseDto, plainProject, {
