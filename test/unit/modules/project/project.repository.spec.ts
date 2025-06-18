@@ -25,6 +25,7 @@ import refreshDatabase from '../../../../src/prisma/prisma.dbreset';
 import { ProjectWithLabels } from '../../../../src/modules/project/types/project.types';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
+import { SaveProjectRequestDto } from '../../../../src/modules/project/dtos/saveProjectRequest.dto';
 
 describe('ProjectRepository', () => {
   let prismaService: PrismaService;
@@ -285,6 +286,45 @@ describe('ProjectRepository', () => {
       ).toStrictEqual(
         projectTobeDeleted.technicalLabels.map((dl) => dl.labelName).sort(),
       );
+    });
+  });
+
+  describe('saveProject', () => {
+    it('should save project successfully', async () => {
+      // Create initial test data
+      const user = await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+
+      const project = await createProjectInDB(
+        prismaService,
+        defaultCreateProjectDto,
+      );
+
+      const saveProjectDto: SaveProjectRequestDto = {
+        saved_by_users: [user.id],
+      };
+
+      const savedProject = await projectRepository.saveProject(
+        project.id,
+        saveProjectDto,
+      );
+
+      expect(savedProject).toBeDefined();
+      expect(savedProject.id).toBe(project.id);
+      expect(savedProject.savedByUsers).toHaveLength(1);
+      expect(savedProject.savedByUsers[0].userId).toBe(user.id);
+    });
+
+    it('should handle errors when saving project', async () => {
+      const saveProjectDto: SaveProjectRequestDto = {
+        saved_by_users: [999],
+      };
+
+      await expect(
+        projectRepository.saveProject(999, saveProjectDto),
+      ).rejects.toThrow(ServiceException);
     });
   });
 });
