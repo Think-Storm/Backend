@@ -24,6 +24,8 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { RedisThrottlerStorageService } from '../../src/common/throttler/redisThrottlerStorage.service';
 import { RedisService } from '../../src/common/caching/redisCaching.service';
 import { LanguageCode, stringToEnum } from '@think-storm/contracts';
+import { errorMessages } from '../../src/common/enums/errorMessages';
+
 describe('/projects', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
@@ -489,6 +491,125 @@ describe('/projects', () => {
         .delete(`/${unauthorizedDeleteRequest.id}`)
         .set('Authorization', token)
         .expect(403);
+    });
+  });
+
+  describe('/projects/:id/save POST (Save Project)', () => {
+    it('should successfully save a project', async () => {
+      // Create a user
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      // Create a project
+      const createdProject = await createProjectInDB(
+        prismaService,
+        defaultCreateProjectDto,
+      );
+
+      // Login to get auth token
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: defaultCreateUserDto.email,
+          password: defaultCreateUserDto.password,
+        })
+        .expect(200);
+
+      const token = loginResponse.headers.authorization;
+
+      // Save the project
+      const response = await request(app.getHttpServer())
+        .post(`/${createdProject.id}/save`)
+        .set('Authorization', token)
+        .send({ saved_by_users: [] })
+        .expect(201);
+
+      expect(response.body).toBeDefined();
+      expect(response.body.id).toBe(createdProject.id);
+      expect(response.body.savedByUsers).toHaveLength(1);
+      expect(response.body.savedByUsers[0].userId).toBe(
+        registerResponse.body.id,
+      );
+    });
+
+    it('should return 401 when not authenticated', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/1/save')
+        .send({ saved_by_users: [] })
+        .expect(401);
+
+      expect(response.body.message).toBe(errorMessages.PROTECT_ROUTES);
+    });
+
+    it('should return 404 when project does not exist', async () => {
+      // Create and login a user first
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: defaultCreateUserDto.email,
+          password: defaultCreateUserDto.password,
+        })
+        .expect(200);
+
+      const token = loginResponse.headers.authorization;
+
+      const response = await request(app.getHttpServer())
+        .post('/999/save')
+        .set('Authorization', token)
+        .send({ saved_by_users: [] })
+        .expect(404);
+
+      expect(response.body.message).toBe(
+        errorMessages.ENTITY_NOT_FOUND('Project', '999'),
+      );
+    });
+
+    it('should return 400 when project is already saved by user', async () => {
+      // Create a user
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      // Create a project
+      const createdProject = await createProjectInDB(
+        prismaService,
+        defaultCreateProjectDto,
+      );
+
+      // Login to get auth token
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: defaultCreateUserDto.email,
+          password: defaultCreateUserDto.password,
+        })
+        .expect(200);
+
+      const token = loginResponse.headers.authorization;
+
+      // Save the project first time
+      await request(app.getHttpServer())
+        .post(`/${createdProject.id}/save`)
+        .set('Authorization', token)
+        .send({ saved_by_users: [registerResponse.body.data.id] })
+        .expect(201);
+
+      // Try to save again
+      const response = await request(app.getHttpServer())
+        .post(`/${createdProject.id}/save`)
+        .set('Authorization', token)
+        .send({ saved_by_users: [registerResponse.body.data.id] })
+        .expect(400);
+
+      expect(response.body.message).toContain('already saved');
     });
   });
 });
