@@ -26,6 +26,7 @@ model User {
   fullName          String?        @map("full_name")
   birthdate         DateTime?
   founded_projects  Project[]      @relation("FounderProjects")
+  savedProjects     SavedProject[]
   projects          Project[]
   like              Like[]
   involvement       Involvement[]
@@ -61,13 +62,14 @@ model Project {
   description     String?
   goal            String
   status          String
-  languageCode    String            @map("language_code")
+  languageCode    String                  @map("language_code")
   milestone       DateTime?
   createdAt       DateTime                @default(now()) @map("created_at")
   lastUpdatedAt   DateTime                @updatedAt @map("last_updated_at")
   founder         User?                   @relation(fields: [founderId], references: [id], name: "FounderProjects", onDelete: SetNull)
   language        Language?               @relation(fields: [languageCode], references: [code], onDelete: SetNull)
   users           User[]
+  savedByUsers    SavedProject[]
   domainLabels    ProjectDomainLabel[]
   technicalLabels ProjectTechnicalLabel[]
   like            Like[]
@@ -105,6 +107,18 @@ model DomainLabel {
   users    UserProfileDomainLabel[]
 
   @@map("domain_labels")
+}
+
+model SavedProject {
+  userId    Int      @map("user_id")
+  projectId Int      @map("project_id")
+  savedAt   DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  project   Project?  @relation(fields: [projectId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@id([userId, projectId])
+  @@map("saved_projects")
 }
 
 model UserProfileDomainLabel {
