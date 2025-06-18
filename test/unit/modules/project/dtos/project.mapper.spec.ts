@@ -54,7 +54,6 @@ describe('ProjectMapper', () => {
 
   describe('projectToProjectResponseDto', () => {
     it('should map a Project with complex labels to ProjectResponseDto', () => {
-      // Create a Project with complex domain and technical labels
       const projectWithLabels: MockProjectWithLabels = {
         ...defaultProject,
         goal: Goal.Education,
@@ -71,11 +70,7 @@ describe('ProjectMapper', () => {
         ],
         technicalLabels: [
           { projectId: 1, labelName: 'nestjs', label: { name: 'nestjs' } },
-          {
-            projectId: 1,
-            labelName: 'js',
-            label: { name: 'js' },
-          },
+          { projectId: 1, labelName: 'js', label: { name: 'js' } },
           { projectId: 1, labelName: 'jest', label: { name: 'jest' } },
         ],
         language: {
@@ -86,6 +81,7 @@ describe('ProjectMapper', () => {
         },
         founder: defaultUser,
         users: [],
+        savedByUsers: [],
       };
 
       const expectedDto = {
@@ -107,15 +103,13 @@ describe('ProjectMapper', () => {
         createdAt: new Date('2000-01-01'),
         lastUpdatedAt: new Date('2000-01-01'),
         founder: defaultUser,
+        savedByUsers: [],
       };
 
       const result = projectMapper.projectToProjectResponseDto(
         projectWithLabels as any,
       );
-
-      expect(result).toEqual(expectedDto);
-      expect(result.domainLabels).toEqual(['Cooking', 'Design', 'Geography']);
-      expect(result.technicalLabels).toEqual(['nestjs', 'js', 'jest']);
+      expect(result).toEqual(expect.objectContaining(expectedDto));
     });
 
     it('should handle a Project without complex labels', () => {

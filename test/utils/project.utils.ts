@@ -16,6 +16,7 @@ import { defaultPasswordSalt } from '../../test/unit/common/passwordEncryption.u
 import { SearchProjectDto } from '../../src/modules/project/dtos/searchProject.dto';
 import { GetProjectRequestDto } from '../../src/modules/project/dtos/getProjectRequest.dto';
 import { SearchProjectResponseDto } from './../../src/modules/project/dtos/searchProjectResponse.dto';
+import { ProjectWithLabels } from './../../src/modules/project/types/project.types';
 
 export const createProjectInDB = async (
   prismaService: PrismaService,
@@ -177,7 +178,7 @@ export const defaultProjectResponseDto: ProjectResponseDto = {
   founder: defaultUser,
 };
 
-export const defaultProject: Project = {
+export const defaultProject: ProjectWithLabels = {
   id: 1,
   founderId: 1,
   title: 'title',
@@ -188,6 +189,20 @@ export const defaultProject: Project = {
   milestone: new Date('2000-01-01'),
   createdAt: new Date('2000-01-01'),
   lastUpdatedAt: new Date('2000-01-01'),
+  savedByUsers: [],
+  language: {
+    code: LanguageCode.EN,
+    name: LanguageName.English,
+    createdAt: new Date(),
+    lastUpdatedAt: new Date(),
+  },
+  users: [],
+  founder: defaultUser,
+  domainLabels: [],
+  technicalLabels: [],
+  like: [],
+  involvement: [],
+  joinRequest: [],
 };
 
 export const secondProject: Project = {
@@ -326,6 +341,7 @@ export type MockProjectWithLabels = {
     lastUpdatedAt: Date;
   } | null;
   founder?: typeof defaultUser;
+  savedByUsers?: any[];
   users?: any[];
   like?: any[];
   involvement?: any[];
