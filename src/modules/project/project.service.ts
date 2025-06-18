@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { UserRepository } from '../user/user.repository';
 import { ProjectRepository } from './project.repository';
 import { ProjectMapper } from './dtos/project.mapper';
 import { errorMessages } from '../../common/enums/errorMessages';
@@ -15,10 +16,12 @@ import { ProjectResponseDto } from './dtos/projectResponse.dto';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
 import { SearchProjectDto } from './dtos/searchProject.dto';
+import { SaveProjectRequestDto } from './dtos/saveProjectRequest.dto';
 
 @Injectable()
 export class ProjectService {
   constructor(
+    private userRepository: UserRepository,
     private projectRepository: ProjectRepository,
     private projectMapper: ProjectMapper,
     private readonly userService: UserService,
@@ -206,5 +209,75 @@ export class ProjectService {
     await this.redisService.flushDb();
 
     return this.projectMapper.projectToProjectResponseDto(deletedProject);
+  }
+
+  /**
+   * Saves a project
+   * @param projectId - project Id to be saved
+   * @param saveProjectDto - The data transfer object for saving a project
+   * @param userId - user Id requested to save the project
+   * @returns A promise resolving to a ProjectResponseDto
+   */
+  async saveProject(
+    projectId: number,
+    saveProjectDto: SaveProjectRequestDto,
+    userId: number,
+  ): Promise<ProjectResponseDto> {
+    const savingProject =
+      await this.projectRepository.findProjectById(projectId);
+
+    if (!savingProject) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    }
+
+    // Check saved_by_users array if each user id exists
+    for (const id of saveProjectDto.saved_by_users) {
+      const user = await this.userRepository.getUserById(id);
+      if (!user) {
+        throw ServiceException.EntityNotFoundException(
+          errorMessages.ENTITY_NOT_FOUND('User', id.toString()),
+        );
+      }
+    }
+
+    // create savedUsers Id array from database and check if current user already exists in saved users array
+    const savedUsersArr = [];
+    for (const user of savingProject.savedByUsers) {
+      if (user.userId === userId) {
+        throw ServiceException.BadRequestException(
+          errorMessages.USER_ALREADY_SAVED_PROJECT,
+        );
+      }
+      savedUsersArr.push(user.userId);
+    }
+
+    // add savedUsers Id array to saveProjectDto
+    saveProjectDto.saved_by_users = [
+      ...saveProjectDto.saved_by_users,
+      ...savedUsersArr,
+    ];
+
+    // add current user Id if current user doesn't exist in saveProjectDto
+    if (!saveProjectDto.saved_by_users.includes(userId)) {
+      saveProjectDto.saved_by_users = [
+        ...saveProjectDto.saved_by_users,
+        userId,
+      ];
+    }
+
+    // remove duplication
+    saveProjectDto.saved_by_users = [...new Set(saveProjectDto.saved_by_users)];
+
+    const savedProject = await this.projectRepository.saveProject(
+      projectId,
+      saveProjectDto,
+    );
+
+    //cache invalidation
+    await this.redisService.flushDb();
+
+    return this.projectMapper.projectToProjectResponseDto(savedProject);
   }
 }
