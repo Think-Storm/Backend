@@ -16,6 +16,8 @@ import { ProjectResponseDto } from './dtos/projectResponse.dto';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
 import { SearchProjectDto } from './dtos/searchProject.dto';
+import { CreateJoinRequestDto } from './dtos/createJoinRequest.dto';
+import { JoinRequestResponseDto } from './dtos/joinRequestResponse.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -170,6 +172,32 @@ export class ProjectController {
       +projectId,
       saveProjectDto,
       user.id,
+    );
+  }
+
+  @Post(':id/join-requests')
+  @ApiOperation({ summary: 'Create a new join request for a project' })
+  @ApiBody({ type: CreateJoinRequestDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Join request created successfully',
+    type: JoinRequestResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project not found',
+  })
+  @UseGuards(JwtAuthGuard)
+  async createJoinRequest(
+    @Param() param: GetProjectRequestDto,
+    @Body() body: CreateJoinRequestDto,
+    @GetUser() user: any,
+  ): Promise<JoinRequestResponseDto> {
+    return await this.projectService.postProjectJoinRequest(
+      user.id,
+      param.id,
+      body.roleName,
+      body.message,
     );
   }
 }
