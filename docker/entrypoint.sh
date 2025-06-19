@@ -5,7 +5,7 @@ set -e
 echo "Setting up the database..."
 npx prisma migrate deploy
 npm run db:seed
-
+sleep infinity
 # Check the TYPE environment variable
 case ${TYPE:-production} in
  "unit")
