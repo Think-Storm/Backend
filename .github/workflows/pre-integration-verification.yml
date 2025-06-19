@@ -48,6 +48,10 @@ jobs:
             REDIS_CACHING_TTL=${{ secrets.REDIS_CACHING_TTL }}
             REDIS_THROTTLER_URL=${{ secrets.REDIS_THROTTLER_URL }}
             REDIS_CACHING_URL=${{ secrets.REDIS_CACHING_URL }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
+            DATABASE_UNIT_TEST_URL=${{ secrets.DATABASE_UNIT_TEST_URL }}
+            DATABASE_E2E_TEST_URL=${{ secrets.DATABASE_E2E_TEST_URL }}
+            DATABASE_COVERAGE_TEST_URL=${{ secrets.DATABASE_COVERAGE_TEST_URL }}
 
       - name: Check Test Results
         if: steps.run-tests.outputs.test-success != 'true'
