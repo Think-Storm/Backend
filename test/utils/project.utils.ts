@@ -1,9 +1,11 @@
-import { Project } from '@prisma/client';
+import { Project, JoinRequest } from '@prisma/client';
 import {
   Goal,
   LanguageCode,
   LanguageName,
   ProjectStatus,
+  JoinRequestStatus,
+  ProjectJoinRequest,
 } from '@think-storm/contracts';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { CreateProjectRequestDto } from '../../src/modules/project/dtos/createProjectRequest.dto';
@@ -16,7 +18,7 @@ import { defaultPasswordSalt } from '../../test/unit/common/passwordEncryption.u
 import { SearchProjectDto } from '../../src/modules/project/dtos/searchProject.dto';
 import { GetProjectRequestDto } from '../../src/modules/project/dtos/getProjectRequest.dto';
 import { SearchProjectResponseDto } from './../../src/modules/project/dtos/searchProjectResponse.dto';
-import { ProjectWithLabels } from './../../src/modules/project/types/project.types';
+import { JoinRequestResponseDto } from '../../src/modules/project/dtos/joinRequestResponse.dto';
 
 export const createProjectInDB = async (
   prismaService: PrismaService,
@@ -178,7 +180,7 @@ export const defaultProjectResponseDto: ProjectResponseDto = {
   founder: defaultUser,
 };
 
-export const defaultProject: ProjectWithLabels = {
+export const defaultProject = {
   id: 1,
   founderId: 1,
   title: 'title',
@@ -346,4 +348,27 @@ export type MockProjectWithLabels = {
   like?: any[];
   involvement?: any[];
   joinRequest?: any[];
+};
+
+export const defaultJoinRequest: JoinRequest = {
+  userId: 1,
+  projectId: 1,
+  roleName: 'Developer',
+  status: JoinRequestStatus.Pending,
+  message: 'I would love to contribute!',
+};
+
+export const defaultCreateJoinRequestDto: ProjectJoinRequest = {
+  userId: 1,
+  projectId: 1,
+  roleName: 'Developer',
+  message: 'I would love to contribute!',
+};
+
+export const defaultJoinRequestResponseDto: JoinRequestResponseDto = {
+  userId: 1,
+  projectId: 1,
+  roleName: 'Developer',
+  status: JoinRequestStatus.Pending,
+  message: 'I would love to contribute!',
 };
