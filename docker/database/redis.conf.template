@@ -1,0 +1,2 @@
+user ${REDIS_USER} on >${REDIS_PASSWORD} ~* +@all
+user default off
