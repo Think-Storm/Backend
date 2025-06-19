@@ -85,7 +85,9 @@ runs:
           echo "Built Docker image with arguments: ${{ inputs.build-args }}"
         fi
         echo "Starting Docker Compose with files: ${{ inputs.compose-file-db }}, ${{ inputs.compose-file-test }}"
-        export $(cat .env | xargs) && docker compose --env-file .env -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up -d --force-recreate > /dev/null 2>&1
+
+        docker compose --env-file .env -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up -d --force-recreate
+        echo "Docker Compose started successfully"
 
     # Step 3: Create logs directory
     - name: Create logs directory
