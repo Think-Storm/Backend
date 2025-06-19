@@ -54,4 +54,5 @@ export const errorMessages = {
   ERROR_DELETING_USER: 'An error occurred while deleting user.',
   ERROR_UPDATING_USER_PROFILE: 'An error occurred while updating user profile.',
   ERROR_DELETING_USER_PROFILE: 'An error occurred while deleting user profile.',
+  ERROR_CREATING_JOIN_REQUEST: 'An error occurred while creating join request.',
 };
