@@ -21,7 +21,7 @@ services:
   unit:
     image: thinkstorm-backend-prod:latest
     environment:
-      DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/unit_test_db'
+      DATABASE_URL: ${DATABASE_UNIT_TEST_URL}
       TYPE: 'unit'
       REDIS_CACHING_TTL: ${REDIS_CACHING_TTL}
       REDIS_THROTTLER_URL: ${REDIS_THROTTLER_URL}
@@ -43,7 +43,7 @@ services:
   e2e:
     image: thinkstorm-backend-prod:latest
     environment:
-      DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/e2e_test_db'
+      DATABASE_URL: ${DATABASE_E2E_TEST_URL}
       TYPE: 'e2e'
       REDIS_CACHING_TTL: ${REDIS_CACHING_TTL}
       REDIS_THROTTLER_URL: ${REDIS_THROTTLER_URL}
@@ -65,7 +65,7 @@ services:
   cov:
     image: thinkstorm-backend-prod:latest
     environment:
-      DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/coverage_test_db'
+      DATABASE_URL: ${DATABASE_COVERAGE_TEST_URL}
       TYPE: 'coverage'
       REDIS_CACHING_TTL: ${REDIS_CACHING_TTL}
       REDIS_THROTTLER_URL: ${REDIS_THROTTLER_URL}

@@ -3,7 +3,7 @@ services:
     image: thinkstorm-backend-prod:latest
     environment:
       TYPE: production
-      DATABASE_URL: 'postgresql://postgres:postgres@thinkstorm-postgres-db:5432/postgres'
+      DATABASE_URL: ${DATABASE_URL}
       REDIS_CACHING_TTL: ${REDIS_CACHING_TTL}
       REDIS_THROTTLER_URL: ${REDIS_THROTTLER_URL}
       REDIS_CACHING_URL: ${REDIS_CACHING_URL}

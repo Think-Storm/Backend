@@ -25,16 +25,16 @@ services:
     ports:
       - '6379:6379'
     volumes:
-      - ./database/redis.conf:/usr/local/etc/redis/redis.conf
-    command: redis-server /usr/local/etc/redis/redis.conf --appendonly no
+      - ./database/redis-entrypoint.sh:/usr/local/bin/redis-entrypoint.sh
+    entrypoint: /usr/local/bin/redis-entrypoint.sh
+    environment:
+      REDIS_USER: ${REDIS_USER}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'redis-cli -u redis://redis_user:redis_password@localhost:6379 ping',
-        ]
+      test: ['CMD-SHELL', '/usr/local/bin/redis-healthcheck.sh']
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
     networks:
       - backend-network
