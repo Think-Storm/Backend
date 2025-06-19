@@ -3,7 +3,6 @@ set -e
 
 # Database setup
 echo "Setting up the database..."
-sleep infinity
 npx prisma migrate deploy
 npm run db:seed
 
