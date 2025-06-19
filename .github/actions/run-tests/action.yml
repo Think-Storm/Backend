@@ -69,7 +69,12 @@ runs:
         echo "DOCKER_IMAGE=${{ inputs.image-name }}" >> $GITHUB_ENV
         echo "Using Docker image: ${{ inputs.image-name }}"
 
-    # Step 2: Run Docker Compose
+    # Step 2: Redis entrypoint permissions
+    - name: Ensure the Redis entrypoint script has the correct permissions
+      shell: bash
+      run: chmod +x ./database/redis-entrypoint.sh
+
+    # Step 3: Run Docker Compose
     - name: Run Docker Compose Tests
       shell: bash
       env:
@@ -86,16 +91,11 @@ runs:
 
         docker compose --env-file .env -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} up -d --force-recreate
 
-    # Step 3: Create logs directory
+    # Step 4: Create logs directory
     - name: Create logs directory
       shell: bash
       run: |
         mkdir -p ${{ inputs.logs-directory }}
-
-    # Step 4: Redis entrypoint permissions
-    - name: Ensure the Redis entrypoint script has the correct permissions
-      shell: bash
-      run: chmod +x ./database/redis-entrypoint.sh
 
     # Step 5: Capture logs from all services
     - name: Capture Container Logs
