@@ -10,6 +10,8 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { cachingConfig } from '../../common/redis/redis.config';
 import * as redisStore from 'cache-manager-ioredis';
 import { RedisService } from '../../common/caching/redisCaching.service';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationRepository } from '../notification/notification.repository';
 
 /**
  * The ProjectModule is responsible for managing the project-related components
@@ -34,6 +36,8 @@ import { RedisService } from '../../common/caching/redisCaching.service';
     ProjectMapper,
     ConfigService,
     RedisService,
+    NotificationService,
+    NotificationRepository,
   ],
 })
 export class ProjectModule {}
