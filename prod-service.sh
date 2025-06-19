@@ -96,6 +96,9 @@ case $command in
         check_image_exists $env_type
         check_env_file_exists
         check_contract_access_token
+
+        chmod +x ./docker/database/redis-entrypoint.sh
+
         case $env_type in
             "dev")
                 
