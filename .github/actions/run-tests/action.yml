@@ -94,6 +94,7 @@ runs:
 
     # Step 4: Redis entrypoint permissions
     - name: Ensure the Redis entrypoint script has the correct permissions
+      shell: bash
       run: chmod +x ./database/redis-entrypoint.sh
 
     # Step 5: Capture logs from all services
