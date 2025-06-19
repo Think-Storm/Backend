@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { JoinRequestStatus } from '@think-storm/contracts';
+import { JoinRequestStatus, ProjectJoinRequest } from '@think-storm/contracts';
 
-export class JoinRequestResponseDto {
+export class JoinRequestResponseDto implements ProjectJoinRequest {
   @ApiProperty({
     description: 'User ID who made the join request',
     example: 1,
