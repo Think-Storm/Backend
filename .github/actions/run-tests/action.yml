@@ -81,7 +81,7 @@ runs:
         cat .env
         echo "------------------------"
 
-        chmod +x "${{ github.workspace }}/database/redis-entrypoint.sh"
+        chmod +x ./database/redis-entrypoint.sh
 
         if [ "${{ inputs.build-image }}" == "true" ]; then
           docker compose --env-file .env -f ${{ inputs.compose-file-app }} build app-prod ${{ inputs.build-args }}
