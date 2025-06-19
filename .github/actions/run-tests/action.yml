@@ -3,6 +3,10 @@ description: 'Runs Docker Compose tests and captures logs from containers'
 
 # Define inputs to customize the test process
 inputs:
+  redis-enttrypoint-script:
+    description: 'Path to the Redis entrypoint script'
+    required: false
+    default: 'docker/database/redis-entrypoint.sh'
   compose-file-app:
     description: 'Path to the base Docker Compose file'
     required: false
@@ -81,7 +85,7 @@ runs:
         cat .env
         echo "------------------------"
 
-        chmod +x ./database/redis-entrypoint.sh
+        chmod +x ${{ inputs.redis-enttrypoint-script }}
 
         if [ "${{ inputs.build-image }}" == "true" ]; then
           docker compose --env-file .env -f ${{ inputs.compose-file-app }} build app-prod ${{ inputs.build-args }}
