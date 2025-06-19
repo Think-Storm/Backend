@@ -92,7 +92,11 @@ runs:
       run: |
         mkdir -p ${{ inputs.logs-directory }}
 
-    # Step 4: Capture logs from all services
+    # Step 4: Redis entrypoint permissions
+    - name: Ensure the Redis entrypoint script has the correct permissions
+      run: chmod +x ./database/redis-entrypoint.sh
+
+    # Step 5: Capture logs from all services
     - name: Capture Container Logs
       shell: bash
       run: |
@@ -105,7 +109,7 @@ runs:
           docker compose --env-file .env -f ${{ inputs.compose-file-db }} -f ${{ inputs.compose-file-test }} logs $service -f -t --no-color --no-log-prefix> ${{ inputs.logs-directory }}/${service}.log &
         done
 
-    # Step 5: Check test container exit codes
+    # Step 6: Check test container exit codes
     - name: Check test container exit codes
       id: check-tests
       shell: bash
@@ -144,7 +148,7 @@ runs:
 
         echo "success=$ALL_TESTS_PASSED" >> $GITHUB_OUTPUT
 
-    # Step 6: Upload logs as artifacts
+    # Step 7: Upload logs as artifacts
     - name: Upload Docker Logs
       uses: actions/upload-artifact@v4
       with:
@@ -152,7 +156,7 @@ runs:
         path: ${{ inputs.logs-directory }}/
         retention-days: ${{ inputs.retention-days }}
 
-    # Step 7: Cleanup Docker resources
+    # Step 8: Cleanup Docker resources
     - name: Cleanup Docker resources
       shell: bash
       run: |
