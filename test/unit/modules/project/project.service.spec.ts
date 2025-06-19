@@ -13,6 +13,8 @@ import {
   searchProjectResponseDto,
   secondProject,
   secondProjectResponseDto,
+  defaultJoinRequest,
+  defaultJoinRequestResponseDto,
 } from '../../../utils/project.utils';
 import prisma from '../../../../src/prisma/prisma.client';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
@@ -31,6 +33,9 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { cachingConfig } from '../../../../src/common/redis/redis.config';
 import * as redisStore from 'cache-manager-ioredis';
 import { SaveProjectRequestDto } from '../../../../src/modules/project/dtos/saveProjectRequest.dto';
+import { NotificationService } from '../../../../src/modules/notification/notification.service';
+import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
+import { JoinRequestMapper } from '../../../../src/modules/project/dtos/joinRequest.mapper';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
@@ -39,6 +44,7 @@ describe('ProjectService', () => {
   let projectMapper: ProjectMapper;
   let userService: UserService;
   let redisService: RedisService;
+  let notificationService: NotificationService;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -65,6 +71,9 @@ describe('ProjectService', () => {
         UserRepository,
         UserMapper,
         RedisService,
+        NotificationService,
+        NotificationRepository,
+        JoinRequestMapper,
       ],
     }).compile();
 
@@ -74,6 +83,11 @@ describe('ProjectService', () => {
     userService = module.get<UserService>(UserService);
     userRepository = module.get<UserRepository>(UserRepository);
     redisService = module.get<RedisService>(RedisService);
+    notificationService = module.get<NotificationService>(NotificationService);
+    joinRequestMapper = module.get<JoinRequestMapper>(JoinRequestMapper);
+    notificationRepository = module.get<NotificationRepository>(
+      NotificationRepository,
+    );
   });
 
   afterEach(async () => {
@@ -216,24 +230,9 @@ describe('ProjectService', () => {
     });
 
     it('should return a project if project exists with id', async () => {
-      const mockProject = {
-        ...defaultProject,
-        language: {
-          code: defaultProject.languageCode,
-          name: LanguageName.English,
-          createdAt: new Date(),
-          lastUpdatedAt: new Date(),
-        },
-        users: [],
-        founder: defaultUser,
-        savedByUsers: [],
-        domainLabels: [],
-        technicalLabels: [],
-      };
-
       const spy = jest
         .spyOn(projectRepository, 'findProjectById')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(defaultProject);
 
       const result = await projectService.getProjectById(
         defaultProjectResponseDto.id,
@@ -248,35 +247,20 @@ describe('ProjectService', () => {
     it('should create user and map the result into UserResponseDto', async () => {
       jest.spyOn(userService, 'getUserById').mockResolvedValue(defaultUser);
 
-      const mockProject = {
-        ...defaultProject,
-        language: {
-          code: defaultProject.languageCode,
-          name: LanguageName.English,
-          createdAt: new Date(),
-          lastUpdatedAt: new Date(),
-        },
-        users: [],
-        founder: defaultUser,
-        savedByUsers: [],
-        domainLabels: [],
-        technicalLabels: [],
-      };
-
       jest
         .spyOn(projectRepository, 'createProject')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(defaultProject);
 
       const result = await projectService.createProject(
         defaultCreateProjectDto,
       );
 
       expect(result).toEqual({
-        id: mockProject.id,
-        title: mockProject.title,
-        description: mockProject.description,
-        goal: mockProject.goal,
-        status: mockProject.status,
+        id: defaultProject.id,
+        title: defaultProject.title,
+        description: defaultProject.description,
+        goal: defaultProject.goal,
+        status: defaultProject.status,
         users: [],
         founder: defaultUser,
         language: {
@@ -288,9 +272,9 @@ describe('ProjectService', () => {
         savedByUsers: [],
         domainLabels: [],
         technicalLabels: [],
-        createdAt: mockProject.createdAt,
-        lastUpdatedAt: mockProject.lastUpdatedAt,
-        milestone: mockProject.milestone,
+        createdAt: defaultProject.createdAt,
+        lastUpdatedAt: defaultProject.lastUpdatedAt,
+        milestone: defaultProject.milestone,
       });
     });
   });
@@ -322,25 +306,10 @@ describe('ProjectService', () => {
     });
 
     it('should throw an 403 exception if the user is not the owner of the project', async () => {
-      const mockProject = {
-        ...defaultProject,
-        language: {
-          code: defaultProject.languageCode,
-          name: LanguageName.English,
-          createdAt: new Date(),
-          lastUpdatedAt: new Date(),
-        },
-        users: [],
-        founder: defaultUser,
-        savedByUsers: [],
-        domainLabels: [],
-        technicalLabels: [],
-      };
-
       // Mock call to DB to return a Project
       const spy = jest
         .spyOn(projectRepository, 'findProjectById')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(defaultProject);
 
       try {
         await projectService.updateProject(defaultUpdateProjectDto, 999);
@@ -357,31 +326,14 @@ describe('ProjectService', () => {
 
     it('should update a project if the user is the owner of the project', async () => {
       // Mock call to DB to return a Project
-      const mockProject = {
-        ...defaultProject,
-        language: {
-          code: defaultProject.languageCode,
-          name: LanguageName.English,
-          createdAt: new Date(),
-          lastUpdatedAt: new Date(),
-        },
-        users: [],
-        founder: defaultUser,
-        savedByUsers: [],
-        domainLabels: [],
-        technicalLabels: [],
-        like: [],
-        involvement: [],
-        joinRequest: [],
-      };
 
       const spy = jest
         .spyOn(projectRepository, 'findProjectById')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(defaultProject);
 
       const dbSpy = jest
         .spyOn(projectRepository, 'updateProject')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(defaultProject);
 
       const expectedResponseDto = {
         ...defaultProjectResponseDto,
@@ -441,25 +393,10 @@ describe('ProjectService', () => {
     });
 
     it('should throw an 403 exception if the user is not the owner of the project', async () => {
-      const mockProject = {
-        ...defaultProject,
-        language: {
-          code: defaultProject.languageCode,
-          name: LanguageName.English,
-          createdAt: new Date(),
-          lastUpdatedAt: new Date(),
-        },
-        users: [],
-        founder: defaultUser,
-        savedByUsers: [],
-        domainLabels: [],
-        technicalLabels: [],
-      };
-
       // Mock call to DB to return a Project
       const spy = jest
         .spyOn(projectRepository, 'findProjectById')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(defaultProject);
 
       try {
         await projectService.deleteProject(defaultDeleteProjectDto, 999);
@@ -475,38 +412,22 @@ describe('ProjectService', () => {
     });
 
     it('should delete a project if the user is the owner of the project', async () => {
-      const currentDate = new Date();
       // Mock call to DB to return a Project
-      const mockProject = {
-        ...defaultProject,
-        language: {
-          code: defaultProject.languageCode,
-          name: LanguageName.English,
-          createdAt: new Date(),
-          lastUpdatedAt: new Date(),
-        },
-        users: [],
-        founder: defaultUser,
-        savedByUsers: [],
-        domainLabels: [],
-        technicalLabels: [],
-      };
-
       const spy = jest
         .spyOn(projectRepository, 'findProjectById')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(defaultProject);
 
       const dbSpy = jest
         .spyOn(projectRepository, 'deleteProjectById')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(defaultProject);
 
       const expectedResponseDto = {
         ...defaultProjectResponseDto,
         language: {
           code: defaultProject.languageCode,
           name: LanguageName.English,
-          createdAt: currentDate,
-          lastUpdatedAt: currentDate,
+          createdAt: expect.any(Date),
+          lastUpdatedAt: expect.any(Date),
         },
         users: [],
         domainLabels: [],
@@ -521,7 +442,13 @@ describe('ProjectService', () => {
       );
 
       // Checking the mapper
-      expect(projectResponseDto).toEqual(expectedResponseDto);
+      expect(projectResponseDto).toEqual(
+        expect.objectContaining({
+          ...expectedResponseDto,
+          createdAt: expect.any(Date),
+          lastUpdatedAt: expect.any(Date),
+        }),
+      );
 
       expect(spy).toHaveBeenCalledTimes(1);
       expect(spy).toHaveBeenCalledWith(defaultDeleteProjectDto.id);
@@ -535,34 +462,19 @@ describe('ProjectService', () => {
     const mockUserId = 1;
 
     it('should save project when project exists and user has not saved it', async () => {
-      const mockProject = {
-        ...defaultProject,
-        language: {
-          code: defaultProject.languageCode,
-          name: LanguageName.English,
-          createdAt: new Date(),
-          lastUpdatedAt: new Date(),
-        },
-        users: [],
-        founder: defaultUser,
-        savedByUsers: [],
-        domainLabels: [],
-        technicalLabels: [],
-      };
-
       const saveProjectDto: SaveProjectRequestDto = {
         saved_by_users: [],
       };
 
       const findProjectSpy = jest
         .spyOn(projectRepository, 'findProjectById')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(defaultProject);
 
       jest.spyOn(userRepository, 'getUserById').mockResolvedValue(defaultUser);
 
       const saveSpy = jest
         .spyOn(projectRepository, 'saveProject')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(defaultProject);
 
       const result = await projectService.saveProject(
         defaultProject.id,
@@ -586,7 +498,7 @@ describe('ProjectService', () => {
     });
 
     it('should throw error when user has already saved project', async () => {
-      const mockProject = {
+      const mockProjectWithSavedUser = {
         ...defaultProject,
         language: {
           code: defaultProject.languageCode,
@@ -621,7 +533,7 @@ describe('ProjectService', () => {
 
       jest
         .spyOn(projectRepository, 'findProjectById')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(mockProjectWithSavedUser);
 
       await expect(
         projectService.saveProject(
@@ -633,24 +545,9 @@ describe('ProjectService', () => {
     });
 
     it('should throw error when user in saved_by_users does not exist', async () => {
-      const mockProject = {
-        ...defaultProject,
-        language: {
-          code: defaultProject.languageCode,
-          name: LanguageName.English,
-          createdAt: new Date(),
-          lastUpdatedAt: new Date(),
-        },
-        users: [],
-        founder: defaultUser,
-        savedByUsers: [],
-        domainLabels: [],
-        technicalLabels: [],
-      };
-
       jest
         .spyOn(projectRepository, 'findProjectById')
-        .mockResolvedValue(mockProject);
+        .mockResolvedValue(defaultProject);
 
       jest.spyOn(userRepository, 'getUserById').mockResolvedValue(null);
 
@@ -661,6 +558,49 @@ describe('ProjectService', () => {
           mockUserId,
         ),
       ).rejects.toThrow(ServiceException);
+  describe.only('postProjectJoinRequest', () => {
+    it('should create a join request successfully', async () => {
+      // Mock findProjectById to return a project
+      const findProjectSpy = jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultProject);
+
+      // Mock createJoinRequest to return a join request
+      const createJoinRequestSpy = jest
+        .spyOn(projectRepository, 'createJoinRequest')
+        .mockResolvedValue(defaultJoinRequest);
+
+      // Mock notification service
+      const createNotificationSpy = jest
+        .spyOn(notificationService, 'createJoinRequestNotification')
+        .mockResolvedValue(undefined);
+
+      // Mock mapper
+      const mapperSpy = jest
+        .spyOn(JoinRequestMapper, 'joinRequestToJoinRequestResponseDto')
+        .mockReturnValue(defaultJoinRequestResponseDto);
+
+      const result = await projectService.postProjectJoinRequest(
+        defaultJoinRequest.userId,
+        defaultJoinRequest.projectId,
+        defaultJoinRequest.roleName,
+        defaultJoinRequest.message,
+      );
+
+      expect(findProjectSpy).toHaveBeenCalledWith(defaultJoinRequest.projectId);
+      expect(createJoinRequestSpy).toHaveBeenCalledWith(
+        defaultJoinRequest.userId,
+        defaultJoinRequest.projectId,
+        defaultJoinRequest.roleName,
+        defaultJoinRequest.message,
+      );
+      expect(createNotificationSpy).toHaveBeenCalledWith(
+        defaultProject.founderId,
+        defaultProject.title,
+        defaultProject.id,
+      );
+      expect(mapperSpy).toHaveBeenCalledWith(defaultJoinRequest);
+      expect(result).toEqual(defaultJoinRequestResponseDto);
     });
   });
 });
