@@ -69,11 +69,6 @@ runs:
         echo "DOCKER_IMAGE=${{ inputs.image-name }}" >> $GITHUB_ENV
         echo "Using Docker image: ${{ inputs.image-name }}"
 
-    # Step 2: Redis entrypoint permissions
-    - name: Ensure the Redis entrypoint script has the correct permissions
-      shell: bash
-      run: chmod +x ./database/redis-entrypoint.sh
-
     # Step 3: Run Docker Compose
     - name: Run Docker Compose Tests
       shell: bash
@@ -85,6 +80,9 @@ runs:
         echo "----- Loaded .env -----"
         cat .env
         echo "------------------------"
+
+        chmod +x "${{ github.workspace }}/database/redis-entrypoint.sh"
+
         if [ "${{ inputs.build-image }}" == "true" ]; then
           docker compose --env-file .env -f ${{ inputs.compose-file-app }} build app-prod ${{ inputs.build-args }}
         fi
