@@ -193,9 +193,12 @@ export class ProjectController {
     @Body() body: CreateJoinRequestDto,
     @GetUser() user: any,
   ): Promise<JoinRequestResponseDto> {
+    body.userId = user.id;
+    body.projectId = param.id;
+
     return await this.projectService.postProjectJoinRequest(
-      user.id,
-      param.id,
+      body.userId,
+      body.projectId,
       body.roleName,
       body.message,
     );
