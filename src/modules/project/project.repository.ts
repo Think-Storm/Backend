@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma, Project } from '@prisma/client';
+import { Prisma, Project, JoinRequest } from '@prisma/client';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
@@ -408,6 +408,37 @@ export class ProjectRepository {
     } catch (error) {
       throw ServiceException.ErrorException(
         errorMessages.ERROR_SAVING_PROJECTS,
+        error,
+      );
+    }
+  }
+
+  /**
+   * Creates a join request for a project
+   * @param userId - The ID of the user making the join request
+   * @param projectId - The ID of the project to join
+   * @param roleName - The role name for the join request
+   * @param message - Optional message for the join request
+   * @returns A promise resolving to the created JoinRequest object
+   */
+  async createJoinRequest(
+    userId: number,
+    projectId: number,
+    roleName: string,
+    message?: string,
+  ): Promise<JoinRequest> {
+    try {
+      return await this.prisma.joinRequest.create({
+        data: {
+          userId: userId,
+          projectId: projectId,
+          roleName: roleName,
+          message: message,
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_CREATING_JOIN_REQUEST,
         error,
       );
     }

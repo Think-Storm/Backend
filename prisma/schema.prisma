@@ -198,6 +198,7 @@ model JoinRequest {
   projectId Int               @map("project_id")
   roleName  String            @map("role_name")
   status    String            @default("Pending")
+  message   String?
   user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   project   Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   role      Role              @relation(fields: [roleName], references: [name])
