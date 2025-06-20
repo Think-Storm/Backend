@@ -16,7 +16,7 @@ import { ProjectResponseDto } from './dtos/projectResponse.dto';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
 import { SearchProjectDto } from './dtos/searchProject.dto';
-import { CreateJoinRequestDto } from './dtos/createJoinRequest.dto';
+import { CreateJoinRequestBodyDto } from './dtos/createJoinRequest.dto';
 import { JoinRequestResponseDto } from './dtos/joinRequestResponse.dto';
 import {
   ApiTags,
@@ -177,7 +177,7 @@ export class ProjectController {
 
   @Post(':id/join-requests')
   @ApiOperation({ summary: 'Create a new join request for a project' })
-  @ApiBody({ type: CreateJoinRequestDto })
+  @ApiBody({ type: CreateJoinRequestBodyDto })
   @ApiResponse({
     status: 201,
     description: 'Join request created successfully',
@@ -190,15 +190,12 @@ export class ProjectController {
   @UseGuards(JwtAuthGuard)
   async createJoinRequest(
     @Param() param: GetProjectRequestDto,
-    @Body() body: CreateJoinRequestDto,
+    @Body() body: CreateJoinRequestBodyDto,
     @GetUser() user: any,
   ): Promise<JoinRequestResponseDto> {
-    body.userId = user.id;
-    body.projectId = param.id;
-
     return await this.projectService.postProjectJoinRequest(
-      body.userId,
-      body.projectId,
+      user.id,
+      param.id,
       body.roleName,
       body.message,
     );
