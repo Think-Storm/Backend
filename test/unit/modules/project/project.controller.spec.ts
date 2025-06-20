@@ -12,6 +12,7 @@ import {
   defaultUpdateProjectDto,
   searchProjectResponseDto,
   secondProjectResponseDto,
+  defaultJoinRequestResponseDto,
 } from '../../../utils/project.utils';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import prisma from '../../../../src/prisma/prisma.client';
@@ -35,6 +36,9 @@ import * as redisStore from 'cache-manager-ioredis';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { SaveProjectRequestDto } from '../../../../src/modules/project/dtos/saveProjectRequest.dto';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
+import { NotificationService } from '../../../../src/modules/notification/notification.service';
+import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
+import { JoinRequestMapper } from '../../../../src/modules/project/dtos/joinRequest.mapper';
 
 describe('ProjectController', () => {
   let projectController: ProjectController;
@@ -67,6 +71,9 @@ describe('ProjectController', () => {
         UserRepository,
         UserMapper,
         RedisService,
+        NotificationService,
+        NotificationRepository,
+        JoinRequestMapper,
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -259,6 +266,70 @@ describe('ProjectController', () => {
           mockRequest.user,
         ),
       ).rejects.toThrow(ServiceException);
+    });
+  });
+
+  describe('createJoinRequest function', () => {
+    it('should pass correct parameters to service when authenticated', async () => {
+      const mockRequest = createMockRequestWithUser(
+        defaultUserResponseDto,
+      ) as any;
+      mockRequest.headers = createAuthHeader(mockJwtToken);
+      mockRequest.user = { id: 1 }; // Explicitly set the user ID
+
+      const projectId = 1;
+      const joinRequestBody = {
+        roleName: 'Developer',
+        message: 'I would love to contribute!',
+      };
+
+      const serviceSpy = jest
+        .spyOn(projectService, 'postProjectJoinRequest')
+        .mockResolvedValue(defaultJoinRequestResponseDto);
+
+      // Execute
+      await projectController.createJoinRequest(
+        { id: projectId },
+        joinRequestBody,
+        mockRequest.user,
+      );
+
+      // Verify correct parameters are passed
+      expect(serviceSpy).toHaveBeenCalledWith(
+        mockRequest.user.id, // User ID from JWT
+        projectId, // Project ID from URL parameter
+        joinRequestBody.roleName, // Role name from body
+        joinRequestBody.message, // Message from body
+      );
+    });
+
+    it('should return join request response dto', async () => {
+      // Setup
+      const mockRequest = createMockRequestWithUser(
+        defaultUserResponseDto,
+      ) as any;
+      mockRequest.user = { id: 1 };
+
+      const projectId = 1;
+      const joinRequestBody = {
+        roleName: 'Developer',
+        message: 'I would love to contribute!',
+      };
+
+      const serviceSpy = jest
+        .spyOn(projectService, 'postProjectJoinRequest')
+        .mockResolvedValue(defaultJoinRequestResponseDto);
+
+      // Execute
+      const result = await projectController.createJoinRequest(
+        { id: projectId },
+        joinRequestBody,
+        mockRequest.user,
+      );
+
+      // Verify response
+      expect(result).toEqual(defaultJoinRequestResponseDto);
+      expect(serviceSpy).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -1,24 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsInt, IsNotEmpty } from 'class-validator';
-import { ProjectJoinRequest } from '@think-storm/contracts';
+import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
 
-export class CreateJoinRequestDto implements ProjectJoinRequest {
-  @ApiProperty({
-    description: 'User ID who makes the join request',
-    example: 1,
-  })
-  @IsInt()
-  @IsNotEmpty()
-  userId: number;
-
-  @ApiProperty({
-    description: 'Project ID for the join request',
-    example: 1,
-  })
-  @IsInt()
-  @IsNotEmpty()
-  projectId: number;
-
+export class CreateJoinRequestBodyDto {
   @ApiProperty({
     description: 'Role name for the join request',
     example: 'Developer',

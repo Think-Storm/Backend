@@ -84,10 +84,6 @@ describe('ProjectService', () => {
     userRepository = module.get<UserRepository>(UserRepository);
     redisService = module.get<RedisService>(RedisService);
     notificationService = module.get<NotificationService>(NotificationService);
-    joinRequestMapper = module.get<JoinRequestMapper>(JoinRequestMapper);
-    notificationRepository = module.get<NotificationRepository>(
-      NotificationRepository,
-    );
   });
 
   afterEach(async () => {
@@ -558,7 +554,36 @@ describe('ProjectService', () => {
           mockUserId,
         ),
       ).rejects.toThrow(ServiceException);
-  describe.only('postProjectJoinRequest', () => {
+    });
+  });
+
+  describe('postProjectJoinRequest', () => {
+    it('should throw a 404 exception if project is not found', async () => {
+      // Mock findProjectById to return null
+      const findProjectSpy = jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(null);
+
+      try {
+        await projectService.postProjectJoinRequest(
+          defaultJoinRequest.userId,
+          defaultJoinRequest.projectId,
+          defaultJoinRequest.roleName,
+          defaultJoinRequest.message,
+        );
+      } catch (e) {
+        expect(e).toBeInstanceOf(ServiceException);
+        expect(e.message).toContain(
+          errorMessages.ENTITY_NOT_FOUND(
+            'Project',
+            defaultJoinRequest.projectId.toString(),
+          ),
+        );
+      }
+
+      expect(findProjectSpy).toHaveBeenCalledWith(defaultJoinRequest.projectId);
+    });
+
     it('should create a join request successfully', async () => {
       // Mock findProjectById to return a project
       const findProjectSpy = jest
