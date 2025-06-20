@@ -612,4 +612,168 @@ describe('/projects', () => {
       expect(response.body.message).toContain('already saved');
     });
   });
+
+  describe('/:id/join-requests POST (Create Join Request)', () => {
+    it('should return a 201 when creating a join request successfully', async () => {
+      // Create project founder
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      // Create a project
+      const createdProject = await createProjectInDB(
+        prismaService,
+        defaultCreateProjectDto,
+      );
+
+      // Create another user who will make the join request
+      const requestUserDto = {
+        ...defaultCreateUserDto,
+        email: 'requester@email.com',
+        password: 'requestPassword',
+      };
+
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(requestUserDto)
+        .expect(201);
+
+      // Login with the requester user
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: requestUserDto.email,
+          password: requestUserDto.password,
+        })
+        .expect(200);
+
+      const token = loginResponse.headers.authorization;
+
+      const joinRequestDto = {
+        roleName: 'Developer',
+        message: 'I would love to contribute to this project!',
+      };
+
+      const { body: joinRequestResponse } = await request(app.getHttpServer())
+        .post(`/${createdProject.id}/join-requests`)
+        .set('Authorization', token)
+        .send(joinRequestDto)
+        .expect(201);
+      expect(joinRequestResponse).not.toBeNull();
+      expect(joinRequestResponse.projectId).toBe(createdProject.id);
+      expect(joinRequestResponse.roleName).toBe(joinRequestDto.roleName);
+      expect(joinRequestResponse.message).toBe(joinRequestDto.message);
+      expect(joinRequestResponse.status).toBe('Pending');
+    });
+
+    it('should return a 404 when project does not exist', async () => {
+      // Create a user who will make the join request
+      const requestUserDto = {
+        ...defaultCreateUserDto,
+        email: 'requester@email.com',
+        password: 'requestPassword',
+      };
+
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(requestUserDto)
+        .expect(201);
+
+      // Login with the requester user
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: requestUserDto.email,
+          password: requestUserDto.password,
+        })
+        .expect(200);
+
+      const token = loginResponse.headers.authorization;
+      const nonExistentProjectId = 999;
+
+      const joinRequestDto = {
+        roleName: 'Developer',
+        message: 'I would love to contribute!',
+      };
+
+      return await request(app.getHttpServer())
+        .post(`/${nonExistentProjectId}/join-requests`)
+        .set('Authorization', token)
+        .send(joinRequestDto)
+        .expect(404);
+    });
+
+    it('should return a 401 when user is not authenticated', async () => {
+      // Create project founder
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      // Create a project
+      const createdProject = await createProjectInDB(
+        prismaService,
+        defaultCreateProjectDto,
+      );
+
+      const joinRequestDto = {
+        roleName: 'Developer',
+        message: 'I would love to contribute!',
+      };
+
+      return await request(app.getHttpServer())
+        .post(`/${createdProject.id}/join-requests`)
+        .send(joinRequestDto)
+        .expect(401);
+    });
+
+    it('should return a 400 when required fields are missing', async () => {
+      // Create project founder
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      // Create a project
+      const createdProject = await createProjectInDB(
+        prismaService,
+        defaultCreateProjectDto,
+      );
+
+      // Create another user who will make the join request
+      const requestUserDto = {
+        ...defaultCreateUserDto,
+        email: 'requester@email.com',
+        password: 'requestPassword',
+      };
+
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(requestUserDto)
+        .expect(201);
+
+      // Login with the requester user
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: requestUserDto.email,
+          password: requestUserDto.password,
+        })
+        .expect(200);
+
+      const token = loginResponse.headers.authorization;
+
+      // Send request without required roleName field
+      const invalidJoinRequestDto = {
+        message: 'I would love to contribute!',
+      };
+
+      return await request(app.getHttpServer())
+        .post(`/${createdProject.id}/join-requests`)
+        .set('Authorization', token)
+        .send(invalidJoinRequestDto)
+        .expect(400);
+    });
+  });
 });
