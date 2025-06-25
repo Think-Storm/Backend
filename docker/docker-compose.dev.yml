@@ -16,6 +16,7 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
       JWT_COOKIE_EXPIRES_IN: ${JWT_COOKIE_EXPIRES_IN}
       ENVELOOP_API_KEY: ${ENVELOOP_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL}
     ports:
       - '${HOST_PORT:-3001}:3001'
     depends_on:
