@@ -12,13 +12,14 @@ import { PrismaExceptionFilter } from './common/exception-filter/prisma-exceptio
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: [frontendUrl],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
-  const configService = app.get(ConfigService);
   const redisService = new RedisService(configService);
   const redisThrottlerStorageService = new RedisThrottlerStorageService(
     redisService,
