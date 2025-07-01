@@ -11,7 +11,11 @@ export const errorMessages = {
   ERROR_DELETING_PROJECTS: 'An error occurred while deleting project.',
   ERROR_FINDING_PROJECTS: 'An error occurred while finding projects.',
   ERROR_SAVING_PROJECTS: 'An error occurred while saving projects.',
+  ERROR_UNSAVING_PROJECTS: 'An error occurred while unsaving projects.',
   USER_ALREADY_SAVED_PROJECT: 'User already saved the project.',
+  CURRENT_USER_NOT_SAVED_PROJECT: 'Current user did not save the project.',
+  UNSAVE_USER_IN_REQ_BODY_NOT_SAVED_PROJECT:
+    'User in request body did not save the project.',
   ERROR_GETTING_USER_BY_EMAIL: 'An error occurred while getting user by email.',
   ERROR_GETTING_USER_BY_ID: 'An error occurred while getting user by id.',
   ERROR_CREATING_USER: 'An error occurred while creating user.',

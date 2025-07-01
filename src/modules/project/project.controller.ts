@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import { ProjectService } from './project.service';
 import { GetProjectRequestDto } from './dtos/getProjectRequest.dto';
@@ -148,7 +149,7 @@ export class ProjectController {
   @Post(':id/save')
   @ApiOperation({ summary: 'Save projects' })
   @ApiParam({ name: 'id', required: true, description: 'Project ID' })
-  @ApiBody({ type: UpdateProjectRequestDto })
+  @ApiBody({ type: SaveProjectRequestDto })
   @ApiResponse({
     status: 201,
     description: 'Save project success',
@@ -171,6 +172,37 @@ export class ProjectController {
     return await this.projectService.saveProject(
       +projectId,
       saveProjectDto,
+      user.id,
+    );
+  }
+
+  @HttpCode(200)
+  @Patch(':id/unsave')
+  @ApiOperation({ summary: 'Unsave projects' })
+  @ApiParam({ name: 'id', required: true, description: 'Project ID' })
+  @ApiBody({ type: SaveProjectRequestDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Unsave project success',
+    type: ProjectResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. User can unsave the project only once.',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project or User not found',
+  })
+  @UseGuards(JwtAuthGuard)
+  async unsaveProject(
+    @Param('id') projectId: number,
+    @Body() unsaveProjectDto: SaveProjectRequestDto,
+    @GetUser() user: any,
+  ): Promise<ProjectResponseDto> {
+    return await this.projectService.unsaveProject(
+      +projectId,
+      unsaveProjectDto,
       user.id,
     );
   }
