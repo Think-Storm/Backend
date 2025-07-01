@@ -755,6 +755,7 @@ describe('/projects', () => {
         .set('Authorization', token)
         .send(joinRequestDto)
         .expect(201);
+
       expect(joinRequestResponse).not.toBeNull();
       expect(joinRequestResponse.projectId).toBe(createdProject.id);
       expect(joinRequestResponse.roleName).toBe(joinRequestDto.roleName);
@@ -870,5 +871,64 @@ describe('/projects', () => {
         .send(invalidJoinRequestDto)
         .expect(400);
     });
+  });
+
+  it('should return 400 if join request already exists', async () => {
+    // Create project founder
+    await request(app.getHttpServer())
+      .post('/register')
+      .send(defaultCreateUserDto)
+      .expect(201);
+
+    // Create a project
+    const createdProject = await createProjectInDB(
+      prismaService,
+      defaultCreateProjectDto,
+    );
+
+    // Create another user who will make the join request
+    const requestUserDto = {
+      ...defaultCreateUserDto,
+      email: 'requester@email.com',
+      password: 'requestPassword',
+    };
+
+    await request(app.getHttpServer())
+      .post('/register')
+      .send(requestUserDto)
+      .expect(201);
+
+    const loginResponse = await request(app.getHttpServer())
+      .post('/login')
+      .send({
+        email: requestUserDto.email,
+        password: requestUserDto.password,
+      })
+      .expect(200);
+
+    const token = loginResponse.headers.authorization;
+
+    const joinRequestDto = {
+      roleName: 'Developer',
+      message: 'I would love to contribute!',
+    };
+
+    // first join request (success)
+    await request(app.getHttpServer())
+      .post(`/${createdProject.id}/join-requests`)
+      .set('Authorization', token)
+      .send(joinRequestDto)
+      .expect(201);
+
+    // second join request (duplicate error)
+    const response = await request(app.getHttpServer())
+      .post(`/${createdProject.id}/join-requests`)
+      .set('Authorization', token)
+      .send(joinRequestDto)
+      .expect(400);
+
+    expect(response.body.message).toContain(
+      errorMessages.USER_ALREADY_JOINED_REQUEST,
+    );
   });
 });

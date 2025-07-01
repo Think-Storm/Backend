@@ -44,6 +44,16 @@ export const defaultUser: User = {
   lastUpdatedAt: new Date('2000-01-01'),
 };
 
+export const defaultUserWithoutSensitiveData = {
+  id: 1,
+  email: 'email@email.com',
+  username: 'username',
+  fullName: 'Full Name',
+  birthdate: new Date('2000-01-01'),
+  createdAt: new Date('2000-01-01'),
+  lastUpdatedAt: new Date('2000-01-01'),
+};
+
 export const createUserInDB = async (
   prismaService: PrismaService,
   defaultCreateUserDto: CreateUserDto,

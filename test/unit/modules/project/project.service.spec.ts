@@ -21,7 +21,10 @@ import prisma from '../../../../src/prisma/prisma.client';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { UserService } from '../../../../src/modules/user/user.service';
-import { defaultUser } from '../../../utils/user.utils';
+import {
+  defaultUser,
+  defaultUserWithoutSensitiveData,
+} from '../../../utils/user.utils';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
@@ -43,6 +46,7 @@ describe('ProjectService', () => {
   let projectRepository: ProjectRepository;
   let userRepository: UserRepository;
   let projectMapper: ProjectMapper;
+  let joinRequestMapper: JoinRequestMapper;
   let userService: UserService;
   let redisService: RedisService;
   let notificationService: NotificationService;
@@ -85,6 +89,7 @@ describe('ProjectService', () => {
     userRepository = module.get<UserRepository>(UserRepository);
     redisService = module.get<RedisService>(RedisService);
     notificationService = module.get<NotificationService>(NotificationService);
+    joinRequestMapper = module.get<JoinRequestMapper>(JoinRequestMapper);
   });
 
   afterEach(async () => {
@@ -267,6 +272,7 @@ describe('ProjectService', () => {
           lastUpdatedAt: expect.any(Date),
         },
         savedByUsers: [],
+        joinRequest: [],
         domainLabels: [],
         technicalLabels: [],
         createdAt: defaultProject.createdAt,
@@ -345,6 +351,7 @@ describe('ProjectService', () => {
         },
         founder: defaultUser,
         savedByUsers: [],
+        joinRequest: [],
       };
 
       const projectResponseDto = await projectService.updateProject(
@@ -669,11 +676,10 @@ describe('ProjectService', () => {
         .mockResolvedValue(null);
 
       try {
-        await projectService.postProjectJoinRequest(
+        await projectService.createJoinRequest(
           defaultJoinRequest.userId,
           defaultJoinRequest.projectId,
-          defaultJoinRequest.roleName,
-          defaultJoinRequest.message,
+          defaultJoinRequest,
         );
       } catch (e) {
         expect(e).toBeInstanceOf(ServiceException);
@@ -686,6 +692,31 @@ describe('ProjectService', () => {
       }
 
       expect(findProjectSpy).toHaveBeenCalledWith(defaultJoinRequest.projectId);
+    });
+
+    it('should throw 400 if join request already exists', async () => {
+      // Mock findProjectById to return a project
+      jest.spyOn(projectRepository, 'findProjectById').mockResolvedValue({
+        ...defaultProject,
+        joinRequest: [
+          {
+            userId: defaultUserWithoutSensitiveData.id,
+            projectId: defaultProject.id,
+            roleName: defaultJoinRequest.roleName,
+            status: defaultJoinRequest.status,
+            message: defaultJoinRequest.message,
+            user: { ...defaultUserWithoutSensitiveData },
+          },
+        ],
+      });
+
+      await expect(
+        projectService.createJoinRequest(
+          defaultJoinRequest.userId,
+          defaultJoinRequest.projectId,
+          defaultJoinRequest,
+        ),
+      ).rejects.toThrow(errorMessages.USER_ALREADY_JOINED_REQUEST);
     });
 
     it('should create a join request successfully', async () => {
@@ -706,14 +737,13 @@ describe('ProjectService', () => {
 
       // Mock mapper
       const mapperSpy = jest
-        .spyOn(JoinRequestMapper, 'joinRequestToJoinRequestResponseDto')
+        .spyOn(joinRequestMapper, 'joinRequestToJoinRequestResponseDto')
         .mockReturnValue(defaultJoinRequestResponseDto);
 
-      const result = await projectService.postProjectJoinRequest(
+      const result = await projectService.createJoinRequest(
         defaultJoinRequest.userId,
         defaultJoinRequest.projectId,
-        defaultJoinRequest.roleName,
-        defaultJoinRequest.message,
+        defaultJoinRequest,
       );
 
       expect(findProjectSpy).toHaveBeenCalledWith(defaultJoinRequest.projectId);

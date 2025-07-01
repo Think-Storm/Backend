@@ -20,6 +20,7 @@ import { SearchProjectDto } from './dtos/searchProject.dto';
 import { SaveProjectRequestDto } from './dtos/saveProjectRequest.dto';
 import { NotificationService } from '../notification/notification.service';
 import { JoinRequestResponseDto } from './dtos/joinRequestResponse.dto';
+import { CreateJoinRequestBodyDto } from './dtos/createJoinRequest.dto';
 
 @Injectable()
 export class ProjectService {
@@ -27,6 +28,7 @@ export class ProjectService {
     private userRepository: UserRepository,
     private projectRepository: ProjectRepository,
     private projectMapper: ProjectMapper,
+    private joinRequestMapper: JoinRequestMapper,
     private readonly userService: UserService,
     private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
@@ -362,15 +364,13 @@ export class ProjectService {
    * Creates a join request for a project
    * @param userId - The ID of the user making the join request
    * @param projectId - The ID of the project to join
-   * @param roleName - The role name for the join request
-   * @param message - Optional message for the join request
+   * @param jonRequestDto - The join request Body containing roleName and message
    * @returns A promise resolving to the created JoinRequest object
    */
-  async postProjectJoinRequest(
+  async createJoinRequest(
     userId: number,
     projectId: number,
-    roleName: string,
-    message?: string,
+    joinRequestDto: CreateJoinRequestBodyDto,
   ): Promise<JoinRequestResponseDto> {
     const project = await this.projectRepository.findProjectById(projectId);
     if (!project) {
@@ -379,19 +379,29 @@ export class ProjectService {
       );
     }
 
+    // Check if user sent the join request before
+    const existingUsers = project.joinRequest.map((user) => user.user.id);
+    if (existingUsers.includes(userId)) {
+      throw ServiceException.BadRequestException(
+        errorMessages.USER_ALREADY_JOINED_REQUEST,
+      );
+    }
+
     const joinRequest = await this.projectRepository.createJoinRequest(
       userId,
       projectId,
-      roleName,
-      message,
+      joinRequestDto.roleName,
+      joinRequestDto.message,
     );
 
     await this.notificationService.createJoinRequestNotification(
-      project.founderId,
+      project.founder?.id,
       project.title,
       projectId,
     );
 
-    return JoinRequestMapper.joinRequestToJoinRequestResponseDto(joinRequest);
+    return this.joinRequestMapper.joinRequestToJoinRequestResponseDto(
+      joinRequest,
+    );
   }
 }

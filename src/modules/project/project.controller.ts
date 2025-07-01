@@ -216,20 +216,23 @@ export class ProjectController {
     type: JoinRequestResponseDto,
   })
   @ApiResponse({
+    status: 400,
+    description: 'Join request already sent before',
+  })
+  @ApiResponse({
     status: 404,
     description: 'Project not found',
   })
   @UseGuards(JwtAuthGuard)
   async createJoinRequest(
-    @Param() param: GetProjectRequestDto,
-    @Body() body: CreateJoinRequestBodyDto,
+    @Param('id') projectId: number,
+    @Body() jonRequestDto: CreateJoinRequestBodyDto,
     @GetUser() user: any,
   ): Promise<JoinRequestResponseDto> {
-    return await this.projectService.postProjectJoinRequest(
+    return await this.projectService.createJoinRequest(
       user.id,
-      param.id,
-      body.roleName,
-      body.message,
+      +projectId,
+      jonRequestDto,
     );
   }
 }

@@ -51,6 +51,13 @@ export class ProjectMapper {
       plainProject.savedByUsers = project.savedByUsers.map((user) => user.user);
     }
 
+    // Transform joinRequest array if they exist and have the complex structure
+    if (project.joinRequest?.length > 0 && 'user' in project.joinRequest[0]) {
+      plainProject.joinRequest = project.joinRequest.map(
+        (joinRequest) => joinRequest.user,
+      );
+    }
+
     return plainToInstance(ProjectResponseDto, plainProject, {
       excludeExtraneousValues: true,
     });
