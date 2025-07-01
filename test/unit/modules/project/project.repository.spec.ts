@@ -327,4 +327,47 @@ describe('ProjectRepository', () => {
       ).rejects.toThrow(ServiceException);
     });
   });
+
+  describe('unsaveProject', () => {
+    it('should unsave project for given user(s)', async () => {
+      // Create initial test data
+      const user = await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+      const project = await createProjectInDB(
+        prismaService,
+        defaultCreateProjectDto,
+      );
+
+      // users save project fist
+      await projectRepository.saveProject(project.id, {
+        saved_by_users: [user.id],
+      });
+
+      // unsave test
+      const unsaveProjectDto: SaveProjectRequestDto = {
+        saved_by_users: [user.id],
+      };
+
+      const unsavedProject = await projectRepository.unsaveProject(
+        project.id,
+        unsaveProjectDto,
+      );
+
+      expect(unsavedProject).toBeDefined();
+      expect(unsavedProject.id).toBe(project.id);
+      expect(unsavedProject.savedByUsers).toHaveLength(0);
+    });
+
+    it('should handle errors when unsaving project', async () => {
+      const unsaveProjectDto: SaveProjectRequestDto = {
+        saved_by_users: [999],
+      };
+
+      await expect(
+        projectRepository.unsaveProject(999, unsaveProjectDto),
+      ).rejects.toThrow(ServiceException);
+    });
+  });
 });

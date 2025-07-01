@@ -310,6 +310,20 @@ export const defaultSortBy: Array<object> = [
   },
 ];
 
+export const defaultSavedProject = {
+  ...defaultProject,
+  savedByUsers: [
+    {
+      userId: defaultUser.id,
+      projectId: defaultProject.id,
+      savedAt: new Date(),
+      user: {
+        ...defaultUser,
+      },
+    },
+  ],
+};
+
 // Define the necessary structure for testing the mapper
 export type MockProjectDomainLabel = {
   projectId?: number;
