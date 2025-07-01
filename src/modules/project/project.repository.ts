@@ -414,6 +414,81 @@ export class ProjectRepository {
   }
 
   /**
+   * Unsave a Project by userId
+   * @param projectId - The id of the Project to unsave
+   * @param unsaveProjectDto - The data transfer object containing unsaved users Id
+   * @returns A promise resolving to a Project object or null
+   */
+  async unsaveProject(
+    projectId: number,
+    unsaveProjectDto: SaveProjectRequestDto,
+  ): Promise<ProjectWithRelations | null> {
+    const { saved_by_users } = unsaveProjectDto;
+    try {
+      return await this.prisma.project.update({
+        where: {
+          id: projectId,
+        },
+        data: {
+          savedByUsers: {
+            deleteMany: {
+              userId: {
+                in: saved_by_users,
+              },
+            },
+          },
+        },
+        include: {
+          language: true,
+          users: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
+          founder: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
+          domainLabels: {
+            include: {
+              label: true,
+            },
+          },
+          technicalLabels: {
+            include: {
+              label: true,
+            },
+          },
+          like: true,
+          involvement: true,
+          joinRequest: true,
+          savedByUsers: {
+            include: {
+              user: {
+                omit: {
+                  password: true,
+                  passwordSalt: true,
+                  passwordChangedAt: true,
+                },
+              },
+            },
+          },
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_UNSAVING_PROJECTS,
+        error,
+      );
+    }
+  }
+
+  /**
    * Creates a join request for a project
    * @param userId - The ID of the user making the join request
    * @param projectId - The ID of the project to join
