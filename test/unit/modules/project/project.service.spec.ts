@@ -15,6 +15,7 @@ import {
   secondProjectResponseDto,
   defaultJoinRequest,
   defaultJoinRequestResponseDto,
+  defaultSavedProject,
 } from '../../../utils/project.utils';
 import prisma from '../../../../src/prisma/prisma.client';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
@@ -557,7 +558,110 @@ describe('ProjectService', () => {
     });
   });
 
-  describe('postProjectJoinRequest', () => {
+  describe('unsaveProject', () => {
+    const mockUserId = 1;
+    const unsaveProjectDto: SaveProjectRequestDto = {
+      saved_by_users: [mockUserId],
+    };
+
+    it('should unsave project when project and user exist', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultSavedProject);
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValue(defaultUser);
+      jest
+        .spyOn(projectRepository, 'unsaveProject')
+        .mockResolvedValue(defaultProject);
+      jest.spyOn(redisService, 'flushDb').mockResolvedValue(undefined);
+
+      const result = await projectService.unsaveProject(
+        defaultProject.id,
+        unsaveProjectDto,
+        mockUserId,
+      );
+
+      expect(result).toBeDefined();
+      expect(projectRepository.findProjectById).toHaveBeenCalledWith(
+        defaultProject.id,
+      );
+      expect(projectRepository.unsaveProject).toHaveBeenCalledWith(
+        defaultProject.id,
+        { saved_by_users: [mockUserId] },
+      );
+      expect(redisService.flushDb).toHaveBeenCalled();
+    });
+
+    it('should throw 404 if project does not exist', async () => {
+      jest.spyOn(projectRepository, 'findProjectById').mockResolvedValue(null);
+
+      await expect(
+        projectService.unsaveProject(999, unsaveProjectDto, mockUserId),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it('should throw 404 if user in saved_by_users does not exist', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultSavedProject);
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValueOnce(null);
+
+      await expect(
+        projectService.unsaveProject(
+          defaultProject.id,
+          { saved_by_users: [999] },
+          mockUserId,
+        ),
+      ).rejects.toThrow(ServiceException);
+    });
+
+    it('should throw 400 if current user did not save the project', async () => {
+      const mockProject = {
+        ...defaultProject,
+        savedByUsers: [
+          {
+            userId: 2,
+            projectId: defaultProject.id,
+            savedAt: new Date(),
+            user: {
+              ...defaultUser,
+              id: 2,
+            },
+          },
+        ],
+      };
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(mockProject);
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValue(defaultUser);
+
+      await expect(
+        projectService.unsaveProject(
+          defaultProject.id,
+          unsaveProjectDto,
+          mockUserId,
+        ),
+      ).rejects.toThrow(errorMessages.CURRENT_USER_NOT_SAVED_PROJECT);
+    });
+
+    it('should throw 400 if user in unsaveProjectDto did not save the project', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultSavedProject);
+      jest.spyOn(userRepository, 'getUserById').mockResolvedValue(defaultUser);
+
+      await expect(
+        projectService.unsaveProject(
+          defaultProject.id,
+          { saved_by_users: [2] },
+          mockUserId,
+        ),
+      ).rejects.toThrow(
+        errorMessages.UNSAVE_USER_IN_REQ_BODY_NOT_SAVED_PROJECT,
+      );
+    });
+  });
+
+  describe('projectJoinRequest', () => {
     it('should throw a 404 exception if project is not found', async () => {
       // Mock findProjectById to return null
       const findProjectSpy = jest
