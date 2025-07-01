@@ -12,6 +12,7 @@ import * as redisStore from 'cache-manager-ioredis';
 import { RedisService } from '../../common/caching/redisCaching.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationRepository } from '../notification/notification.repository';
+import { JoinRequestMapper } from './dtos/joinRequest.mapper';
 
 /**
  * The ProjectModule is responsible for managing the project-related components
@@ -34,6 +35,7 @@ import { NotificationRepository } from '../notification/notification.repository'
     ProjectRepository,
     PrismaService,
     ProjectMapper,
+    JoinRequestMapper,
     ConfigService,
     RedisService,
     NotificationService,

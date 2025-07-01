@@ -1,5 +1,6 @@
 import { JoinRequest } from '@prisma/client';
 import { JoinRequestResponseDto } from './joinRequestResponse.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class JoinRequestMapper {
   /**
@@ -7,7 +8,8 @@ export class JoinRequestMapper {
    * @param joinRequest - The Prisma JoinRequest object
    * @returns A JoinRequestResponseDto object
    */
-  static joinRequestToJoinRequestResponseDto(
+  @ApiProperty({ type: JoinRequestResponseDto })
+  joinRequestToJoinRequestResponseDto(
     joinRequest: JoinRequest,
   ): JoinRequestResponseDto {
     return {
