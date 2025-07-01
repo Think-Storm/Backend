@@ -269,6 +269,55 @@ describe('ProjectController', () => {
     });
   });
 
+  describe('unsaveProject', () => {
+    it('should unsave saved by users in project and return project response', async () => {
+      const mockRequest = createMockRequestWithUser(
+        defaultUserResponseDto,
+      ) as any;
+      mockRequest.user = { id: 1 };
+      const unsaveProjectDto: SaveProjectRequestDto = { saved_by_users: [1] };
+
+      const serviceSpy = jest
+        .spyOn(projectService, 'unsaveProject')
+        .mockResolvedValue(defaultProjectResponseDto);
+
+      const result = await projectController.unsaveProject(
+        defaultProject.id,
+        unsaveProjectDto,
+        mockRequest.user,
+      );
+
+      expect(result).toEqual(defaultProjectResponseDto);
+      expect(serviceSpy).toHaveBeenCalledWith(
+        defaultProject.id,
+        unsaveProjectDto,
+        mockRequest.user.id,
+      );
+    });
+
+    it('should handle errors from service layer', async () => {
+      const mockRequest = createMockRequestWithUser(
+        defaultUserResponseDto,
+      ) as any;
+      mockRequest.user = { id: 1 };
+      const unsaveProjectDto: SaveProjectRequestDto = { saved_by_users: [1] };
+
+      jest
+        .spyOn(projectService, 'unsaveProject')
+        .mockRejectedValue(
+          ServiceException.EntityNotFoundException('Project not found'),
+        );
+
+      await expect(
+        projectController.unsaveProject(
+          defaultProject.id,
+          unsaveProjectDto,
+          mockRequest.user,
+        ),
+      ).rejects.toThrow(ServiceException);
+    });
+  });
+
   describe('createJoinRequest function', () => {
     it('should pass correct parameters to service when authenticated', async () => {
       const mockRequest = createMockRequestWithUser(
