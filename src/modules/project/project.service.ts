@@ -286,6 +286,79 @@ export class ProjectService {
   }
 
   /**
+   * Unsaves a project
+   * @param projectId - project Id to be unsaved
+   * @param unsaveProjectDto - The data transfer object for unsaving a project
+   * @param userId - user Id requested to unsave the project
+   * @returns A promise resolving to a ProjectResponseDto
+   */
+  async unsaveProject(
+    projectId: number,
+    unsaveProjectDto: SaveProjectRequestDto,
+    userId: number,
+  ): Promise<ProjectResponseDto> {
+    const savingProject =
+      await this.projectRepository.findProjectById(projectId);
+
+    if (!savingProject) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    }
+
+    // Check saved_by_users array if each user id exists
+    for (const id of unsaveProjectDto.saved_by_users) {
+      const user = await this.userRepository.getUserById(id);
+      if (!user) {
+        throw ServiceException.EntityNotFoundException(
+          errorMessages.ENTITY_NOT_FOUND('User', id.toString()),
+        );
+      }
+    }
+
+    // Check if current user exists in saved users array
+    const savedUsersArr = savingProject.savedByUsers.map((user) => user.userId);
+
+    if (!savedUsersArr.includes(userId)) {
+      throw ServiceException.BadRequestException(
+        errorMessages.CURRENT_USER_NOT_SAVED_PROJECT,
+      );
+    }
+
+    // Check if each user in unsaveProjectDto exists in saved users array
+    unsaveProjectDto.saved_by_users.forEach((userId) => {
+      if (!savedUsersArr.includes(userId)) {
+        throw ServiceException.BadRequestException(
+          errorMessages.UNSAVE_USER_IN_REQ_BODY_NOT_SAVED_PROJECT,
+        );
+      }
+    });
+
+    // add current user Id if current user doesn't exist in unsaveProjectDto
+    if (!unsaveProjectDto.saved_by_users.includes(userId)) {
+      unsaveProjectDto.saved_by_users = [
+        ...unsaveProjectDto.saved_by_users,
+        userId,
+      ];
+    }
+
+    // remove duplication
+    unsaveProjectDto.saved_by_users = [
+      ...new Set(unsaveProjectDto.saved_by_users),
+    ];
+
+    const unsavedProject = await this.projectRepository.unsaveProject(
+      projectId,
+      unsaveProjectDto,
+    );
+
+    //cache invalidation
+    await this.redisService.flushDb();
+
+    return this.projectMapper.projectToProjectResponseDto(unsavedProject);
+  }
+
+  /**
    * Creates a join request for a project
    * @param userId - The ID of the user making the join request
    * @param projectId - The ID of the project to join
