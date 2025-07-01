@@ -45,6 +45,17 @@ export class ProjectRepository {
               },
             },
           },
+          joinRequest: {
+            include: {
+              user: {
+                omit: {
+                  password: true,
+                  passwordSalt: true,
+                  passwordChangedAt: true,
+                },
+              },
+            },
+          },
         },
       });
     } catch (error) {
@@ -391,7 +402,17 @@ export class ProjectRepository {
           },
           like: true,
           involvement: true,
-          joinRequest: true,
+          joinRequest: {
+            include: {
+              user: {
+                omit: {
+                  password: true,
+                  passwordSalt: true,
+                  passwordChangedAt: true,
+                },
+              },
+            },
+          },
           savedByUsers: {
             include: {
               user: {
@@ -466,7 +487,17 @@ export class ProjectRepository {
           },
           like: true,
           involvement: true,
-          joinRequest: true,
+          joinRequest: {
+            include: {
+              user: {
+                omit: {
+                  password: true,
+                  passwordSalt: true,
+                  passwordChangedAt: true,
+                },
+              },
+            },
+          },
           savedByUsers: {
             include: {
               user: {

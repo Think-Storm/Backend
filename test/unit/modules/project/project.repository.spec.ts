@@ -370,4 +370,48 @@ describe('ProjectRepository', () => {
       ).rejects.toThrow(ServiceException);
     });
   });
+
+  describe('createJoinRequest', () => {
+    it('should create a join request successfully', async () => {
+      // Arrange
+      const user = await userRepository.createUser(
+        defaultCreateUserDto,
+        defaultPasswordSalt,
+      );
+      const project = await createProjectInDB(
+        prismaService,
+        defaultCreateProjectDto,
+      );
+
+      const joinRequestData = {
+        userId: user.id,
+        projectId: project.id,
+        roleName: 'Developer',
+        message: 'I want to join!',
+      };
+
+      const joinRequest = await projectRepository.createJoinRequest(
+        joinRequestData.userId,
+        joinRequestData.projectId,
+        joinRequestData.roleName,
+        joinRequestData.message,
+      );
+
+      expect(joinRequest).toBeDefined();
+      expect(joinRequest.userId).toBe(user.id);
+      expect(joinRequest.projectId).toBe(project.id);
+      expect(joinRequest.roleName).toBe('Developer');
+      expect(joinRequest.message).toBe('I want to join!');
+    });
+
+    it('should throw ServiceException on DB error', async () => {
+      jest
+        .spyOn(prismaService.joinRequest, 'create')
+        .mockRejectedValue(new Error('DB error'));
+
+      await expect(
+        projectRepository.createJoinRequest(1, 1, 'Developer', 'msg'),
+      ).rejects.toThrow(ServiceException);
+    });
+  });
 });

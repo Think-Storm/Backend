@@ -59,4 +59,6 @@ export const errorMessages = {
   ERROR_UPDATING_USER_PROFILE: 'An error occurred while updating user profile.',
   ERROR_DELETING_USER_PROFILE: 'An error occurred while deleting user profile.',
   ERROR_CREATING_JOIN_REQUEST: 'An error occurred while creating join request.',
+  USER_ALREADY_JOINED_REQUEST:
+    'You have already sent a join request to this project.',
 };

@@ -1,6 +1,5 @@
 import {
   Involvement,
-  JoinRequest,
   Language,
   Like,
   Prisma,
@@ -22,7 +21,9 @@ export type ProjectWithLabels = Project & {
   founder?: UserWithoutSensitiveData;
   like?: Like[];
   involvement?: Involvement[];
-  joinRequest?: JoinRequest[];
+  joinRequest?: {
+    user: UserWithoutSensitiveData;
+  }[];
   savedByUsers?: {
     savedAt: Date;
     user: UserWithoutSensitiveData;
@@ -47,6 +48,17 @@ export type ProjectWithRelations = Prisma.ProjectGetPayload<{
       };
     };
     savedByUsers: {
+      include: {
+        user: {
+          omit: {
+            password: true;
+            passwordSalt: true;
+            passwordChangedAt: true;
+          };
+        };
+      };
+    };
+    joinRequest: {
       include: {
         user: {
           omit: {

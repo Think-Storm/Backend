@@ -1,9 +1,9 @@
-import { User } from '@prisma/client';
 import {
   ProjectResponse,
   Language,
   ProjectStatus,
   Goal,
+  User,
 } from '@think-storm/contracts';
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
@@ -106,4 +106,10 @@ export class ProjectResponseDto implements ProjectResponse {
     description: 'The users array that saved current project',
   })
   savedByUsers?: User[];
+
+  @Expose()
+  @ApiProperty({
+    description: 'The users array that requested to join current project',
+  })
+  joinRequest?: User[];
 }

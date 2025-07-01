@@ -333,12 +333,12 @@ describe('ProjectController', () => {
       };
 
       const serviceSpy = jest
-        .spyOn(projectService, 'postProjectJoinRequest')
+        .spyOn(projectService, 'createJoinRequest')
         .mockResolvedValue(defaultJoinRequestResponseDto);
 
       // Execute
       await projectController.createJoinRequest(
-        { id: projectId },
+        projectId,
         joinRequestBody,
         mockRequest.user,
       );
@@ -347,8 +347,7 @@ describe('ProjectController', () => {
       expect(serviceSpy).toHaveBeenCalledWith(
         mockRequest.user.id, // User ID from JWT
         projectId, // Project ID from URL parameter
-        joinRequestBody.roleName, // Role name from body
-        joinRequestBody.message, // Message from body
+        joinRequestBody, // Join Request body
       );
     });
 
@@ -366,12 +365,12 @@ describe('ProjectController', () => {
       };
 
       const serviceSpy = jest
-        .spyOn(projectService, 'postProjectJoinRequest')
+        .spyOn(projectService, 'createJoinRequest')
         .mockResolvedValue(defaultJoinRequestResponseDto);
 
       // Execute
       const result = await projectController.createJoinRequest(
-        { id: projectId },
+        projectId,
         joinRequestBody,
         mockRequest.user,
       );
