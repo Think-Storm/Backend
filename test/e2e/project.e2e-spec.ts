@@ -613,6 +613,101 @@ describe('/projects', () => {
     });
   });
 
+  describe('/projects/:id/unsave PATCH (Unsave Project)', () => {
+    let userId: number;
+    let token: string;
+    let createdProject: any;
+
+    beforeEach(async () => {
+      // Register and login user
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      // register second user
+      await request(app.getHttpServer())
+        .post('/register')
+        .send({ ...defaultCreateUserDto, email: 'user2@email.com' })
+        .expect(201);
+
+      userId = registerResponse.body.data.id;
+
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: defaultCreateUserDto.email,
+          password: defaultCreateUserDto.password,
+        })
+        .expect(200);
+
+      token = loginResponse.headers.authorization;
+
+      // Create project
+      createdProject = await createProjectInDB(
+        prismaService,
+        defaultCreateProjectDto,
+      );
+
+      // Save project
+      await request(app.getHttpServer())
+        .post(`/${createdProject.id}/save`)
+        .set('Authorization', token)
+        .send({ saved_by_users: [userId] })
+        .expect(201);
+    });
+
+    it('should unsave project successfully', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/${createdProject.id}/unsave`)
+        .set('Authorization', token)
+        .send({ saved_by_users: [userId] })
+        .expect(200);
+
+      expect(response.body).toBeDefined();
+      expect(response.body.id).toBe(createdProject.id);
+      expect(response.body.savedByUsers).toHaveLength(0);
+    });
+
+    it('should return 404 if project does not exist', async () => {
+      await request(app.getHttpServer())
+        .patch('/9999/unsave')
+        .set('Authorization', token)
+        .send({ saved_by_users: [userId] })
+        .expect(404);
+    });
+
+    it('should return 400 if user did not save the project', async () => {
+      // Unsave with a user who never saved the project
+      await request(app.getHttpServer())
+        .patch(`/${createdProject.id}/unsave`)
+        .set('Authorization', token)
+        .send({ saved_by_users: [2] })
+        .expect(400);
+    });
+
+    it('should return 401 when not authenticated', async () => {
+      await request(app.getHttpServer())
+        .patch(`/${createdProject.id}/unsave`)
+        .send({ saved_by_users: [userId] })
+        .expect(401);
+    });
+
+    it('should return 400 if saved_by_users is missing or not an array', async () => {
+      await request(app.getHttpServer())
+        .patch(`/${createdProject.id}/unsave`)
+        .set('Authorization', token)
+        .send({})
+        .expect(400);
+
+      await request(app.getHttpServer())
+        .patch(`/${createdProject.id}/unsave`)
+        .set('Authorization', token)
+        .send({ saved_by_users: 'not-an-array' })
+        .expect(400);
+    });
+  });
+
   describe('/:id/join-requests POST (Create Join Request)', () => {
     it('should return a 201 when creating a join request successfully', async () => {
       // Create project founder
