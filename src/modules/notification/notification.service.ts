@@ -5,18 +5,25 @@ import { notificationMessages } from '../../common/enums/notificationMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { NotificationType } from '@think-storm/contracts';
+import { NotificationMapper } from './dtos/notification.mapper';
 @Injectable()
 export class NotificationService {
-  constructor(private notificationRepository: NotificationRepository) {}
+  constructor(
+    private notificationRepository: NotificationRepository,
+    private notificationMapper: NotificationMapper,
+  ) {}
 
   async createWelcomeNotification(
     userId: number,
     name: string,
   ): Promise<Notification> {
-    return await this.notificationRepository.create(
+    const notification = await this.notificationRepository.create(
       userId,
       NotificationType.Welcome,
       notificationMessages.WELCOME(name),
+    );
+    return this.notificationMapper.notificationToNotificationResponseDto(
+      notification,
     );
   }
 
@@ -27,11 +34,14 @@ export class NotificationService {
   ) {
     const description = notificationMessages.JOIN_REQUEST(projectTitle);
     const link = `/projects/${projectId}`;
-    return await this.notificationRepository.create(
+    const notification = await this.notificationRepository.create(
       userId,
       NotificationType.JoinRequest,
       description,
       link,
+    );
+    return this.notificationMapper.notificationToNotificationResponseDto(
+      notification,
     );
   }
 
@@ -42,11 +52,14 @@ export class NotificationService {
   ) {
     const description = notificationMessages.ACCEPT_JOIN_REQUEST(projectTitle);
     const link = `/projects/${projectId}`;
-    return await this.notificationRepository.create(
+    const notification = await this.notificationRepository.create(
       userId,
       NotificationType.AcceptJoinRequest,
       description,
       link,
+    );
+    return this.notificationMapper.notificationToNotificationResponseDto(
+      notification,
     );
   }
 
@@ -57,16 +70,23 @@ export class NotificationService {
   ) {
     const description = notificationMessages.INVITE_TO_PROJECT(projectTitle);
     const link = `/projects/${projectId}`;
-    return await this.notificationRepository.create(
+    const notification = await this.notificationRepository.create(
       userId,
       NotificationType.InviteToProject,
       description,
       link,
     );
+    return this.notificationMapper.notificationToNotificationResponseDto(
+      notification,
+    );
   }
 
   async getUserNotifications(userId: number) {
-    return await this.notificationRepository.findAllByUserId(userId);
+    const notifications =
+      await this.notificationRepository.findAllByUserId(userId);
+    return this.notificationMapper.notificationsToNotificationResponseDtos(
+      notifications,
+    );
   }
 
   async deleteNotification(id: number) {
@@ -90,6 +110,10 @@ export class NotificationService {
         errorMessages.ENTITY_NOT_FOUND('Notification', id.toString()),
       );
     }
-    return await this.notificationRepository.updateReadStatus(id, isRead);
+    const updatedNotification =
+      await this.notificationRepository.updateReadStatus(id, isRead);
+    return this.notificationMapper.notificationToNotificationResponseDto(
+      updatedNotification,
+    );
   }
 }

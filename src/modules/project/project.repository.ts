@@ -6,7 +6,7 @@ import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
 import { SearchProjectDto } from './dtos/searchProject.dto';
-import { ProjectWithRelations } from './types/project.types';
+import { PrismaProjectWithRelations } from './types/project.types';
 import { SaveProjectRequestDto } from './dtos/saveProjectRequest.dto';
 
 @Injectable()
@@ -18,7 +18,9 @@ export class ProjectRepository {
    * @param id - The id of the Project to find
    * @returns A promise resolving to a Project object or null
    */
-  async findProjectById(id: number): Promise<ProjectWithRelations | null> {
+  async findProjectById(
+    id: number,
+  ): Promise<PrismaProjectWithRelations | null> {
     try {
       return await this.prisma.project.findUnique({
         where: {
@@ -359,7 +361,7 @@ export class ProjectRepository {
   async saveProject(
     projectId: number,
     saveProjectDto: SaveProjectRequestDto,
-  ): Promise<ProjectWithRelations | null> {
+  ): Promise<PrismaProjectWithRelations | null> {
     const { saved_by_users } = saveProjectDto;
     try {
       return await this.prisma.project.update({
@@ -443,7 +445,7 @@ export class ProjectRepository {
   async unsaveProject(
     projectId: number,
     unsaveProjectDto: SaveProjectRequestDto,
-  ): Promise<ProjectWithRelations | null> {
+  ): Promise<PrismaProjectWithRelations | null> {
     const { saved_by_users } = unsaveProjectDto;
     try {
       return await this.prisma.project.update({

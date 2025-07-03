@@ -23,8 +23,6 @@ model User {
   password          String
   passwordSalt      String         @map("password_salt")
   passwordChangedAt DateTime?      @map("password_changed_at")
-  fullName          String?        @map("full_name")
-  birthdate         DateTime?
   founded_projects  Project[]      @relation("FounderProjects")
   savedProjects     SavedProject[]
   projects          Project[]
@@ -44,6 +42,8 @@ model UserProfile {
   userId       Int                         @unique @map("user_id")
   avatar       String?
   bio          String?
+  fullName          String?        @map("full_name")
+  birthdate         DateTime?
   preferredRole UserProfileRole[]                  
   location     String?
   website      String?

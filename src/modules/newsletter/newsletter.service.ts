@@ -20,7 +20,7 @@ export class NewsletterService {
    * @returns A Promise that resolves to the newsletter subscription if it exists, or null if it does not
    */
   async doesASubscriptionExist(email: string): Promise<NewsletterSubscription> {
-    return this.newsletterRepository.getSubscriptionByEmail(email);
+    return await this.newsletterRepository.getSubscriptionByEmail(email);
   }
 
   /**

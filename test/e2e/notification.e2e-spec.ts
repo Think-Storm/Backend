@@ -39,8 +39,6 @@ describe('NotificationController (e2e)', () => {
         password: hashedPassword,
         passwordSalt: salt,
         passwordChangedAt: new Date(),
-        fullName: 'Test User',
-        birthdate: new Date(),
       },
     });
 

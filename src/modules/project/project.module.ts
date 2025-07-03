@@ -13,6 +13,7 @@ import { RedisService } from '../../common/caching/redisCaching.service';
 import { NotificationService } from '../notification/notification.service';
 import { NotificationRepository } from '../notification/notification.repository';
 import { JoinRequestMapper } from './dtos/joinRequest.mapper';
+import { NotificationMapper } from '../notification/dtos/notification.mapper';
 
 /**
  * The ProjectModule is responsible for managing the project-related components
@@ -39,6 +40,7 @@ import { JoinRequestMapper } from './dtos/joinRequest.mapper';
     ConfigService,
     RedisService,
     NotificationService,
+    NotificationMapper,
     NotificationRepository,
   ],
 })

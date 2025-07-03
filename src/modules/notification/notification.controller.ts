@@ -31,7 +31,7 @@ export class NotificationController {
     description: 'Returns all notifications for the user',
   })
   async getAllNotifications(@GetUser() user: User) {
-    return this.notificationService.getUserNotifications(user.id);
+    return await this.notificationService.getUserNotifications(user.id);
   }
 
   @Delete(':id')
@@ -45,7 +45,7 @@ export class NotificationController {
     description: 'Notification not found',
   })
   async deleteNotification(@Param('id', ParseIntPipe) id: number) {
-    return this.notificationService.deleteNotification(id);
+    return await this.notificationService.deleteNotification(id);
   }
 
   @Delete()
@@ -57,7 +57,7 @@ export class NotificationController {
     description: 'All notifications deleted successfully',
   })
   async deleteAllNotifications(@GetUser() user: User) {
-    return this.notificationService.clearAllNotifications(user.id);
+    return await this.notificationService.clearAllNotifications(user.id);
   }
 
   @Patch(':id/read')
@@ -78,6 +78,6 @@ export class NotificationController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: SetNotificationReadDto,
   ) {
-    return this.notificationService.setNotificationRead(id, dto.isRead);
+    return await this.notificationService.setNotificationRead(id, dto.isRead);
   }
 }

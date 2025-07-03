@@ -96,12 +96,6 @@ describe('/profiles', () => {
       expect(registerResponse.body.data.username).toBe(
         defaultCreateUserDto.username,
       );
-      expect(registerResponse.body.data.birthdate).toBe(
-        defaultCreateUserDto.birthdate.toISOString(),
-      );
-      expect(registerResponse.body.data.fullName).toBe(
-        defaultCreateUserDto.fullName,
-      );
       expect(registerResponse.body.data.createdAt).toBeDefined();
       expect(registerResponse.body.data.lastUpdatedAt).toBeDefined();
 
@@ -127,6 +121,12 @@ describe('/profiles', () => {
       );
       expect(createProfileResponse.body.data.website).toBe(
         defaultE2ECreateProfileDto.website,
+      );
+      expect(createProfileResponse.body.data.fullName).toBe(
+        defaultE2ECreateProfileDto.fullName,
+      );
+      expect(createProfileResponse.body.data.birthdate).toBe(
+        defaultE2ECreateProfileDto.birthdate.toISOString(),
       );
       // Test roles
       expect(createProfileResponse.body.data.preferredRole).toHaveLength(1);
@@ -197,6 +197,8 @@ describe('/profiles', () => {
           ...defaultE2ECreateProfileDto,
           avatar: 'https://example.com/avatar2.jpg',
           bio: 'Another bio',
+          fullName: 'Full Name2',
+          birthdate: new Date('2000-01-01'),
           preferred_role: [UserRole.FrontendDeveloper],
           location: 'Another Location',
           website: 'https://example2.com',
@@ -276,6 +278,12 @@ describe('/profiles', () => {
       );
       expect(getProfileResponse.body.data.website).toBe(
         defaultE2ECreateProfileDto.website,
+      );
+      expect(getProfileResponse.body.data.fullName).toBe(
+        defaultE2ECreateProfileDto.fullName,
+      );
+      expect(getProfileResponse.body.data.birthdate).toBe(
+        defaultE2ECreateProfileDto.birthdate.toISOString(),
       );
 
       // Verify associations

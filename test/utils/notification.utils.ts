@@ -1,4 +1,4 @@
-import { NotificationType } from '@think-storm/contracts';
+import { NotificationResponse, NotificationType } from '@think-storm/contracts';
 import { notificationMessages } from '../../src/common/enums/notificationMessages';
 import { CreateNotificationDto } from '../../src/modules/notification/dtos/createNotification.dto';
 import { User } from '@prisma/client';
@@ -10,8 +10,6 @@ export const mockUser: User = {
   password: 'hashedPassword',
   passwordSalt: 'salt',
   passwordChangedAt: new Date(),
-  fullName: 'Test User',
-  birthdate: new Date(),
   createdAt: new Date(),
   lastUpdatedAt: new Date(),
 };
@@ -48,7 +46,7 @@ export const defaultInviteToProjectNotification: CreateNotificationDto = {
   isRead: false,
 };
 
-export const mockNotification = {
+export const mockNotification: NotificationResponse = {
   id: 1,
   userId: 1,
   type: NotificationType.Welcome,

@@ -40,6 +40,7 @@ import { SaveProjectRequestDto } from '../../../../src/modules/project/dtos/save
 import { NotificationService } from '../../../../src/modules/notification/notification.service';
 import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
 import { JoinRequestMapper } from '../../../../src/modules/project/dtos/joinRequest.mapper';
+import { NotificationMapper } from '../../../../src/modules/notification/dtos/notification.mapper';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
@@ -79,6 +80,7 @@ describe('ProjectService', () => {
         NotificationService,
         NotificationRepository,
         JoinRequestMapper,
+        NotificationMapper,
       ],
     }).compile();
 
@@ -521,8 +523,6 @@ describe('ProjectService', () => {
               id: mockUserId,
               email: 'test@test.com',
               username: 'testuser',
-              fullName: 'Test User',
-              birthdate: new Date(),
               createdAt: new Date(),
               lastUpdatedAt: new Date(),
             },

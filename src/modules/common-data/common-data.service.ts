@@ -3,7 +3,7 @@ import { CommonDataRepository } from './common-data.repository';
 import { CommonDataMapper } from './dto/common-data.mapper';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
-import { LanguageResponseDto } from './dto/language.dto';
+import { LanguageResponseDto } from './dto/commonDataResponse.dto';
 
 @Injectable()
 export class CommonDataService {

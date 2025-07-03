@@ -39,6 +39,7 @@ import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { NotificationService } from '../../../../src/modules/notification/notification.service';
 import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
 import { JoinRequestMapper } from '../../../../src/modules/project/dtos/joinRequest.mapper';
+import { NotificationMapper } from '../../../../src/modules/notification/dtos/notification.mapper';
 
 describe('ProjectController', () => {
   let projectController: ProjectController;
@@ -73,6 +74,7 @@ describe('ProjectController', () => {
         RedisService,
         NotificationService,
         NotificationRepository,
+        NotificationMapper,
         JoinRequestMapper,
       ],
     })
