@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNotEmpty, IsEmail } from 'class-validator';
+import { UpdatePassword } from '@think-storm/contracts';
+import { IsString, IsNotEmpty, IsEmail } from 'class-validator';
 
-export class UpdatePasswordDto {
+export class UpdatePasswordDto implements UpdatePassword {
   @ApiProperty({ description: 'email address of the user', required: true })
   @IsEmail()
   @IsNotEmpty()
@@ -12,7 +13,6 @@ export class UpdatePasswordDto {
     required: true,
   })
   @IsString()
-  @IsOptional()
   password: string;
 
   @ApiProperty({
@@ -20,6 +20,5 @@ export class UpdatePasswordDto {
     required: true,
   })
   @IsString()
-  @IsOptional()
   passwordResetToken: string;
 }

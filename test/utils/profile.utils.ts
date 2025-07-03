@@ -6,6 +6,8 @@ import { UpdateUserProfileDto } from '../../src/modules/profile/dtos/updateUserP
 export const defaultCreateProfileDto: CreateUserProfileDto = {
   avatar: 'https://example.com/avatar.jpg',
   bio: 'Test bio',
+  fullName: 'Full Name',
+  birthdate: new Date('2000-01-01'),
   preferred_role: [UserRole.BackendDeveloper],
   location: 'Test Location',
   website: 'https://example.com',
@@ -19,6 +21,8 @@ export const defaultProfileResponse = {
   data: {
     id: 1,
     userId: 1,
+    fullName: 'Full Name',
+    birthdate: new Date('2000-01-01'),
     avatar: 'https://example.com/avatar.jpg',
     bio: 'Test bio',
     preferredRole: [UserRole.BackendDeveloper],
@@ -32,6 +36,8 @@ export const defaultMockUserProfile: UserProfile = {
   userId: 1,
   avatar: defaultCreateProfileDto.avatar,
   bio: defaultCreateProfileDto.bio,
+  fullName: defaultCreateProfileDto.fullName,
+  birthdate: defaultCreateProfileDto.birthdate,
   location: defaultCreateProfileDto.location,
   website: defaultCreateProfileDto.website,
 };
@@ -43,8 +49,6 @@ export const defaultMockUser = {
   password: 'hashedPassword',
   passwordSalt: 'salt',
   passwordChangedAt: new Date(),
-  fullName: 'Test User',
-  birthdate: new Date(),
   createdAt: new Date(),
   lastUpdatedAt: new Date(),
 };
@@ -59,6 +63,8 @@ export const defaultProfileWithAssociations = {
 export const defaultE2ECreateProfileDto = {
   avatar: 'https://example.com/avatar.jpg',
   bio: 'Test bio',
+  fullName: 'Full Name',
+  birthdate: new Date('2000-01-01'),
   preferred_role: [UserRole.BackendDeveloper],
   location: 'Test Location',
   website: 'https://example.com',

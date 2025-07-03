@@ -87,10 +87,6 @@ describe('/users', () => {
       expect(body.data.id).toBe(1);
       expect(body.data.email).toBe(defaultCreateUserDto.email);
       expect(body.data.username).toBe(defaultCreateUserDto.username);
-      expect(body.data.birthdate).toBe(
-        defaultCreateUserDto.birthdate.toISOString(),
-      );
-      expect(body.data.fullName).toBe(defaultCreateUserDto.fullName);
       expect(body.data.createdAt).toBeDefined();
       expect(body.data.lastUpdatedAt).toBeDefined();
 
@@ -100,10 +96,6 @@ describe('/users', () => {
       expect(searchedUserResult.id).toBe(1);
       expect(searchedUserResult.email).toBe(defaultCreateUserDto.email);
       expect(searchedUserResult.username).toBe(defaultCreateUserDto.username);
-      expect(searchedUserResult.birthdate).toBe(
-        defaultCreateUserDto.birthdate.toISOString(),
-      );
-      expect(searchedUserResult.fullName).toBe(defaultCreateUserDto.fullName);
       expect(searchedUserResult.createdAt).toBeDefined();
       expect(searchedUserResult.lastUpdatedAt).toBeDefined();
     });
@@ -143,12 +135,6 @@ describe('/users', () => {
       expect(registerResponse.body.data.username).toBe(
         defaultCreateUserDto.username,
       );
-      expect(registerResponse.body.data.birthdate).toBe(
-        defaultCreateUserDto.birthdate.toISOString(),
-      );
-      expect(registerResponse.body.data.fullName).toBe(
-        defaultCreateUserDto.fullName,
-      );
       expect(registerResponse.body.data.createdAt).toBeDefined();
       expect(registerResponse.body.data.lastUpdatedAt).toBeDefined();
 
@@ -163,12 +149,6 @@ describe('/users', () => {
       expect(updateResponse.body.data.email).toBe(defaultUpdateUser1Dto.email);
       expect(updateResponse.body.data.username).toBe(
         defaultUpdateUser1Dto.username,
-      );
-      expect(updateResponse.body.data.birthdate).toBe(
-        defaultUpdateUser1Dto.birthdate.toISOString(),
-      );
-      expect(updateResponse.body.data.fullName).toBe(
-        defaultUpdateUser1Dto.fullName,
       );
       expect(updateResponse.body.data.createdAt).toBeDefined();
       expect(updateResponse.body.data.lastUpdatedAt).toBeDefined();
@@ -219,9 +199,7 @@ describe('/users', () => {
           ...defaultCreateUserDto,
           email: defaultUpdateUser2Dto.email,
           username: defaultUpdateUser2Dto.username,
-          fullName: defaultUpdateUser2Dto.fullName,
           password: defaultCreateUserDto.password,
-          birthdate: defaultUpdateUser2Dto.birthdate,
         });
 
       const cookies = registerResponse.headers['set-cookie'];

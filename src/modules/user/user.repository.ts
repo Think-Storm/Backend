@@ -49,6 +49,13 @@ export class UserRepository {
         omit: {
           passwordChangedAt: false,
         },
+        include: {
+          savedProjects: {
+            include: {
+              project: true,
+            },
+          },
+        },
       });
     } catch (error) {
       throw ServiceException.ErrorException(
@@ -75,8 +82,6 @@ export class UserRepository {
           email: createUserDto.email.toLowerCase(),
           password: createUserDto.password,
           passwordSalt: passwordSalt,
-          fullName: createUserDto.fullName,
-          birthdate: createUserDto.birthdate,
         },
         include: {
           founded_projects: true,
@@ -106,12 +111,20 @@ export class UserRepository {
         data: {
           username: updateUserDto.username,
           email: updateUserDto.email.toLowerCase(),
-          fullName: updateUserDto.fullName,
-          birthdate: updateUserDto.birthdate,
           lastUpdatedAt: new Date(),
         },
         where: {
           id: updateUserDto.id,
+        },
+        include: {
+          savedProjects: true,
+          founded_projects: true,
+          projects: true,
+          like: true,
+          involvement: true,
+          joinRequest: true,
+          userProfile: true,
+          notifications: true,
         },
       });
     } catch (error) {

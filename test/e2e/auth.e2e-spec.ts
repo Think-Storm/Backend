@@ -110,10 +110,6 @@ describe('/', () => {
       expect(response.body.data.id).toBe(1);
       expect(response.body.data.email).toBe(defaultCreateUserDto.email);
       expect(response.body.data.username).toBe(defaultCreateUserDto.username);
-      expect(response.body.data.birthdate).toBe(
-        defaultCreateUserDto.birthdate.toISOString(),
-      );
-      expect(response.body.data.fullName).toBe(defaultCreateUserDto.fullName);
       expect(response.body.data.createdAt).toBeDefined();
       expect(response.body.data.lastUpdatedAt).toBeDefined();
 
@@ -123,10 +119,6 @@ describe('/', () => {
       expect(registeredUser.id).toBe(1);
       expect(registeredUser.email).toBe(defaultCreateUserDto.email);
       expect(registeredUser.username).toBe(defaultCreateUserDto.username);
-      expect(registeredUser.birthdate).toBe(
-        defaultCreateUserDto.birthdate.toISOString(),
-      );
-      expect(registeredUser.fullName).toBe(defaultCreateUserDto.fullName);
       expect(registeredUser.createdAt).toBeDefined();
       expect(registeredUser.lastUpdatedAt).toBeDefined();
 
@@ -144,10 +136,6 @@ describe('/', () => {
       expect(body.data.id).toBe(1);
       expect(body.data.email).toBe(defaultCreateUserDto.email);
       expect(body.data.username).toBe(defaultCreateUserDto.username);
-      expect(body.data.birthdate).toBe(
-        defaultCreateUserDto.birthdate.toISOString(),
-      );
-      expect(body.data.fullName).toBe(defaultCreateUserDto.fullName);
       expect(body.data.createdAt).toBeDefined();
       expect(body.data.lastUpdatedAt).toBeDefined();
 
@@ -175,10 +163,6 @@ describe('/', () => {
       expect(body.data.id).toBe(1);
       expect(body.data.email).toBe(defaultCreateUserDto.email);
       expect(body.data.username).toBe(defaultCreateUserDto.username);
-      expect(body.data.birthdate).toBe(
-        defaultCreateUserDto.birthdate.toISOString(),
-      );
-      expect(body.data.fullName).toBe(defaultCreateUserDto.fullName);
       expect(body.data.createdAt).toBeDefined();
       expect(body.data.lastUpdatedAt).toBeDefined();
 

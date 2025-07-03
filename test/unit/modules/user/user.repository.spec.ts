@@ -47,12 +47,8 @@ describe('UserRepository', () => {
       expect(user.createdAt).toBeDefined();
       expect(user.lastUpdatedAt).toBeDefined();
       expect(user.username).toBe(defaultCreateUserDto.username);
-      expect(user.fullName).toBe(defaultCreateUserDto.fullName);
       expect(user.email).toBe(defaultCreateUserDto.email);
       expect(user.password).toBe(defaultCreateUserDto.password);
-      expect(user.birthdate.toDateString()).toBe(
-        defaultCreateUserDto.birthdate.toDateString(),
-      );
       expect(user.passwordSalt).toBe(defaultPasswordSalt);
     });
   });
@@ -102,12 +98,8 @@ describe('UserRepository', () => {
       expect(user.createdAt).toBeDefined();
       expect(user.lastUpdatedAt).toBeDefined();
       expect(user.username).toBe(defaultCreateUserDto.username);
-      expect(user.fullName).toBe(defaultCreateUserDto.fullName);
       expect(user.email).toBe(defaultCreateUserDto.email);
       expect(user.password).toBe(defaultCreateUserDto.password);
-      expect(user.birthdate.toDateString()).toBe(
-        defaultCreateUserDto.birthdate.toDateString(),
-      );
       expect(user.passwordSalt).toBe(defaultPasswordSalt);
     });
 
@@ -141,11 +133,7 @@ describe('UserRepository', () => {
       expect(user.createdAt).toBeDefined();
       expect(user.lastUpdatedAt).toBeDefined();
       expect(user.username).toBe(defaultUpdateUser1Dto.username);
-      expect(user.fullName).toBe(defaultUpdateUser1Dto.fullName);
       expect(user.email).toBe(defaultUpdateUser1Dto.email);
-      expect(user.birthdate.toDateString()).toBe(
-        defaultUpdateUser1Dto.birthdate.toDateString(),
-      );
     });
   });
 

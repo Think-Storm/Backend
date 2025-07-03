@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CreateJoinRequest } from '@think-storm/contracts';
 import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
 
-export class CreateJoinRequestBodyDto {
+export class CreateJoinRequestBodyDto implements CreateJoinRequest {
   @ApiProperty({
     description: 'Role name for the join request',
     example: 'Developer',

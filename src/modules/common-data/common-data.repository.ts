@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { LanguageWithCodeAndName } from './dto/language.dto';
+import { LanguageWithCodeAndName } from './types/commonData.types';
 
 @Injectable()
 export class CommonDataRepository {

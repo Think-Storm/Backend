@@ -22,7 +22,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import refreshDatabase from '../../../../src/prisma/prisma.dbreset';
-import { ProjectWithLabels } from '../../../../src/modules/project/types/project.types';
+import { ProjectWithRelations } from '../../../../src/modules/project/types/project.types';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { SaveProjectRequestDto } from '../../../../src/modules/project/dtos/saveProjectRequest.dto';
@@ -208,7 +208,7 @@ describe('ProjectRepository', () => {
       // Update the Project using a domain label from seed data
       const updatedProject = (await projectRepository.updateProject(
         defaultUpdateProjectDto,
-      )) as ProjectWithLabels;
+      )) as ProjectWithRelations;
 
       expect(updatedProject).not.toBeNull();
       expect(updatedProject).toHaveProperty('id');
@@ -251,12 +251,12 @@ describe('ProjectRepository', () => {
       const projectTobeDeleted = (await createProjectInDB(
         prismaService,
         defaultCreateProjectDto,
-      )) as ProjectWithLabels;
+      )) as ProjectWithRelations;
 
       // Delete the Project
       const deletedProject = (await projectRepository.deleteProjectById(
         defaultDeleteProjectDto.id,
-      )) as ProjectWithLabels;
+      )) as ProjectWithRelations;
 
       expect(deletedProject).not.toBeNull();
       expect(deletedProject).toHaveProperty('id');

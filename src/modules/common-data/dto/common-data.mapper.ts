@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
-import { LanguageResponseDto, LanguageWithCodeAndName } from './language.dto';
+import { LanguageResponseDto } from './commonDataResponse.dto';
+import { LanguageWithCodeAndName } from '../types/commonData.types';
+import { LanguageCode, LanguageName } from '@think-storm/contracts';
 
 @Injectable()
 export class CommonDataMapper {
@@ -12,8 +14,8 @@ export class CommonDataMapper {
   @ApiProperty({ type: LanguageResponseDto })
   mapLanguages(languages: LanguageWithCodeAndName[]): LanguageResponseDto[] {
     return languages.map((language) => ({
-      code: language.code,
-      name: language.name,
+      code: language.code as LanguageCode,
+      name: language.name as LanguageName,
     }));
   }
 }

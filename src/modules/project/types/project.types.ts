@@ -9,7 +9,7 @@ import {
 } from '@prisma/client';
 import { UserWithoutSensitiveData } from '../../../../src/modules/user/types/user.types';
 
-export type ProjectWithLabels = Project & {
+export type ProjectWithRelations = Project & {
   domainLabels?: (ProjectDomainLabel & {
     label: { name: string };
   })[];
@@ -30,7 +30,7 @@ export type ProjectWithLabels = Project & {
   }[];
 };
 
-export type ProjectWithRelations = Prisma.ProjectGetPayload<{
+export type PrismaProjectWithRelations = Prisma.ProjectGetPayload<{
   include: {
     language: true;
     users: {

@@ -74,7 +74,6 @@ async function main() {
         username: 'mockfounder',
         password: 'mockpassword',
         passwordSalt: 'mocksalt',
-        fullName: 'Mock Founder',
       },
     });
 

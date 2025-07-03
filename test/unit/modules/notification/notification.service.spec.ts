@@ -5,6 +5,7 @@ import { NotificationType } from '@think-storm/contracts';
 import { notificationMessages } from '../../../../src/common/enums/notificationMessages';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { mockNotification } from '../../../utils/notification.utils';
+import { NotificationMapper } from '../../../../src/modules/notification/dtos/notification.mapper';
 describe('NotificationService', () => {
   let service: NotificationService;
   let repository: NotificationRepository;
@@ -26,6 +27,7 @@ describe('NotificationService', () => {
           provide: NotificationRepository,
           useValue: mockNotificationRepository,
         },
+        NotificationMapper,
       ],
     }).compile();
 
@@ -46,7 +48,15 @@ describe('NotificationService', () => {
 
       const result = await service.createWelcomeNotification(userId, name);
 
-      expect(result).toEqual(mockNotification);
+      expect(result.id).toEqual(mockNotification.id);
+      expect(result.userId).toEqual(mockNotification.userId);
+      expect(result.type).toEqual(mockNotification.type);
+      expect(result.description).toEqual(mockNotification.description);
+      expect(result.link).toEqual(mockNotification.link);
+      expect(result.isRead).toEqual(mockNotification.isRead);
+      expect(result.createdAt).toBeDefined();
+      expect(result.lastUpdatedAt).toBeDefined();
+
       expect(repository.create).toHaveBeenCalledWith(
         userId,
         NotificationType.Welcome,
@@ -79,7 +89,14 @@ describe('NotificationService', () => {
         projectId,
       );
 
-      expect(result).toEqual(mockNotification);
+      expect(result.id).toEqual(mockNotification.id);
+      expect(result.userId).toEqual(mockNotification.userId);
+      expect(result.type).toEqual(mockNotification.type);
+      expect(result.description).toEqual(mockNotification.description);
+      expect(result.link).toEqual(mockNotification.link);
+      expect(result.isRead).toEqual(mockNotification.isRead);
+      expect(result.createdAt).toBeDefined();
+      expect(result.lastUpdatedAt).toBeDefined();
       expect(repository.create).toHaveBeenCalledWith(
         userId,
         NotificationType.JoinRequest,
@@ -113,7 +130,14 @@ describe('NotificationService', () => {
         projectId,
       );
 
-      expect(result).toEqual(mockNotification);
+      expect(result.id).toEqual(mockNotification.id);
+      expect(result.userId).toEqual(mockNotification.userId);
+      expect(result.type).toEqual(mockNotification.type);
+      expect(result.description).toEqual(mockNotification.description);
+      expect(result.link).toEqual(mockNotification.link);
+      expect(result.isRead).toEqual(mockNotification.isRead);
+      expect(result.createdAt).toBeDefined();
+      expect(result.lastUpdatedAt).toBeDefined();
       expect(repository.create).toHaveBeenCalledWith(
         userId,
         NotificationType.AcceptJoinRequest,
@@ -147,7 +171,14 @@ describe('NotificationService', () => {
         projectId,
       );
 
-      expect(result).toEqual(mockNotification);
+      expect(result.id).toEqual(mockNotification.id);
+      expect(result.userId).toEqual(mockNotification.userId);
+      expect(result.type).toEqual(mockNotification.type);
+      expect(result.description).toEqual(mockNotification.description);
+      expect(result.link).toEqual(mockNotification.link);
+      expect(result.isRead).toEqual(mockNotification.isRead);
+      expect(result.createdAt).toBeDefined();
+      expect(result.lastUpdatedAt).toBeDefined();
       expect(repository.create).toHaveBeenCalledWith(
         userId,
         NotificationType.InviteToProject,
@@ -166,7 +197,7 @@ describe('NotificationService', () => {
           userId,
           type: NotificationType.Welcome,
           description: 'Welcome!',
-          isRead: false,
+          isRead: true,
           link: null,
           createdAt: new Date(),
           lastUpdatedAt: new Date(),
@@ -179,7 +210,14 @@ describe('NotificationService', () => {
 
       const result = await service.getUserNotifications(userId);
 
-      expect(result).toEqual(mockNotifications);
+      expect(result[0].id).toEqual(mockNotification.id);
+      expect(result[0].userId).toEqual(mockNotification.userId);
+      expect(result[0].type).toEqual(mockNotification.type);
+      expect(result[0].description).toEqual(mockNotification.description);
+      expect(result[0].link).toEqual(mockNotification.link);
+      expect(result[0].isRead).toEqual(mockNotification.isRead);
+      expect(result[0].createdAt).toBeDefined();
+      expect(result[0].lastUpdatedAt).toBeDefined();
       expect(repository.findAllByUserId).toHaveBeenCalledWith(userId);
     });
   });
@@ -207,7 +245,14 @@ describe('NotificationService', () => {
 
       const result = await service.deleteNotification(notificationId);
 
-      expect(result).toEqual(mockNotification);
+      expect(result.id).toEqual(mockNotification.id);
+      expect(result.userId).toEqual(mockNotification.userId);
+      expect(result.type).toEqual(mockNotification.type);
+      expect(result.description).toEqual(mockNotification.description);
+      expect(result.link).toEqual(mockNotification.link);
+      expect(result.isRead).toEqual(mockNotification.isRead);
+      expect(result.createdAt).toBeDefined();
+      expect(result.lastUpdatedAt).toBeDefined();
       expect(repository.findById).toHaveBeenCalledWith(notificationId);
       expect(repository.deleteById).toHaveBeenCalledWith(notificationId);
     });
@@ -270,7 +315,14 @@ describe('NotificationService', () => {
 
       const result = await service.setNotificationRead(1, true);
 
-      expect(result).toEqual(mockNotification);
+      expect(result.id).toEqual(mockNotification.id);
+      expect(result.userId).toEqual(mockNotification.userId);
+      expect(result.type).toEqual(mockNotification.type);
+      expect(result.description).toEqual(mockNotification.description);
+      expect(result.link).toEqual(mockNotification.link);
+      expect(result.isRead).toEqual(mockNotification.isRead);
+      expect(result.createdAt).toEqual(mockNotification.createdAt);
+      expect(result.lastUpdatedAt).toEqual(mockNotification.lastUpdatedAt);
       expect(repository.findById).toHaveBeenCalledWith(1);
       expect(repository.updateReadStatus).toHaveBeenCalledWith(1, true);
     });
