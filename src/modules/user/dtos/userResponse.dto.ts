@@ -1,6 +1,7 @@
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { UserResponse } from '@think-storm/contracts';
+import { UserResponse, Project } from '@think-storm/contracts';
+import { ProjectResponseDto } from '../../project/dtos/projectResponse.dto';
 
 export class UserResponseDto implements UserResponse {
   @ApiProperty()
@@ -23,14 +24,6 @@ export class UserResponseDto implements UserResponse {
   @Expose()
   passwordChangedAt?: Date;
 
-  @ApiProperty({ required: false })
-  @Expose()
-  fullName?: string;
-
-  @ApiProperty({ required: false, type: String, format: 'date-time' })
-  @Expose()
-  birthdate?: Date;
-
   @ApiProperty({ type: String, format: 'date-time' })
   @Expose()
   createdAt: Date;
@@ -38,4 +31,8 @@ export class UserResponseDto implements UserResponse {
   @ApiProperty({ type: String, format: 'date-time' })
   @Expose()
   lastUpdatedAt: Date;
+
+  @ApiProperty({ type: ProjectResponseDto })
+  @Expose()
+  savedProjects?: Project[];
 }

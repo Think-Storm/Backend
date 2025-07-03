@@ -1,4 +1,8 @@
-import { LanguageCode, LanguageName } from '@think-storm/contracts';
+import {
+  LanguageCode,
+  LanguageName,
+  LanguageResponse,
+} from '@think-storm/contracts';
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty } from 'class-validator';
@@ -6,7 +10,7 @@ import { IsEnum, IsNotEmpty } from 'class-validator';
 /**
  * A DTO class that represents the response of a language
  */
-export class LanguageResponseDto {
+export class LanguageResponseDto implements LanguageResponse {
   @Expose()
   @IsNotEmpty()
   @IsEnum(LanguageCode)

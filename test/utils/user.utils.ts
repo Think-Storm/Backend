@@ -13,20 +13,16 @@ export const loginUserDto = {
 
 export const defaultCreateUserDto: CreateUserDto = {
   username: 'username',
-  fullName: 'Full Name',
   email: 'email@email.com',
   password: 'hashedPassword',
-  birthdate: new Date('2000-01-01'),
 };
 
 export const defaultUserResponseDto: UserResponseDto = {
   id: 1,
   email: 'email@email.com',
   username: 'username',
-  fullName: 'Full Name',
   password: 'hashedPassword',
   passwordChangedAt: null,
-  birthdate: new Date('2000-01-01'),
   createdAt: new Date('2000-01-01'),
   lastUpdatedAt: new Date('2000-01-01'),
 };
@@ -38,8 +34,6 @@ export const defaultUser: User = {
   password: 'hashedPassword',
   passwordSalt: 'passwordsalt',
   passwordChangedAt: null,
-  fullName: 'Full Name',
-  birthdate: new Date('2000-01-01'),
   createdAt: new Date('2000-01-01'),
   lastUpdatedAt: new Date('2000-01-01'),
 };
@@ -48,8 +42,6 @@ export const defaultUserWithoutSensitiveData = {
   id: 1,
   email: 'email@email.com',
   username: 'username',
-  fullName: 'Full Name',
-  birthdate: new Date('2000-01-01'),
   createdAt: new Date('2000-01-01'),
   lastUpdatedAt: new Date('2000-01-01'),
 };
@@ -68,15 +60,11 @@ export const createUserInDB = async (
 export const defaultUpdateUser1Dto: UpdateUserDto = {
   id: 1,
   username: 'username1',
-  fullName: 'Full Name 1',
   email: 'email@email.com',
-  birthdate: new Date('2000-01-01'),
 };
 
 export const defaultUpdateUser2Dto: UpdateUserDto = {
   id: 2,
   username: 'username2',
-  fullName: 'Full Name 2',
   email: 'email2@email.com',
-  birthdate: new Date('2000-01-01'),
 };

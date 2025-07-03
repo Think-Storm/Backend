@@ -1,12 +1,5 @@
-import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsEmail,
-  IsNotEmpty,
-  IsDate,
-  IsNumber,
-} from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty, IsNumber } from 'class-validator';
 import { UpdateUser } from '@think-storm/contracts';
 
 export class UpdateUserDto implements UpdateUser {
@@ -24,20 +17,4 @@ export class UpdateUserDto implements UpdateUser {
   @IsEmail()
   @IsNotEmpty()
   email: string;
-
-  @ApiProperty({ description: 'New full name of the user', required: true })
-  @IsString()
-  @IsNotEmpty()
-  fullName: string;
-
-  @ApiProperty({
-    description: 'New birthdate of the user',
-    required: true,
-    type: String,
-    format: 'date-time',
-  })
-  @IsDate()
-  @Transform(({ value }) => new Date(value))
-  @IsNotEmpty()
-  birthdate: Date;
 }

@@ -1,12 +1,5 @@
-import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsEmail,
-  IsOptional,
-  IsNotEmpty,
-  IsDate,
-} from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty } from 'class-validator';
 import { CreateUser } from '@think-storm/contracts';
 
 export class CreateUserDto implements CreateUser {
@@ -24,20 +17,4 @@ export class CreateUserDto implements CreateUser {
   @IsString()
   @IsNotEmpty()
   password: string;
-
-  @ApiProperty({ description: 'Full name of the user', required: false })
-  @IsString()
-  @IsOptional()
-  fullName: string;
-
-  @ApiProperty({
-    description: 'Birthdate of the user',
-    required: false,
-    type: String,
-    format: 'date-time',
-  })
-  @IsDate()
-  @Transform(({ value }) => new Date(value))
-  @IsOptional()
-  birthdate: Date;
 }

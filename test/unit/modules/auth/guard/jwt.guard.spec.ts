@@ -22,6 +22,7 @@ import { NotificationService } from '../../../../../src/modules/notification/not
 import { NotificationRepository } from '../../../../../src/modules/notification/notification.repository';
 import { JwtHelperService } from '../../../../../src/modules/auth/jwt/jwt-helper.service';
 import { MailService } from '../../../../../src/modules/mail/mail.service';
+import { NotificationMapper } from '../../../../../src/modules/notification/dtos/notification.mapper';
 
 describe('JwtAuthGuard', () => {
   jest.useFakeTimers();
@@ -60,6 +61,7 @@ describe('JwtAuthGuard', () => {
         LocalStrategy,
         ConfigService,
         NotificationService,
+        NotificationMapper,
         NotificationRepository,
       ],
     }).compile();

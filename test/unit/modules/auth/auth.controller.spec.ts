@@ -31,6 +31,7 @@ import {
   defaultUpdatePasswordDto,
 } from '../../../utils/auth.utils';
 import { mockJwtPayloadForPasswordReset } from '../../../utils/jwt.utils';
+import { NotificationMapper } from '../../../../src/modules/notification/dtos/notification.mapper';
 
 describe('AuthController', () => {
   let authController: AuthController;
@@ -59,6 +60,7 @@ describe('AuthController', () => {
       providers: [
         UserService,
         NotificationService,
+        NotificationMapper,
         NotificationRepository,
         UserRepository,
         PasswordEncryption,

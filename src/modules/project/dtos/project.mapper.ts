@@ -4,7 +4,7 @@ import { ProjectResponseDto } from './projectResponse.dto';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { SearchProjectResponseDto } from './searchProjectResponse.dto';
-import { ProjectWithLabels } from '../types/project.types';
+import { ProjectWithRelations } from '../types/project.types';
 
 export class ProjectMapper {
   /**
@@ -13,7 +13,9 @@ export class ProjectMapper {
    * @returns A ProjectResponseDto with the mapped data
    */
   @ApiProperty({ type: ProjectResponseDto })
-  projectToProjectResponseDto(project: ProjectWithLabels): ProjectResponseDto {
+  projectToProjectResponseDto(
+    project: ProjectWithRelations,
+  ): ProjectResponseDto {
     const plainProject = instanceToPlain(project);
 
     // Transform domain labels to string array if they exist and have the complex structure

@@ -25,6 +25,7 @@ import { NotificationRepository } from '../../../../src/modules/notification/not
 import { NotificationService } from '../../../../src/modules/notification/notification.service';
 import { JwtHelperService } from '../../../../src/modules/auth/jwt/jwt-helper.service';
 import { MailService } from '../../../../src/modules/mail/mail.service';
+import { NotificationMapper } from '../../../../src/modules/notification/dtos/notification.mapper';
 
 describe('UserService', () => {
   let authService: AuthService;
@@ -44,6 +45,7 @@ describe('UserService', () => {
         JwtService,
         ConfigService,
         NotificationService,
+        NotificationMapper,
         NotificationRepository,
         JwtHelperService,
         MailService,

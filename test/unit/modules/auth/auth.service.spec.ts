@@ -35,6 +35,7 @@ import {
   defaultForgotPasswordDto,
   defaultUpdatePasswordDto,
 } from '../../../utils/auth.utils';
+import { NotificationMapper } from '../../../../src/modules/notification/dtos/notification.mapper';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -70,6 +71,7 @@ describe('AuthService', () => {
         AuthService,
         ConfigService,
         NotificationService,
+        NotificationMapper,
         NotificationRepository,
         MailService,
         JwtHelperService,
@@ -141,8 +143,6 @@ describe('AuthService', () => {
         id: defaultUser.id,
         email: defaultUser.email,
         username: defaultUser.username,
-        fullName: defaultUser.fullName,
-        birthdate: defaultUser.birthdate,
         createdAt: defaultUser.createdAt,
         lastUpdatedAt: defaultUser.lastUpdatedAt,
         passwordChangedAt: defaultUser.passwordChangedAt,
