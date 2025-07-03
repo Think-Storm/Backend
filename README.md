@@ -9,7 +9,6 @@ Main backend for the ThinkStorm project (API and DB relationships)
 Before installing dependencies, you need to set up GitHub authentication to access the private `@think-storm/contracts` package:
 
 1. Create a GitHub Personal Access Token (PAT):
-
    - Go to GitHub.com → Settings → Developer Settings → Personal Access Tokens → Tokens (classic)
    - Click "Generate new token (classic)"
    - Give it a name (e.g., "ThinkStorm Package Access")
