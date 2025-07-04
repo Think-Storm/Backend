@@ -551,4 +551,46 @@ export class ProjectRepository {
       );
     }
   }
+
+  async findJoinRequest(
+    userId: number,
+    projectId: number,
+  ): Promise<JoinRequest | null> {
+    return this.prisma.joinRequest.findUnique({
+      where: {
+        userId_projectId: {
+          userId,
+          projectId,
+        },
+      },
+    });
+  }
+
+  async updateJoinRequestStatus(
+    userId: number,
+    projectId: number,
+    status: string,
+  ): Promise<JoinRequest> {
+    return this.prisma.joinRequest.update({
+      where: {
+        userId_projectId: {
+          userId,
+          projectId,
+        },
+      },
+      data: {
+        status,
+      },
+    });
+  }
+
+  async createInvolvement(userId: number, projectId: number, roleName: string) {
+    return this.prisma.involvement.create({
+      data: {
+        userId,
+        projectId,
+        roleName,
+      },
+    });
+  }
 }

@@ -18,6 +18,7 @@ import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
 import { SearchProjectDto } from './dtos/searchProject.dto';
 import { CreateJoinRequestBodyDto } from './dtos/createJoinRequest.dto';
+import { UpdateJoinRequestDto } from './dtos/updateJoinRequest.dto';
 import { JoinRequestResponseDto } from './dtos/joinRequestResponse.dto';
 import {
   ApiTags,
@@ -233,6 +234,29 @@ export class ProjectController {
       user.id,
       +projectId,
       jonRequestDto,
+    );
+  }
+
+  @Put(':projectId/join-request/:requestId')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Accept or decline a join request' })
+  @ApiResponse({
+    status: 200,
+    description: 'The join request has been successfully updated.',
+  })
+  @ApiResponse({ status: 403, description: 'Forbidden.' })
+  @ApiResponse({ status: 404, description: 'Not Found.' })
+  async handleJoinRequest(
+    @Param('projectId') projectId: number,
+    @Param('requestId') requestId: number,
+    @Body() updateJoinRequestDto: UpdateJoinRequestDto,
+    @GetUser() user: any,
+  ) {
+    return this.projectService.handleJoinRequest(
+      user.id,
+      +projectId,
+      +requestId,
+      updateJoinRequestDto.status,
     );
   }
 }

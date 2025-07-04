@@ -21,6 +21,7 @@ import { SaveProjectRequestDto } from './dtos/saveProjectRequest.dto';
 import { NotificationService } from '../notification/notification.service';
 import { JoinRequestResponseDto } from './dtos/joinRequestResponse.dto';
 import { CreateJoinRequestBodyDto } from './dtos/createJoinRequest.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class ProjectService {
@@ -34,6 +35,7 @@ export class ProjectService {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     private redisService: RedisService,
     private readonly notificationService: NotificationService,
+    private readonly mailService: MailService,
   ) {}
 
   /**
@@ -403,5 +405,71 @@ export class ProjectService {
     return this.joinRequestMapper.joinRequestToJoinRequestResponseDto(
       joinRequest,
     );
+  }
+
+  async handleJoinRequest(
+    authUserId: number,
+    projectId: number,
+    requestId: number,
+    status: string,
+  ): Promise<void> {
+    const project = await this.projectRepository.findProjectById(projectId);
+    if (!project) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    }
+
+    if (project.founderId !== authUserId) {
+      throw ServiceException.ForbiddenException(
+        errorMessages.FORBIDDEN('You are not the owner of this project'),
+      );
+    }
+
+    const joinRequest = await this.projectRepository.findJoinRequest(
+      requestId,
+      projectId,
+    );
+
+    if (!joinRequest) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('Join Request', requestId.toString()),
+      );
+    }
+
+    await this.projectRepository.updateJoinRequestStatus(
+      requestId,
+      projectId,
+      status,
+    );
+
+    const user = await this.userService.getUserById(requestId);
+
+    if (status === 'Accepted') {
+      await this.projectRepository.createInvolvement(
+        requestId,
+        projectId,
+        joinRequest.roleName,
+      );
+      await this.mailService.sendMail({
+        to: user.email,
+        subject: `Your request to join ${project.title} has been accepted`,
+        template: 'join-request-accepted',
+        templateVariables: {
+          projectName: project.title,
+          projectOwner: project.founder.username,
+        },
+      });
+    } else {
+      await this.mailService.sendMail({
+        to: user.email,
+        subject: `Your request to join ${project.title} has been declined`,
+        template: 'join-request-declined',
+        templateVariables: {
+          projectName: project.title,
+          projectOwner: project.founder.username,
+        },
+      });
+    }
   }
 }

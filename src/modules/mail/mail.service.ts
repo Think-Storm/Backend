@@ -93,4 +93,38 @@ export class MailService {
       },
     });
   }
+
+  async sendJoinRequestAcceptedEmail(
+    userEmail: string,
+    projectName: string,
+    projectOwner: string,
+  ): Promise<void> {
+    await this.sendMail({
+      to: userEmail,
+      from: 'info@thinkstorm.app',
+      template: 'join-request-accepted',
+      subject: `Your request to join ${projectName} has been accepted`,
+      templateVariables: {
+        projectName,
+        projectOwner,
+      },
+    });
+  }
+
+  async sendJoinRequestDeclinedEmail(
+    userEmail: string,
+    projectName: string,
+    projectOwner: string,
+  ): Promise<void> {
+    await this.sendMail({
+      to: userEmail,
+      from: 'info@thinkstorm.app',
+      template: 'join-request-declined',
+      subject: `Your request to join ${projectName} has been declined`,
+      templateVariables: {
+        projectName,
+        projectOwner,
+      },
+    });
+  }
 }

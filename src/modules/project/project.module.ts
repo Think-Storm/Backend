@@ -14,6 +14,7 @@ import { NotificationService } from '../notification/notification.service';
 import { NotificationRepository } from '../notification/notification.repository';
 import { JoinRequestMapper } from './dtos/joinRequest.mapper';
 import { NotificationMapper } from '../notification/dtos/notification.mapper';
+import { MailService } from '../mail/mail.service';
 
 /**
  * The ProjectModule is responsible for managing the project-related components
@@ -42,6 +43,7 @@ import { NotificationMapper } from '../notification/dtos/notification.mapper';
     NotificationService,
     NotificationMapper,
     NotificationRepository,
+    MailService,
   ],
 })
 export class ProjectModule {}
