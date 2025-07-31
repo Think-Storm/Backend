@@ -931,4 +931,397 @@ describe('/projects', () => {
       errorMessages.USER_ALREADY_JOINED_REQUEST,
     );
   });
+
+  describe('/:projectId/join-request/:requestId PUT (Handle Join Request)', () => {
+    it('should return 200 when project owner accepts a join request', async () => {
+      // Create project founder
+      const founderDto = {
+        ...defaultCreateUserDto,
+        email: 'founder@email.com',
+        username: 'projectFounder',
+      };
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(founderDto)
+        .expect(201);
+
+      // Login as founder to get token
+      const founderLoginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: founderDto.email,
+          password: founderDto.password,
+        })
+        .expect(200);
+
+      const founderToken = founderLoginResponse.headers.authorization;
+
+      // Create a project with the founder
+      const createdProject = await createProjectInDB(prismaService, {
+        ...defaultCreateProjectDto,
+        founderId: 1, // Will be updated after registration
+      });
+
+      // Create another user who will make the join request
+      const requestUserDto = {
+        ...defaultCreateUserDto,
+        email: 'requester@email.com',
+        username: 'joinRequester',
+        password: 'requestPassword',
+      };
+
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(requestUserDto)
+        .expect(201);
+
+      const requesterId = registerResponse.body.data.id;
+
+      // Login with the requester user
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: requestUserDto.email,
+          password: requestUserDto.password,
+        })
+        .expect(200);
+
+      const requesterToken = loginResponse.headers.authorization;
+
+      const joinRequestDto = {
+        roleName: 'Developer',
+        message: 'I would love to contribute to this project!',
+      };
+
+      // Create join request
+      await request(app.getHttpServer())
+        .post(`/${createdProject.id}/join-requests`)
+        .set('Authorization', requesterToken)
+        .send(joinRequestDto)
+        .expect(201);
+
+      // Accept join request as project owner
+      const updateJoinRequestDto = {
+        status: 'Accepted',
+      };
+
+      await request(app.getHttpServer())
+        .put(`/${createdProject.id}/join-request/${requesterId}`)
+        .set('Authorization', founderToken)
+        .send(updateJoinRequestDto)
+        .expect(200);
+
+      // Verify the join request status was updated
+      const updatedJoinRequest = await prismaService.joinRequest.findUnique({
+        where: {
+          userId_projectId: {
+            userId: requesterId,
+            projectId: createdProject.id,
+          },
+        },
+      });
+
+      expect(updatedJoinRequest).not.toBeNull();
+      expect(updatedJoinRequest.status).toBe('Accepted');
+
+      // Verify user involvement was created
+      const involvement = await prismaService.involvement.findUnique({
+        where: {
+          userId_projectId: {
+            userId: requesterId,
+            projectId: createdProject.id,
+          },
+        },
+      });
+
+      expect(involvement).not.toBeNull();
+      expect(involvement.roleName).toBe(joinRequestDto.roleName);
+    });
+
+    it('should return 200 when project owner rejects a join request', async () => {
+      // Create project founder
+      const founderDto = {
+        ...defaultCreateUserDto,
+        email: 'founder2@email.com',
+        username: 'projectFounder2',
+      };
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(founderDto)
+        .expect(201);
+
+      // Login as founder to get token
+      const founderLoginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: founderDto.email,
+          password: founderDto.password,
+        })
+        .expect(200);
+
+      const founderToken = founderLoginResponse.headers.authorization;
+
+      // Create a project with the founder
+      const createdProject = await createProjectInDB(prismaService, {
+        ...defaultCreateProjectDto,
+        founderId: 1, // Will be updated after registration
+      });
+
+      // Create another user who will make the join request
+      const requestUserDto = {
+        ...defaultCreateUserDto,
+        email: 'requester2@email.com',
+        username: 'joinRequester2',
+        password: 'requestPassword2',
+      };
+
+      const registerResponse = await request(app.getHttpServer())
+        .post('/register')
+        .send(requestUserDto)
+        .expect(201);
+
+      const requesterId = registerResponse.body.data.id;
+
+      // Login with the requester user
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: requestUserDto.email,
+          password: requestUserDto.password,
+        })
+        .expect(200);
+
+      const requesterToken = loginResponse.headers.authorization;
+
+      const joinRequestDto = {
+        roleName: 'Developer',
+        message: 'I would love to contribute to this project!',
+      };
+
+      // Create join request
+      await request(app.getHttpServer())
+        .post(`/${createdProject.id}/join-requests`)
+        .set('Authorization', requesterToken)
+        .send(joinRequestDto)
+        .expect(201);
+
+      // Reject join request as project owner
+      const updateJoinRequestDto = {
+        status: 'Rejected',
+      };
+
+      await request(app.getHttpServer())
+        .put(`/${createdProject.id}/join-request/${requesterId}`)
+        .set('Authorization', founderToken)
+        .send(updateJoinRequestDto)
+        .expect(200);
+
+      // Verify the join request status was updated
+      const updatedJoinRequest = await prismaService.joinRequest.findUnique({
+        where: {
+          userId_projectId: {
+            userId: requesterId,
+            projectId: createdProject.id,
+          },
+        },
+      });
+
+      expect(updatedJoinRequest).not.toBeNull();
+      expect(updatedJoinRequest.status).toBe('Rejected');
+
+      // Verify user involvement was NOT created
+      const involvement = await prismaService.involvement.findUnique({
+        where: {
+          userId_projectId: {
+            userId: requesterId,
+            projectId: createdProject.id,
+          },
+        },
+      });
+
+      expect(involvement).toBeNull();
+    });
+
+    it('should return 404 when project does not exist', async () => {
+      // Create a user who will try to handle a join request
+      const userDto = {
+        ...defaultCreateUserDto,
+        email: 'user3@email.com',
+        username: 'testUser3',
+      };
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(userDto)
+        .expect(201);
+
+      // Login to get token
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: userDto.email,
+          password: userDto.password,
+        })
+        .expect(200);
+
+      const token = loginResponse.headers.authorization;
+
+      const updateJoinRequestDto = {
+        status: 'Accepted',
+      };
+
+      await request(app.getHttpServer())
+        .put(`/999/join-request/1`) // Non-existent project ID
+        .set('Authorization', token)
+        .send(updateJoinRequestDto)
+        .expect(404);
+    });
+
+    it('should return 403 when user is not the project owner', async () => {
+      // Create project founder
+      const founderDto = {
+        ...defaultCreateUserDto,
+        email: 'founder4@email.com',
+        username: 'projectFounder4',
+      };
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(founderDto)
+        .expect(201);
+
+      // Create a project with the founder
+      const createdProject = await createProjectInDB(prismaService, {
+        ...defaultCreateProjectDto,
+        founderId: 1, // Will be updated after registration
+      });
+
+      // Create another user who is NOT the project owner
+      const unauthorizedUserDto = {
+        ...defaultCreateUserDto,
+        email: 'unauthorized@email.com',
+        username: 'unauthorizedUser',
+        password: 'unauthorizedPassword',
+      };
+
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(unauthorizedUserDto)
+        .expect(201);
+
+      // Login as unauthorized user to get token
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: unauthorizedUserDto.email,
+          password: unauthorizedUserDto.password,
+        })
+        .expect(200);
+
+      const unauthorizedToken = loginResponse.headers.authorization;
+
+      const updateJoinRequestDto = {
+        status: 'Accepted',
+      };
+
+      await request(app.getHttpServer())
+        .put(`/${createdProject.id}/join-request/1`)
+        .set('Authorization', unauthorizedToken)
+        .send(updateJoinRequestDto)
+        .expect(403);
+    });
+
+    it('should return 404 when join request does not exist', async () => {
+      // Create project founder
+      const founderDto = {
+        ...defaultCreateUserDto,
+        email: 'founder5@email.com',
+        username: 'projectFounder5',
+      };
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(founderDto)
+        .expect(201);
+
+      // Login as founder to get token
+      const founderLoginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: founderDto.email,
+          password: founderDto.password,
+        })
+        .expect(200);
+
+      const founderToken = founderLoginResponse.headers.authorization;
+
+      // Create a project with the founder
+      const createdProject = await createProjectInDB(prismaService, {
+        ...defaultCreateProjectDto,
+        founderId: 1, // Will be updated after registration
+      });
+
+      const updateJoinRequestDto = {
+        status: 'Accepted',
+      };
+
+      await request(app.getHttpServer())
+        .put(`/${createdProject.id}/join-request/999`) // Non-existent request ID
+        .set('Authorization', founderToken)
+        .send(updateJoinRequestDto)
+        .expect(404);
+    });
+
+    it('should return 401 when user is not authenticated', async () => {
+      const updateJoinRequestDto = {
+        status: 'Accepted',
+      };
+
+      await request(app.getHttpServer())
+        .put(`/1/join-request/1`)
+        .send(updateJoinRequestDto)
+        .expect(401);
+    });
+
+    it('should return 400 when status is missing or invalid', async () => {
+      // Create project founder
+      const founderDto = {
+        ...defaultCreateUserDto,
+        email: 'founder6@email.com',
+        username: 'projectFounder6',
+      };
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(founderDto)
+        .expect(201);
+
+      // Login as founder to get token
+      const founderLoginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({
+          email: founderDto.email,
+          password: founderDto.password,
+        })
+        .expect(200);
+
+      const founderToken = founderLoginResponse.headers.authorization;
+
+      // Create a project with the founder
+      const createdProject = await createProjectInDB(prismaService, {
+        ...defaultCreateProjectDto,
+        founderId: 1, // Will be updated after registration
+      });
+
+      // Send request without status field
+      await request(app.getHttpServer())
+        .put(`/${createdProject.id}/join-request/1`)
+        .set('Authorization', founderToken)
+        .send({})
+        .expect(400);
+
+      // Send request with invalid status
+      await request(app.getHttpServer())
+        .put(`/${createdProject.id}/join-request/1`)
+        .set('Authorization', founderToken)
+        .send({ status: 'InvalidStatus' })
+        .expect(400);
+    });
+  });
 });

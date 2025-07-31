@@ -41,6 +41,7 @@ import { NotificationService } from '../../../../src/modules/notification/notifi
 import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
 import { JoinRequestMapper } from '../../../../src/modules/project/dtos/joinRequest.mapper';
 import { NotificationMapper } from '../../../../src/modules/notification/dtos/notification.mapper';
+import { MailService } from '../../../../src/modules/mail/mail.service';
 
 describe('ProjectService', () => {
   let projectService: ProjectService;
@@ -81,6 +82,12 @@ describe('ProjectService', () => {
         NotificationRepository,
         JoinRequestMapper,
         NotificationMapper,
+        {
+          provide: MailService,
+          useValue: {
+            sendMail: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -760,6 +767,195 @@ describe('ProjectService', () => {
       );
       expect(mapperSpy).toHaveBeenCalledWith(defaultJoinRequest);
       expect(result).toEqual(defaultJoinRequestResponseDto);
+    });
+  });
+
+  describe('handleJoinRequest', () => {
+    const authUserId = 1; // Project owner ID
+    const projectId = 1;
+    const requestId = 2; // Requester user ID
+    const mockProject = {
+      ...defaultProject,
+      founder: {
+        ...defaultUser,
+        username: 'projectOwner',
+      },
+      title: 'Test Project',
+    };
+
+    const mockJoinRequest = {
+      userId: requestId,
+      projectId: projectId,
+      roleName: 'Developer',
+      status: 'Pending',
+      message: 'I would love to contribute!',
+    };
+
+    const mockUser = {
+      ...defaultUser,
+      id: requestId,
+      email: 'requester@example.com',
+    };
+
+    it('should throw 404 if project is not found', async () => {
+      // Mock project repository to return null for findProjectById
+      jest.spyOn(projectRepository, 'findProjectById').mockResolvedValue(null);
+
+      await expect(
+        projectService.handleJoinRequest(
+          authUserId,
+          projectId,
+          requestId,
+          'Accepted',
+        ),
+      ).rejects.toThrow(
+        ServiceException.EntityNotFoundException(
+          errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+        ),
+      );
+
+      expect(projectRepository.findProjectById).toHaveBeenCalledWith(projectId);
+    });
+
+    it('should throw 403 if user is not the project owner', async () => {
+      // Mock project repository to return a project with different founderId
+      const unauthorizedProject = {
+        ...mockProject,
+        founderId: 999, // Different founder ID
+      };
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(unauthorizedProject);
+
+      await expect(
+        projectService.handleJoinRequest(
+          authUserId,
+          projectId,
+          requestId,
+          'Accepted',
+        ),
+      ).rejects.toThrow(
+        ServiceException.ForbiddenException(
+          errorMessages.FORBIDDEN('You are not the owner of this project'),
+        ),
+      );
+
+      expect(projectRepository.findProjectById).toHaveBeenCalledWith(projectId);
+    });
+
+    it('should throw 404 if join request is not found', async () => {
+      // Mock project repository to return a valid project
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(mockProject);
+
+      // Mock project repository to return null for findJoinRequest
+      jest.spyOn(projectRepository, 'findJoinRequest').mockResolvedValue(null);
+
+      await expect(
+        projectService.handleJoinRequest(
+          authUserId,
+          projectId,
+          requestId,
+          'Accepted',
+        ),
+      ).rejects.toThrow(
+        ServiceException.EntityNotFoundException(
+          errorMessages.ENTITY_NOT_FOUND('Join Request', requestId.toString()),
+        ),
+      );
+
+      expect(projectRepository.findProjectById).toHaveBeenCalledWith(projectId);
+      expect(projectRepository.findJoinRequest).toHaveBeenCalledWith(
+        requestId,
+        projectId,
+      );
+    });
+
+    it('should accept a join request and create user involvement', async () => {
+      // Mock all required dependencies
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(mockProject);
+      jest
+        .spyOn(projectRepository, 'findJoinRequest')
+        .mockResolvedValue(mockJoinRequest);
+      jest
+        .spyOn(projectRepository, 'updateJoinRequestStatus')
+        .mockResolvedValue({
+          ...mockJoinRequest,
+          status: 'Accepted',
+        });
+      jest.spyOn(userService, 'getUserById').mockResolvedValue(mockUser);
+      jest
+        .spyOn(projectRepository, 'createInvolvement')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn(notificationService, 'createJoinRequestNotification')
+        .mockResolvedValue(undefined);
+
+      await projectService.handleJoinRequest(
+        authUserId,
+        projectId,
+        requestId,
+        'Accepted',
+      );
+
+      // Verify all calls
+      expect(projectRepository.findProjectById).toHaveBeenCalledWith(projectId);
+      expect(projectRepository.findJoinRequest).toHaveBeenCalledWith(
+        requestId,
+        projectId,
+      );
+      expect(projectRepository.updateJoinRequestStatus).toHaveBeenCalledWith(
+        requestId,
+        projectId,
+        'Accepted',
+      );
+      expect(userService.getUserById).toHaveBeenCalledWith(requestId);
+      expect(projectRepository.createInvolvement).toHaveBeenCalledWith(
+        requestId,
+        projectId,
+        mockJoinRequest.roleName,
+      );
+    });
+
+    it('should decline a join request', async () => {
+      // Mock all required dependencies
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(mockProject);
+      jest
+        .spyOn(projectRepository, 'findJoinRequest')
+        .mockResolvedValue(mockJoinRequest);
+      jest
+        .spyOn(projectRepository, 'updateJoinRequestStatus')
+        .mockResolvedValue({
+          ...mockJoinRequest,
+          status: 'Declined',
+        });
+      jest.spyOn(userService, 'getUserById').mockResolvedValue(mockUser);
+
+      await projectService.handleJoinRequest(
+        authUserId,
+        projectId,
+        requestId,
+        'Declined',
+      );
+
+      // Verify all calls
+      expect(projectRepository.findProjectById).toHaveBeenCalledWith(projectId);
+      expect(projectRepository.findJoinRequest).toHaveBeenCalledWith(
+        requestId,
+        projectId,
+      );
+      expect(projectRepository.updateJoinRequestStatus).toHaveBeenCalledWith(
+        requestId,
+        projectId,
+        'Declined',
+      );
+      expect(userService.getUserById).toHaveBeenCalledWith(requestId);
+      expect(projectRepository.createInvolvement).not.toHaveBeenCalled();
     });
   });
 });

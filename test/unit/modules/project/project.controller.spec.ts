@@ -40,6 +40,7 @@ import { NotificationService } from '../../../../src/modules/notification/notifi
 import { NotificationRepository } from '../../../../src/modules/notification/notification.repository';
 import { JoinRequestMapper } from '../../../../src/modules/project/dtos/joinRequest.mapper';
 import { NotificationMapper } from '../../../../src/modules/notification/dtos/notification.mapper';
+import { MailService } from '../../../../src/modules/mail/mail.service';
 
 describe('ProjectController', () => {
   let projectController: ProjectController;
@@ -76,6 +77,13 @@ describe('ProjectController', () => {
         NotificationRepository,
         NotificationMapper,
         JoinRequestMapper,
+        {
+          provide: MailService,
+          useValue: {
+            sendJoinRequestAcceptedEmail: jest.fn(),
+            sendJoinRequestDeclinedEmail: jest.fn(),
+          },
+        },
       ],
     })
       .overrideGuard(JwtAuthGuard)
@@ -380,6 +388,80 @@ describe('ProjectController', () => {
       // Verify response
       expect(result).toEqual(defaultJoinRequestResponseDto);
       expect(serviceSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('handleJoinRequest function', () => {
+    it('should pass correct parameters to service when accepting a join request', async () => {
+      // Setup
+      const mockRequest = createMockRequestWithUser(
+        defaultUserResponseDto,
+      ) as any;
+      mockRequest.headers = createAuthHeader(mockJwtToken);
+      mockRequest.user = { id: 1 }; // Project owner ID
+
+      const projectId = 1;
+      const requestId = 2;
+      const updateJoinRequestDto = {
+        status: 'Accepted' as any,
+      };
+
+      const serviceSpy = jest
+        .spyOn(projectService, 'handleJoinRequest')
+        .mockResolvedValue(undefined);
+
+      // Execute
+      await projectController.handleJoinRequest(
+        projectId,
+        requestId,
+        updateJoinRequestDto,
+        mockRequest.user,
+      );
+
+      // Verify correct parameters are passed
+      expect(serviceSpy).toHaveBeenCalledTimes(1);
+      expect(serviceSpy).toHaveBeenCalledWith(
+        mockRequest.user.id, // Authenticated user ID (project owner)
+        projectId, // Project ID from URL parameter
+        requestId, // Request ID from URL parameter
+        updateJoinRequestDto.status, // Status from request body
+      );
+    });
+
+    it('should pass correct parameters to service when declining a join request', async () => {
+      // Setup
+      const mockRequest = createMockRequestWithUser(
+        defaultUserResponseDto,
+      ) as any;
+      mockRequest.headers = createAuthHeader(mockJwtToken);
+      mockRequest.user = { id: 1 }; // Project owner ID
+
+      const projectId = 1;
+      const requestId = 2;
+      const updateJoinRequestDto = {
+        status: 'Declined' as any,
+      };
+
+      const serviceSpy = jest
+        .spyOn(projectService, 'handleJoinRequest')
+        .mockResolvedValue(undefined);
+
+      // Execute
+      await projectController.handleJoinRequest(
+        projectId,
+        requestId,
+        updateJoinRequestDto,
+        mockRequest.user,
+      );
+
+      // Verify correct parameters are passed
+      expect(serviceSpy).toHaveBeenCalledTimes(1);
+      expect(serviceSpy).toHaveBeenCalledWith(
+        mockRequest.user.id,
+        projectId,
+        requestId,
+        updateJoinRequestDto.status,
+      );
     });
   });
 });
