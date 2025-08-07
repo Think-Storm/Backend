@@ -593,4 +593,22 @@ export class ProjectRepository {
       },
     });
   }
+
+  async connectProjectUsers(userId: number, projectId: number) {
+    try {
+      return this.prisma.project.update({
+        where: { id: projectId },
+        data: {
+          users: {
+            connect: { id: userId },
+          },
+        },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_CONNECTING_PROJECT_USERS,
+        error,
+      );
+    }
+  }
 }

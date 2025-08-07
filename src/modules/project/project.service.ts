@@ -451,6 +451,7 @@ export class ProjectService {
         projectId,
         joinRequest.roleName,
       );
+      await this.projectRepository.connectProjectUsers(requestId, projectId);
       await this.mailService.sendMail({
         to: user.email,
         subject: `Your request to join ${project.title} has been accepted`,

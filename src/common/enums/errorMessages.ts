@@ -8,6 +8,8 @@ export const errorMessages = {
   ERROR_SEARCHING_PROJECTS:
     'An error occurred while searching projects for your queries.',
   ERROR_UPDATING_PROJECTS: 'An error occurred while updating project.',
+  ERROR_CONNECTING_PROJECT_USERS:
+    'An error occurred while connecting project users',
   ERROR_DELETING_PROJECTS: 'An error occurred while deleting project.',
   ERROR_FINDING_PROJECTS: 'An error occurred while finding projects.',
   ERROR_SAVING_PROJECTS: 'An error occurred while saving projects.',
