@@ -1,8 +1,8 @@
 import {
   Goal,
-  LanguageCode,
   ProjectStatus,
   CreateProject,
+  LanguageName,
 } from '@think-storm/contracts';
 import { Transform } from 'class-transformer';
 import {
@@ -68,12 +68,12 @@ export class CreateProjectRequestDto implements CreateProject {
   status: ProjectStatus;
 
   @ApiProperty({
-    description: 'The language code of the project',
-    enum: LanguageCode,
+    description: 'The language name of the project',
+    enum: LanguageName,
   })
-  @IsEnum(LanguageCode)
+  @IsEnum(LanguageName)
   @IsNotEmpty()
-  languageCode: LanguageCode;
+  languageName: LanguageName;
 
   @ApiProperty({
     description: 'The milestone date of the project',

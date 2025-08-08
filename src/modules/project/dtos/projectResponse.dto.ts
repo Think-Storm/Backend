@@ -1,6 +1,6 @@
 import {
   ProjectResponse,
-  Language,
+  LanguageName,
   ProjectStatus,
   Goal,
   User,
@@ -25,10 +25,10 @@ export class ProjectResponseDto implements ProjectResponse {
 
   @Expose()
   @ApiProperty({
-    example: 'EN',
-    description: 'The language of the project',
+    example: 'English',
+    description: 'The language name of the project',
   })
-  language: Language;
+  languageName: LanguageName;
 
   @Expose()
   @ApiProperty({
