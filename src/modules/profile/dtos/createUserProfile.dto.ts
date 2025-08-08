@@ -7,7 +7,7 @@ import {
   IsEnum,
   IsDate,
 } from 'class-validator';
-import { LanguageCode, CreateProfile, UserRole } from '@think-storm/contracts';
+import { LanguageName, CreateProfile, UserRole } from '@think-storm/contracts';
 import { Transform } from 'class-transformer';
 
 export class CreateUserProfileDto implements CreateProfile {
@@ -83,13 +83,13 @@ export class CreateUserProfileDto implements CreateProfile {
   @ApiProperty({
     description: 'Programming languages known by the user',
     required: false,
-    enum: LanguageCode,
+    enum: LanguageName,
     isArray: true,
   })
   @IsOptional()
   @IsArray()
-  @IsEnum(LanguageCode, { each: true })
-  languages?: LanguageCode[];
+  @IsEnum(LanguageName, { each: true })
+  languages?: LanguageName[];
 
   @ApiProperty({
     description: 'Technical skills and labels',

@@ -9,8 +9,8 @@ import {
 import {
   ProjectStatus,
   Goal,
-  LanguageCode,
   UpdateProject,
+  LanguageName,
 } from '@think-storm/contracts';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
@@ -49,12 +49,12 @@ export class UpdateProjectRequestDto implements UpdateProject {
   status: ProjectStatus;
 
   @ApiProperty({
-    description: 'The language code of the project',
+    description: 'The language name of the project',
     required: false,
   })
-  @IsEnum(LanguageCode)
+  @IsEnum(LanguageName)
   @IsNotEmpty()
-  languageCode: LanguageCode;
+  languageName: LanguageName;
 
   @ApiProperty({
     description: 'The milestone date of the project',

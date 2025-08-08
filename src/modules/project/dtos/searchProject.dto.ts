@@ -1,6 +1,6 @@
 import {
   Goal,
-  LanguageCode,
+  LanguageName,
   ProjectStatus,
   SearchProject,
 } from '@think-storm/contracts';
@@ -13,6 +13,14 @@ import { IsAfterDate } from '../../../common/decorator/isAfterDate';
 
 export class SearchProjectDto implements SearchProject {
   @ApiProperty({
+    description: 'Search query to search the projects',
+    required: false,
+  })
+  @IsString()
+  @IsOptional()
+  searchQuery?: string;
+
+  @ApiProperty({
     description: 'The title of the project',
     required: false,
   })
@@ -21,13 +29,13 @@ export class SearchProjectDto implements SearchProject {
   title?: string;
 
   @ApiProperty({
-    description: 'The language code of the project',
-    enum: LanguageCode,
+    description: 'The language name of the project',
+    enum: LanguageName,
     required: false,
   })
-  @IsEnum(LanguageCode)
+  @IsEnum(LanguageName)
   @IsOptional()
-  languageCode?: LanguageCode;
+  languageName?: LanguageName;
 
   @ApiProperty({
     description: 'The description of the project',

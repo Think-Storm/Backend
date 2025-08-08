@@ -19,22 +19,16 @@ export class ProjectMapper {
     const plainProject = instanceToPlain(project);
 
     // Transform domain labels to string array if they exist and have the complex structure
-    if (
-      project.domainLabels?.length > 0 &&
-      'label' in project.domainLabels[0]
-    ) {
+    if (project.domainLabels?.length > 0) {
       plainProject.domainLabels = project.domainLabels.map(
-        (dl) => dl.label.name,
+        (dl) => dl.labelName,
       );
     }
 
     // Transform technical labels to string array if they exist and have the complex structure
-    if (
-      project.technicalLabels?.length > 0 &&
-      'label' in project.technicalLabels[0]
-    ) {
+    if (project.technicalLabels?.length > 0) {
       plainProject.technicalLabels = project.technicalLabels.map(
-        (tl) => tl.label.name,
+        (tl) => tl.labelName,
       );
     }
 
@@ -72,11 +66,7 @@ export class ProjectMapper {
    */
   @ApiProperty({ type: ProjectResponseDto })
   projectsToProjectResponseDtos(projects: Project[]): ProjectResponseDto[] {
-    return projects.map((project) =>
-      plainToInstance(ProjectResponseDto, instanceToPlain(project), {
-        excludeExtraneousValues: true,
-      }),
-    );
+    return projects.map((project) => this.projectToProjectResponseDto(project));
   }
 
   /**

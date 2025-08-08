@@ -10,12 +10,8 @@ import {
 import { UserWithoutSensitiveData } from '../../../../src/modules/user/types/user.types';
 
 export type ProjectWithRelations = Project & {
-  domainLabels?: (ProjectDomainLabel & {
-    label: { name: string };
-  })[];
-  technicalLabels?: (ProjectTechnicalLabel & {
-    label: { name: string };
-  })[];
+  domainLabels?: ProjectDomainLabel[];
+  technicalLabels?: ProjectTechnicalLabel[];
   language?: Language;
   users?: UserWithoutSensitiveData[];
   founder?: UserWithoutSensitiveData;
@@ -33,6 +29,26 @@ export type ProjectWithRelations = Project & {
 export type PrismaProjectWithRelations = Prisma.ProjectGetPayload<{
   include: {
     language: true;
+    domainLabels: {
+      include: {
+        label: {
+          select: {
+            name: true;
+          };
+        };
+      };
+    };
+    technicalLabels: {
+      include: {
+        label: {
+          select: {
+            name: true;
+          };
+        };
+      };
+    };
+    like: true;
+    involvement: true;
     users: {
       omit: {
         password: true;

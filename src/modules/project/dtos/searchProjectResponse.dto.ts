@@ -12,12 +12,7 @@ export class SearchProjectResponseDto implements SearchProjectResponse {
         id: 1,
         title: 'title',
         description: 'description',
-        language: {
-          code: 'EN',
-          name: 'English',
-          createdAt: new Date('2000-01-01'),
-          lastUpdatedAt: new Date('2000-01-01'),
-        },
+        language: 'English',
         technicalLabels: ['nestjs', 'js', 'jest'],
         domainLabels: ['Cooking', 'Design', 'Geography'],
         goal: 'Education',

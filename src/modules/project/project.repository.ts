@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma, Project, JoinRequest } from '@prisma/client';
+import { Prisma, JoinRequest } from '@prisma/client';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
@@ -28,7 +28,13 @@ export class ProjectRepository {
         },
         include: {
           language: true,
-          users: true,
+          users: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
           founder: {
             omit: {
               password: true,
@@ -36,7 +42,27 @@ export class ProjectRepository {
               passwordChangedAt: true,
             },
           },
-          savedByUsers: {
+          domainLabels: {
+            include: {
+              label: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          technicalLabels: {
+            include: {
+              label: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          like: true,
+          involvement: true,
+          joinRequest: {
             include: {
               user: {
                 omit: {
@@ -47,7 +73,7 @@ export class ProjectRepository {
               },
             },
           },
-          joinRequest: {
+          savedByUsers: {
             include: {
               user: {
                 omit: {
@@ -76,17 +102,25 @@ export class ProjectRepository {
    */
   async createProject(
     createProjectRequestDto: CreateProjectRequestDto,
-  ): Promise<Project> {
+  ): Promise<PrismaProjectWithRelations> {
     try {
       return await this.prisma.project.create({
         data: {
-          founderId: createProjectRequestDto.founderId,
           title: createProjectRequestDto.title,
           description: createProjectRequestDto.description,
           goal: createProjectRequestDto.goal,
           status: createProjectRequestDto.status,
-          languageCode: createProjectRequestDto.languageCode,
           milestone: createProjectRequestDto.milestone,
+          founder: {
+            connect: {
+              id: createProjectRequestDto.founderId,
+            },
+          },
+          language: {
+            connect: {
+              name: createProjectRequestDto.languageName,
+            },
+          },
           domainLabels: {
             create: createProjectRequestDto.domainLabels.map((domainLabel) => {
               return {
@@ -114,7 +148,13 @@ export class ProjectRepository {
         },
         include: {
           language: true,
-          users: true,
+          users: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
           founder: {
             omit: {
               password: true,
@@ -122,11 +162,48 @@ export class ProjectRepository {
               passwordChangedAt: true,
             },
           },
-          domainLabels: true,
-          technicalLabels: true,
+          domainLabels: {
+            include: {
+              label: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          technicalLabels: {
+            include: {
+              label: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
           like: true,
           involvement: true,
-          joinRequest: true,
+          joinRequest: {
+            include: {
+              user: {
+                omit: {
+                  password: true,
+                  passwordSalt: true,
+                  passwordChangedAt: true,
+                },
+              },
+            },
+          },
+          savedByUsers: {
+            include: {
+              user: {
+                omit: {
+                  password: true,
+                  passwordSalt: true,
+                  passwordChangedAt: true,
+                },
+              },
+            },
+          },
         },
       });
     } catch (error) {
@@ -145,7 +222,7 @@ export class ProjectRepository {
    */
   async updateProject(
     updateProjectRequestDto: UpdateProjectRequestDto,
-  ): Promise<Project> {
+  ): Promise<PrismaProjectWithRelations> {
     try {
       return await this.prisma.project.update({
         where: { id: updateProjectRequestDto.id },
@@ -153,9 +230,13 @@ export class ProjectRepository {
           title: updateProjectRequestDto.title,
           description: updateProjectRequestDto.description,
           status: updateProjectRequestDto.status,
-          languageCode: updateProjectRequestDto.languageCode,
           milestone: updateProjectRequestDto.milestone,
           goal: updateProjectRequestDto.goal,
+          language: {
+            connect: {
+              name: updateProjectRequestDto.languageName,
+            },
+          },
           domainLabels: {
             deleteMany: {},
             create: updateProjectRequestDto.domainLabels.map((domainLabel) => ({
@@ -197,17 +278,46 @@ export class ProjectRepository {
           },
           domainLabels: {
             include: {
-              label: true,
+              label: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           technicalLabels: {
             include: {
-              label: true,
+              label: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           like: true,
           involvement: true,
-          joinRequest: true,
+          joinRequest: {
+            include: {
+              user: {
+                omit: {
+                  password: true,
+                  passwordSalt: true,
+                  passwordChangedAt: true,
+                },
+              },
+            },
+          },
+          savedByUsers: {
+            include: {
+              user: {
+                omit: {
+                  password: true,
+                  passwordSalt: true,
+                  passwordChangedAt: true,
+                },
+              },
+            },
+          },
         },
       });
     } catch (error) {
@@ -226,52 +336,66 @@ export class ProjectRepository {
   async searchProjects(
     searchProjectDto: SearchProjectDto,
     sortByArr: Array<object>,
-  ): Promise<{ projects: Project[]; totalItems: number }> {
+  ): Promise<{ projects: PrismaProjectWithRelations[]; totalItems: number }> {
     try {
-      const whereClause = {
-        title: {
-          contains: searchProjectDto.title,
-          mode: Prisma.QueryMode.insensitive,
-        },
-        languageCode: searchProjectDto.languageCode,
-        description: {
-          contains: searchProjectDto.description,
-          mode: Prisma.QueryMode.insensitive,
-        },
-        status: searchProjectDto.status,
-        goal: searchProjectDto.goal,
-        milestone: {
-          gte: searchProjectDto.mileStoneFrom,
-          lte: searchProjectDto.mileStoneTo,
-        },
-        createdAt: {
-          gte: searchProjectDto.createdAtFrom,
-          lte: searchProjectDto.createdAtTo,
-        },
-        lastUpdatedAt: {
-          gte: searchProjectDto.lastUpdatedAtFrom,
-          lte: searchProjectDto.lastUpdatedAtTo,
-        },
-        technicalLabels: {
-          some: {
-            OR: searchProjectDto.technicalLabels
-              ?.split(',')
-              .map((technicalLabel) => {
-                return {
-                  labelName: technicalLabel,
-                };
-              }),
+      const whereClause: Prisma.ProjectWhereInput = {
+        AND: [
+          {
+            title: {
+              contains: searchProjectDto.title,
+              mode: Prisma.QueryMode.insensitive,
+            },
+            description: {
+              contains: searchProjectDto.description,
+              mode: Prisma.QueryMode.insensitive,
+            },
+            languageName: searchProjectDto.languageName,
+            status: searchProjectDto.status,
+            goal: searchProjectDto.goal,
+            milestone: {
+              gte: searchProjectDto.mileStoneFrom,
+              lte: searchProjectDto.mileStoneTo,
+            },
+            createdAt: {
+              gte: searchProjectDto.createdAtFrom,
+              lte: searchProjectDto.createdAtTo,
+            },
+            lastUpdatedAt: {
+              gte: searchProjectDto.lastUpdatedAtFrom,
+              lte: searchProjectDto.lastUpdatedAtTo,
+            },
+            technicalLabels: {
+              some: {
+                OR: searchProjectDto.technicalLabels
+                  ?.split(',')
+                  .map((technicalLabel) => ({ labelName: technicalLabel })),
+              },
+            },
+            domainLabels: {
+              some: {
+                OR: searchProjectDto.domainLabels
+                  ?.split(',')
+                  .map((domainLabel) => ({ labelName: domainLabel })),
+              },
+            },
           },
-        },
-        domainLabels: {
-          some: {
-            OR: searchProjectDto.domainLabels?.split(',').map((domainLabel) => {
-              return {
-                labelName: domainLabel,
-              };
-            }),
+          {
+            OR: [
+              {
+                title: {
+                  contains: searchProjectDto.searchQuery,
+                  mode: Prisma.QueryMode.insensitive,
+                },
+              },
+              {
+                description: {
+                  contains: searchProjectDto.searchQuery,
+                  mode: Prisma.QueryMode.insensitive,
+                },
+              },
+            ],
           },
-        },
+        ],
       };
 
       const [projects, totalItems] = await this.prisma.$transaction([
@@ -281,13 +405,62 @@ export class ProjectRepository {
           where: whereClause,
           include: {
             language: true,
-            users: true,
-            founder: true,
-            domainLabels: true,
-            technicalLabels: true,
+            users: {
+              omit: {
+                password: true,
+                passwordSalt: true,
+                passwordChangedAt: true,
+              },
+            },
+            founder: {
+              omit: {
+                password: true,
+                passwordSalt: true,
+                passwordChangedAt: true,
+              },
+            },
+            domainLabels: {
+              include: {
+                label: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+            technicalLabels: {
+              include: {
+                label: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
             like: true,
             involvement: true,
-            joinRequest: true,
+            joinRequest: {
+              include: {
+                user: {
+                  omit: {
+                    password: true,
+                    passwordSalt: true,
+                    passwordChangedAt: true,
+                  },
+                },
+              },
+            },
+            savedByUsers: {
+              include: {
+                user: {
+                  omit: {
+                    password: true,
+                    passwordSalt: true,
+                    passwordChangedAt: true,
+                  },
+                },
+              },
+            },
           },
           orderBy: sortByArr,
         }),
@@ -307,7 +480,7 @@ export class ProjectRepository {
    * @param id - The id of the Project to delete
    * @returns A promise resolving to a Project object or null
    */
-  async deleteProjectById(id: number): Promise<Project> {
+  async deleteProjectById(id: number): Promise<PrismaProjectWithRelations> {
     try {
       return await this.prisma.project.delete({
         where: {
@@ -331,17 +504,46 @@ export class ProjectRepository {
           },
           domainLabels: {
             include: {
-              label: true,
+              label: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           technicalLabels: {
             include: {
-              label: true,
+              label: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           like: true,
           involvement: true,
-          joinRequest: true,
+          joinRequest: {
+            include: {
+              user: {
+                omit: {
+                  password: true,
+                  passwordSalt: true,
+                  passwordChangedAt: true,
+                },
+              },
+            },
+          },
+          savedByUsers: {
+            include: {
+              user: {
+                omit: {
+                  password: true,
+                  passwordSalt: true,
+                  passwordChangedAt: true,
+                },
+              },
+            },
+          },
         },
       });
     } catch (error) {
@@ -394,12 +596,20 @@ export class ProjectRepository {
           },
           domainLabels: {
             include: {
-              label: true,
+              label: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           technicalLabels: {
             include: {
-              label: true,
+              label: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           like: true,
@@ -479,12 +689,20 @@ export class ProjectRepository {
           },
           domainLabels: {
             include: {
-              label: true,
+              label: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           technicalLabels: {
             include: {
-              label: true,
+              label: {
+                select: {
+                  name: true,
+                },
+              },
             },
           },
           like: true,

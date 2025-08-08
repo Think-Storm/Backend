@@ -15,7 +15,7 @@ export class ProfileRepository {
    * @param userId - The ID of the user to create the profile for
    * @param createProfileDto - Data transfer object containing profile information
    * @param createProfileDto.domain_labels - Array of domain/interest areas (e.g., "AI", "Web Development")
-   * @param createProfileDto.languages - Array of language codes the user knows
+   * @param createProfileDto.languages - Array of language names the user knows
    * @param createProfileDto.technical_labels - Array of technical skills/technologies
    * @param createProfileDto.preferred_role - User's preferred role in projects
    * @param createProfileDto.profileData - Additional profile data (spread from remaining DTO fields)
@@ -60,9 +60,9 @@ export class ProfileRepository {
             : undefined,
           languages: languages
             ? {
-                create: languages.map((code) => ({
+                create: languages.map((name) => ({
                   language: {
-                    connect: { code },
+                    connect: { name },
                   },
                 })),
               }
@@ -212,9 +212,9 @@ export class ProfileRepository {
           languages: languages
             ? {
                 deleteMany: {},
-                create: languages.map((code) => ({
+                create: languages.map((name) => ({
                   language: {
-                    connect: { code },
+                    connect: { name },
                   },
                 })),
               }
