@@ -62,12 +62,12 @@ model Project {
   description     String?
   goal            String
   status          String
-  languageCode    String                  @map("language_code")
+  languageName    String                  @map("language_name")
   milestone       DateTime?
   createdAt       DateTime                @default(now()) @map("created_at")
   lastUpdatedAt   DateTime                @updatedAt @map("last_updated_at")
   founder         User?                   @relation(fields: [founderId], references: [id], name: "FounderProjects", onDelete: SetNull)
-  language        Language?               @relation(fields: [languageCode], references: [code], onDelete: SetNull)
+  language        Language?               @relation(fields: [languageName], references: [name], onDelete: SetNull)
   users           User[]
   savedByUsers    SavedProject[]
   domainLabels    ProjectDomainLabel[]
@@ -208,8 +208,8 @@ model JoinRequest {
 }
 
 model Language {
-  code          String          @id
-  name          String
+  name          String          @id
+  code          String          @unique
   createdAt     DateTime              @default(now()) @map("created_at")
   lastUpdatedAt DateTime              @updatedAt @map("last_updated_at")
   projects      Project[]
@@ -231,11 +231,11 @@ model Role {
 
 model UserProfileLanguage {
   userId       Int          @map("user_id")
-  languageCode String @map("language_code")
-  language     Language     @relation(fields: [languageCode], references: [code], onUpdate: Cascade, onDelete: Cascade)
+  languageName String       @map("language_name")
+  language     Language     @relation(fields: [languageName], references: [name], onUpdate: Cascade, onDelete: Cascade)
   userProfile  UserProfile? @relation(fields: [userId], references: [userId], onUpdate: Cascade, onDelete: Cascade)
 
-  @@id([userId, languageCode])
+  @@id([userId, languageName])
   @@map("user_profile_languages")
 }
 

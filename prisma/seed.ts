@@ -10,7 +10,7 @@ async function main() {
   await Promise.all(
     languages.map(async (language) => {
       await prisma.language.upsert({
-        where: { code: language.code },
+        where: { name: language.name },
         update: {},
         create: {
           code: language.code,
@@ -89,7 +89,7 @@ async function main() {
           description: project.description,
           goal: project.goal,
           status: project.status,
-          languageCode: project.languageCode,
+          languageName: project.languageName,
           milestone: project.milestone,
           founderId: mockFounder.id,
           domainLabels: {
