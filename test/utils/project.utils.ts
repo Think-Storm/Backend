@@ -10,16 +10,20 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 import { CreateProjectRequestDto } from '../../src/modules/project/dtos/createProjectRequest.dto';
 import { ProjectResponseDto } from '../../src/modules/project/dtos/projectResponse.dto';
 import { ProjectRepository } from '../../src/modules/project/project.repository';
-import { defaultCreateUserDto, defaultUser } from './user.utils';
+import { defaultUser } from './user.utils';
 import { UpdateProjectRequestDto } from '../../src/modules/project/dtos/updateProjectRequest.dto';
-import { UserRepository } from '../../src/modules/user/user.repository';
-import { defaultPasswordSalt } from '../../test/unit/common/passwordEncryption.utils';
 import { SearchProjectDto } from '../../src/modules/project/dtos/searchProject.dto';
 import { GetProjectRequestDto } from '../../src/modules/project/dtos/getProjectRequest.dto';
 import { SearchProjectResponseDto } from './../../src/modules/project/dtos/searchProjectResponse.dto';
 import { JoinRequestResponseDto } from '../../src/modules/project/dtos/joinRequestResponse.dto';
 import { Project } from '@prisma/client';
 
+/**
+ *
+ * @param prismaService - The Prisma service for database access.
+ * @param defaultCreateProjectDto - Default Create Project DTO for creating project.
+ * @returns The created project.
+ */
 export const createProjectInDB = async (
   prismaService: PrismaService,
   defaultCreateProjectDto: CreateProjectRequestDto,
@@ -30,22 +34,13 @@ export const createProjectInDB = async (
 };
 
 /**
- * Creates a project in the database.
- * @param prismaService - The Prisma service for database access.
- * @param UserRepository - The user repository for user-related database operations.
- * @returns The created project.
+ *
+ * @param prismaService - The Prisma service for database access
  */
-export const createProjectInDBWithUser = async (
-  prismaService: PrismaService,
-  userRepository: UserRepository,
-  createProjectRequestDto: CreateProjectRequestDto,
-): Promise<Project> => {
-  // Create a User in DB as project founder
-  await userRepository.createUser(defaultCreateUserDto, defaultPasswordSalt);
-
+export const createLanguagesInDB = async (prismaService: PrismaService) => {
   // Create a Language in DB (if is does not already exist) as project language
   await prismaService.language.upsert({
-    where: { code: LanguageCode.EN },
+    where: { name: LanguageName.English },
     update: {},
     create: {
       code: LanguageCode.EN,
@@ -55,26 +50,52 @@ export const createProjectInDBWithUser = async (
 
   // Create a Language in DB (if is does not already exist) as project language
   await prismaService.language.upsert({
-    where: { code: LanguageCode.KR },
+    where: { name: LanguageName.Korean },
     update: {},
     create: {
       code: LanguageCode.KR,
       name: LanguageName.Korean,
     },
   });
-
-  // Create a Project in DB and return it
-  return await createProject(prismaService, createProjectRequestDto);
 };
 
+/**
+ *
+ * @param prismaService - The Prisma service for database access.
+ * @param createProjectRequestDto - Default Create Project Request DTO for creating project.
+ * @returns The created project.
+ */
 export const createProject = async (prismaService, createProjectRequestDto) => {
   const createdProject = await prismaService.project.create({
     data: {
-      founderId: createProjectRequestDto.founderId,
       title: createProjectRequestDto.title,
       description: createProjectRequestDto.description,
+      goal: createProjectRequestDto.goal,
+      status: createProjectRequestDto.status,
+      milestone: createProjectRequestDto.milestone,
+      founder: {
+        connect: {
+          id: createProjectRequestDto.founderId,
+        },
+      },
+      language: {
+        connect: {
+          name: createProjectRequestDto.languageName,
+        },
+      },
+      domainLabels: {
+        create: createProjectRequestDto.domainLabels.map((domainLabel) => {
+          return {
+            label: {
+              connect: {
+                name: domainLabel,
+              },
+            },
+          };
+        }),
+      },
       technicalLabels: {
-        create: createProjectRequestDto.technicalLabels?.map(
+        create: createProjectRequestDto.technicalLabels.map(
           (technicalLabel) => {
             return {
               label: {
@@ -86,33 +107,57 @@ export const createProject = async (prismaService, createProjectRequestDto) => {
           },
         ),
       },
-      domainLabels: {
-        create: createProjectRequestDto.domainLabels?.map((domainLabel) => {
-          return {
-            label: {
-              connect: {
-                name: domainLabel,
-              },
-            },
-          };
-        }),
-      },
-      goal: createProjectRequestDto.goal,
-      status: createProjectRequestDto.status,
-      languageCode: createProjectRequestDto.languageCode,
-      milestone: createProjectRequestDto.milestone,
-      createdAt: new Date('2000-01-01'),
-      lastUpdatedAt: new Date('2000-01-01'),
     },
     include: {
       language: true,
-      users: true,
-      founder: true,
-      domainLabels: true,
-      technicalLabels: true,
+      users: {
+        omit: {
+          password: true,
+          passwordSalt: true,
+          passwordChangedAt: true,
+        },
+      },
+      founder: {
+        omit: {
+          password: true,
+          passwordSalt: true,
+          passwordChangedAt: true,
+        },
+      },
+      domainLabels: {
+        include: {
+          label: true,
+        },
+      },
+      technicalLabels: {
+        include: {
+          label: true,
+        },
+      },
       like: true,
       involvement: true,
-      joinRequest: true,
+      joinRequest: {
+        include: {
+          user: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
+        },
+      },
+      savedByUsers: {
+        include: {
+          user: {
+            omit: {
+              password: true,
+              passwordSalt: true,
+              passwordChangedAt: true,
+            },
+          },
+        },
+      },
     },
   });
   return createdProject;
@@ -122,10 +167,7 @@ export const secondProjectResponseDto: ProjectResponseDto = {
   id: 1,
   title: 'second title',
   description: 'second description',
-  language: {
-    code: LanguageCode.KR,
-    name: LanguageName.Korean,
-  },
+  languageName: LanguageName.Korean,
   technicalLabels: ['aws', 'nextjs', 'gatsby'],
   domainLabels: ['Design', 'Mathematics', 'Mindfulness'],
   goal: Goal.Fun,
@@ -143,7 +185,7 @@ export const defaultCreateProjectRequestDto: CreateProjectRequestDto = {
   description: 'description',
   goal: Goal.Education,
   status: ProjectStatus.InProgress,
-  languageCode: LanguageCode.EN,
+  languageName: LanguageName.English,
   milestone: new Date('2000-01-01'),
   technicalLabels: ['nestjs', 'js', 'jest'],
   domainLabels: ['Cooking', 'Design', 'Geography'],
@@ -155,7 +197,7 @@ export const secondCreateProjectRequestDto: CreateProjectRequestDto = {
   description: 'second description',
   goal: Goal.Fun,
   status: ProjectStatus.Complete,
-  languageCode: LanguageCode.KR,
+  languageName: LanguageName.Korean,
   milestone: new Date('2028-01-01'),
   technicalLabels: ['aws', 'nextjs', 'gatsby'],
   domainLabels: ['Design', 'Mathematics', 'Mindfulness'],
@@ -165,10 +207,7 @@ export const defaultProjectResponseDto: ProjectResponseDto = {
   id: 1,
   title: 'title',
   description: 'description',
-  language: {
-    code: LanguageCode.EN,
-    name: LanguageName.English,
-  },
+  languageName: LanguageName.English,
   technicalLabels: ['nestjs', 'js', 'jest'],
   domainLabels: ['Cooking', 'Design', 'Geography'],
   goal: Goal.Education,
@@ -187,7 +226,7 @@ export const defaultProject = {
   description: 'description',
   goal: Goal.Education,
   status: ProjectStatus.InProgress,
-  languageCode: LanguageCode.EN,
+  languageName: LanguageName.English,
   milestone: new Date('2000-01-01'),
   createdAt: new Date('2000-01-01'),
   lastUpdatedAt: new Date('2000-01-01'),
@@ -200,8 +239,16 @@ export const defaultProject = {
   },
   users: [],
   founder: defaultUser,
-  domainLabels: [],
-  technicalLabels: [],
+  technicalLabels: [
+    { projectId: 1, labelName: 'nestjs', label: { name: 'nestjs' } },
+    { projectId: 1, labelName: 'js', label: { name: 'js' } },
+    { projectId: 1, labelName: 'jest', label: { name: 'jest' } },
+  ],
+  domainLabels: [
+    { projectId: 1, labelName: 'Cooking', label: { name: 'Cooking' } },
+    { projectId: 1, labelName: 'Design', label: { name: 'Design' } },
+    { projectId: 1, labelName: 'Geography', label: { name: 'Geography' } },
+  ],
   like: [],
   involvement: [],
   joinRequest: [],
@@ -214,10 +261,32 @@ export const secondProject = {
   description: 'second description',
   goal: Goal.Fun,
   status: ProjectStatus.Complete,
-  languageCode: LanguageCode.KR,
+  languageName: LanguageName.Korean,
   milestone: new Date('2028-01-01'),
   createdAt: new Date('2025-01-01'),
   lastUpdatedAt: new Date('2025-01-01'),
+  savedByUsers: [],
+  language: {
+    code: LanguageCode.KR,
+    name: LanguageName.Korean,
+    createdAt: new Date(),
+    lastUpdatedAt: new Date(),
+  },
+  users: [],
+  founder: defaultUser,
+  technicalLabels: [
+    { projectId: 1, labelName: 'aws', label: { name: 'aws' } },
+    { projectId: 1, labelName: 'nextjs', label: { name: 'nextjs' } },
+    { projectId: 1, labelName: 'gatsby', label: { name: 'gatsby' } },
+  ],
+  domainLabels: [
+    { projectId: 1, labelName: 'Design', label: { name: 'Design' } },
+    { projectId: 1, labelName: 'Mathematics', label: { name: 'Mathematics' } },
+    { projectId: 1, labelName: 'Mindfulness', label: { name: 'Mindfulness' } },
+  ],
+  like: [],
+  involvement: [],
+  joinRequest: [],
 };
 
 export const defaultUpdatedProject = {
@@ -226,7 +295,7 @@ export const defaultUpdatedProject = {
   title: 'updatedTitle',
   description: 'updatedDescription',
   status: ProjectStatus.Complete,
-  languageCode: LanguageCode.FR,
+  languageName: LanguageName.French,
   goal: Goal.OpenSource,
   milestone: new Date('2021-01-01'),
   createdAt: new Date('2000-01-01'),
@@ -241,7 +310,7 @@ export const defaultCreateProjectDto: CreateProjectRequestDto = {
   domainLabels: [],
   goal: Goal.Education,
   status: ProjectStatus.InProgress,
-  languageCode: LanguageCode.EN,
+  languageName: LanguageName.English,
   milestone: new Date('2000-01-01'),
 };
 
@@ -251,7 +320,7 @@ export const defaultUpdateProjectDto: UpdateProjectRequestDto = {
   title: 'updatedTitle',
   description: 'updatedDescription',
   status: ProjectStatus.Complete,
-  languageCode: LanguageCode.FR,
+  languageName: LanguageName.French,
   goal: Goal.OpenSource,
   milestone: new Date('2021-01-01'),
   domainLabels: ['Science', 'Technology'],
@@ -264,7 +333,7 @@ export const defaultDeleteProjectDto: GetProjectRequestDto = {
 
 export const defaultSearchProjectDto: SearchProjectDto = {
   title: 'title',
-  languageCode: LanguageCode.EN,
+  languageName: LanguageName.English,
   description: 'description',
   status: ProjectStatus.InProgress,
   goal: Goal.Education,
@@ -328,13 +397,11 @@ export const defaultSavedProject = {
 export type MockProjectDomainLabel = {
   projectId?: number;
   labelName?: string;
-  label: { name: string };
 };
 
 export type MockProjectTechnicalLabel = {
   projectId?: number;
   labelName?: string;
-  label: { name: string };
 };
 
 export type MockProjectWithLabels = {
@@ -344,7 +411,7 @@ export type MockProjectWithLabels = {
   description: string | null;
   goal: Goal;
   status: ProjectStatus;
-  languageCode: LanguageCode;
+  languageName: LanguageName;
   milestone: Date | null;
   createdAt: Date;
   lastUpdatedAt: Date;

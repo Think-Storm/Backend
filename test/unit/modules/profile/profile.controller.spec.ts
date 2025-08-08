@@ -10,7 +10,7 @@ import {
 } from '../../../utils/profile.utils';
 import { mockJwtToken } from '../../../utils/jwt.utils';
 import { createAuthHeader } from '../../../utils/auth.utils';
-import { LanguageCode, UserRole } from '@think-storm/contracts';
+import { LanguageName, UserRole } from '@think-storm/contracts';
 
 describe('ProfileController', () => {
   let controller: ProfileController;
@@ -96,7 +96,7 @@ describe('ProfileController', () => {
     const profileId = defaultMockUserProfile.id;
     const updateProfileDto: UpdateUserProfileDto = {
       domain_labels: ['AI', 'ML'],
-      languages: [LanguageCode.EN],
+      languages: [LanguageName.English],
       technical_labels: ['Python'],
       preferred_role: [UserRole.DataScientist],
     };

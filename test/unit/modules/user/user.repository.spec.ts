@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
   defaultCreateUserDto,
   defaultUpdateUser1Dto,
+  createUserInDB,
 } from '../../../utils/user.utils';
 import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
@@ -38,10 +39,7 @@ describe('UserRepository', () => {
 
   describe('createUser function', () => {
     it('should create a new user in DB', async () => {
-      const user = await userRepository.createUser(
-        defaultCreateUserDto,
-        defaultPasswordSalt,
-      );
+      const user = await createUserInDB(prismaService, defaultCreateUserDto);
 
       expect(user).toHaveProperty('id');
       expect(user.createdAt).toBeDefined();
@@ -56,10 +54,7 @@ describe('UserRepository', () => {
   describe('getUserByEmail function', () => {
     it('should retrieve a user in DB with email', async () => {
       // Create a User in DB to fetch
-      await userRepository.createUser(
-        defaultCreateUserDto,
-        defaultPasswordSalt,
-      );
+      await createUserInDB(prismaService, defaultCreateUserDto);
 
       const user = await userRepository.getUserByEmail(
         defaultCreateUserDto.email,
@@ -86,9 +81,9 @@ describe('UserRepository', () => {
   describe('getUser function', () => {
     it('should get a searched user in DB', async () => {
       // create a user
-      const createdUser = await userRepository.createUser(
+      const createdUser = await createUserInDB(
+        prismaService,
         defaultCreateUserDto,
-        defaultPasswordSalt,
       );
 
       const user = await userRepository.getUserById(createdUser.id);
@@ -105,10 +100,7 @@ describe('UserRepository', () => {
 
     it('should fail if userId is String type', async () => {
       // create a user
-      await userRepository.createUser(
-        defaultCreateUserDto,
-        defaultPasswordSalt,
-      );
+      await createUserInDB(prismaService, defaultCreateUserDto);
       try {
         await userRepository.getUserById(Number('abc'));
       } catch (e) {
@@ -121,9 +113,9 @@ describe('UserRepository', () => {
   describe('updateUser function', () => {
     it('should update an existing user in DB', async () => {
       // create a user
-      const createdUser = await userRepository.createUser(
+      const createdUser = await createUserInDB(
+        prismaService,
         defaultCreateUserDto,
-        defaultPasswordSalt,
       );
 
       const user = await userRepository.updateUser(defaultUpdateUser1Dto);
@@ -139,9 +131,9 @@ describe('UserRepository', () => {
 
   describe('udpatePassword', () => {
     it('should update user password', async () => {
-      const createdUser = await userRepository.createUser(
+      const createdUser = await createUserInDB(
+        prismaService,
         defaultCreateUserDto,
-        defaultPasswordSalt,
       );
 
       const updatedUser = await userRepository.udpatePassword(
@@ -173,9 +165,9 @@ describe('UserRepository', () => {
   describe('deleteUser repository function', () => {
     it('should delete an existing user from DB', async () => {
       // Arrange: create a user
-      const createdUser = await userRepository.createUser(
+      const createdUser = await createUserInDB(
+        prismaService,
         defaultCreateUserDto,
-        defaultPasswordSalt,
       );
 
       // Act
@@ -202,9 +194,9 @@ describe('UserRepository', () => {
       // This test assumes you have a Notification or related table with a foreign key to User.
       // You may need to adjust this test based on your schema and seed data.
       // Arrange: create a user
-      const createdUser = await userRepository.createUser(
+      const createdUser = await createUserInDB(
+        prismaService,
         defaultCreateUserDto,
-        defaultPasswordSalt,
       );
       // Simulate a foreign key constraint by creating a related record if possible
       // For demonstration, we expect the error to be thrown if such a constraint exists

@@ -10,7 +10,7 @@ import {
   defaultMockUserProfile,
   defaultProfileWithAssociations,
 } from '../../../utils/profile.utils';
-import { LanguageCode, UserRole } from '@think-storm/contracts';
+import { LanguageName, UserRole } from '@think-storm/contracts';
 
 describe('ProfileService', () => {
   let service: ProfileService;
@@ -158,7 +158,7 @@ describe('ProfileService', () => {
     const requestUserId = defaultMockUser.id;
     const updateProfileDto: UpdateUserProfileDto = {
       domain_labels: ['AI', 'ML'],
-      languages: [LanguageCode.EN],
+      languages: [LanguageName.English],
       technical_labels: ['Python'],
       preferred_role: [UserRole.DataScientist],
     };

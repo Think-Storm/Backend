@@ -21,7 +21,7 @@ type ProjectWithStringArrayLabels = {
   description: string | null;
   goal: string;
   status: string;
-  languageCode: string;
+  languageName: string;
   milestone: Date | null;
   createdAt: Date;
   lastUpdatedAt: Date;
@@ -58,20 +58,19 @@ describe('ProjectMapper', () => {
         ...defaultProject,
         goal: Goal.Education,
         status: ProjectStatus.InProgress,
-        languageCode: stringToEnum(defaultProject.languageCode, LanguageCode),
+        languageName: stringToEnum(defaultProject.languageName, LanguageName),
         domainLabels: [
-          { projectId: 1, labelName: 'Cooking', label: { name: 'Cooking' } },
-          { projectId: 1, labelName: 'Design', label: { name: 'Design' } },
+          { projectId: 1, labelName: 'Cooking' },
+          { projectId: 1, labelName: 'Design' },
           {
             projectId: 1,
             labelName: 'Geography',
-            label: { name: 'Geography' },
           },
         ],
         technicalLabels: [
-          { projectId: 1, labelName: 'nestjs', label: { name: 'nestjs' } },
-          { projectId: 1, labelName: 'js', label: { name: 'js' } },
-          { projectId: 1, labelName: 'jest', label: { name: 'jest' } },
+          { projectId: 1, labelName: 'nestjs' },
+          { projectId: 1, labelName: 'js' },
+          { projectId: 1, labelName: 'jest' },
         ],
         language: {
           code: LanguageCode.EN,
@@ -88,12 +87,7 @@ describe('ProjectMapper', () => {
         id: 1,
         title: 'title',
         description: 'description',
-        language: {
-          code: LanguageCode.EN,
-          name: LanguageName.English,
-          createdAt: expect.any(Date),
-          lastUpdatedAt: expect.any(Date),
-        },
+        languageName: LanguageName.English,
         technicalLabels: ['nestjs', 'js', 'jest'],
         domainLabels: ['Cooking', 'Design', 'Geography'],
         goal: Goal.Education,
@@ -104,6 +98,7 @@ describe('ProjectMapper', () => {
         lastUpdatedAt: new Date('2000-01-01'),
         founder: defaultUser,
         savedByUsers: [],
+        joinRequest: [],
       };
 
       const result = projectMapper.projectToProjectResponseDto(
@@ -118,7 +113,7 @@ describe('ProjectMapper', () => {
         ...defaultProject,
         goal: stringToEnum(defaultProject.goal, Goal),
         status: stringToEnum(defaultProject.status, ProjectStatus),
-        languageCode: stringToEnum(defaultProject.languageCode, LanguageCode),
+        languageName: stringToEnum(defaultProject.languageName, LanguageName),
         domainLabels: [],
         technicalLabels: [],
         language: {
@@ -202,7 +197,7 @@ describe('ProjectMapper', () => {
         ...defaultProject,
         goal: stringToEnum(defaultProject.goal, Goal),
         status: stringToEnum(defaultProject.status, ProjectStatus),
-        languageCode: stringToEnum(defaultProject.languageCode, LanguageCode),
+        languageName: stringToEnum(defaultProject.languageName, LanguageName),
         description: null,
         domainLabels: undefined,
         technicalLabels: undefined,
