@@ -3,10 +3,9 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import {
-  createProjectInDB,
-  createProjectInDBWithUser,
-  defaultCreateProjectDto,
+  createProject,
   defaultCreateProjectRequestDto,
+  createLanguagesInDB,
   defaultDeleteProjectDto,
   defaultUpdateProjectDto,
 } from '../utils/project.utils';
@@ -19,17 +18,15 @@ import prisma from '../../src/prisma/prisma.client';
 import { ConfigService } from '@nestjs/config';
 import { AuthModule } from '../../src/modules/auth/auth.module';
 import refreshDatabase from '../../src/prisma/prisma.dbreset';
-import { UserRepository } from '../../src/modules/user/user.repository';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { RedisThrottlerStorageService } from '../../src/common/throttler/redisThrottlerStorage.service';
 import { RedisService } from '../../src/common/caching/redisCaching.service';
-import { LanguageCode, stringToEnum } from '@think-storm/contracts';
+import { LanguageName, stringToEnum } from '@think-storm/contracts';
 import { errorMessages } from '../../src/common/enums/errorMessages';
 
 describe('/projects', () => {
   let app: INestApplication;
   let prismaService: PrismaService;
-  let userRepository: UserRepository;
   let redisService: RedisService;
 
   beforeAll(async () => {
@@ -49,7 +46,6 @@ describe('/projects', () => {
       .compile();
 
     prismaService = moduleFixture.get<PrismaService>(PrismaService);
-    userRepository = moduleFixture.get<UserRepository>(UserRepository);
     redisService = moduleFixture.get<RedisService>(RedisService);
 
     app = moduleFixture.createNestApplication();
@@ -89,18 +85,26 @@ describe('/projects', () => {
 
   describe('/ POST (Create Project)', () => {
     it('should return a 201 if everything is fine', async () => {
-      // Create User and Language in DB
-      await createUserInDB(prismaService, defaultCreateUserDto);
-      const createdProject = await createProjectInDB(
+      // First create a user
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
+      // Create project with the founder user
+      const createdProject = await createProject(
         prismaService,
-        defaultCreateProjectDto,
+        defaultCreateProjectRequestDto,
       );
 
-      const createProjectRequest = defaultCreateProjectDto;
+      const createProjectRequest = defaultCreateProjectRequestDto;
       createProjectRequest.founderId = createdProject.founderId;
-      createProjectRequest.languageCode = stringToEnum(
-        createdProject.languageCode,
-        LanguageCode,
+      createProjectRequest.languageName = stringToEnum(
+        createdProject.languageName,
+        LanguageName,
       );
 
       return await request(app.getHttpServer())
@@ -113,18 +117,26 @@ describe('/projects', () => {
       // No previous creation of User, so the project should be refused
       return await request(app.getHttpServer())
         .post('/')
-        .send(defaultCreateProjectDto)
+        .send(defaultCreateProjectRequestDto)
         .expect(404);
     });
   });
 
   describe('/:id GET (Get Project By Id)', () => {
     it('should return a 200 if everything is fine', async () => {
-      // Create Project in DB
-      await createUserInDB(prismaService, defaultCreateUserDto);
-      const createdProject = await createProjectInDB(
+      // First create a user
+      await request(app.getHttpServer())
+        .post('/register')
+        .send(defaultCreateUserDto)
+        .expect(201);
+
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
+      // Create project with the founder user
+      const createdProject = await createProject(
         prismaService,
-        defaultCreateProjectDto,
+        defaultCreateProjectRequestDto,
       );
 
       // fetch Project that has be created
@@ -154,10 +166,13 @@ describe('/projects', () => {
         .send(defaultCreateUserDto)
         .expect(201);
 
-      // Then create a project with that user as founder
-      const createdProject = await createProjectInDB(
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
+      // Create project with the founder user
+      const createdProject = await createProject(
         prismaService,
-        defaultCreateProjectDto,
+        defaultCreateProjectRequestDto,
       );
 
       const loginResponse = await request(app.getHttpServer())
@@ -168,7 +183,7 @@ describe('/projects', () => {
         })
         .expect(200);
 
-      const validUpdateRequest = { ...defaultUpdateProjectDto };
+      const validUpdateRequest = defaultUpdateProjectDto;
       validUpdateRequest.founderId = createdProject.founderId;
 
       const token = loginResponse.headers.authorization;
@@ -198,7 +213,7 @@ describe('/projects', () => {
       expect(updatedProject).not.toBeNull();
       expect(updatedProject.title).toBe(validUpdateRequest.title);
       expect(updatedProject.description).toBe(validUpdateRequest.description);
-      expect(updatedProject.languageCode).toBe(validUpdateRequest.languageCode);
+      expect(updatedProject.languageName).toBe(validUpdateRequest.languageName);
       expect(updatedProject.founderId).toBe(validUpdateRequest.founderId);
       expect(updatedProject.status).toBe(validUpdateRequest.status);
       expect(updatedProject.milestone).toStrictEqual(
@@ -214,12 +229,17 @@ describe('/projects', () => {
     });
 
     it('should return a 404 if project does not exist', async () => {
+      // First create a user
       await request(app.getHttpServer())
         .post('/register')
         .send(defaultCreateUserDto)
         .expect(201);
 
-      await createProjectInDB(prismaService, defaultCreateProjectDto);
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
+      // Create project with the founder user
+      await createProject(prismaService, defaultCreateProjectRequestDto);
 
       const loginResponse = await request(app.getHttpServer())
         .post('/login')
@@ -242,15 +262,19 @@ describe('/projects', () => {
     });
 
     it('should return a 403 if user is not the owner of the project', async () => {
-      // Create original project with its owner
+      // First create a user
       await request(app.getHttpServer())
         .post('/register')
         .send(defaultCreateUserDto)
         .expect(201);
 
-      const originalProject = await createProjectInDB(
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
+      // Create project with the founder user
+      const originalProject = await createProject(
         prismaService,
-        defaultCreateProjectDto,
+        defaultCreateProjectRequestDto,
       );
 
       // Create another user who will try to update the project
@@ -292,13 +316,6 @@ describe('/projects', () => {
 
   describe('/ GET (Search Projects)', () => {
     it('should return a 200 if everything is fine', async () => {
-      // Create User and Language in DB
-      await createProjectInDBWithUser(
-        prismaService,
-        userRepository,
-        defaultCreateProjectRequestDto,
-      );
-
       const searchProjectRequest = 'goal=Education&status=InProgress';
 
       return await request(app.getHttpServer())
@@ -362,10 +379,13 @@ describe('/projects', () => {
         .send(defaultCreateUserDto)
         .expect(201);
 
-      // Then create a project with that user as a founder
-      const projectTobeDeleted = await createProjectInDB(
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
+      // Create project with the founder user
+      const projectTobeDeleted = await createProject(
         prismaService,
-        defaultCreateProjectDto,
+        defaultCreateProjectRequestDto,
       );
 
       const loginResponse = await request(app.getHttpServer())
@@ -401,9 +421,6 @@ describe('/projects', () => {
       expect(deletedProject).not.toBeNull();
       expect(deletedProject.title).toBe(projectTobeDeleted.title);
       expect(deletedProject.description).toBe(projectTobeDeleted.description);
-      expect(deletedProject.language.code).toBe(
-        projectTobeDeleted.languageCode,
-      );
       expect(deletedProject.founder.id).toBe(projectTobeDeleted.founderId);
       expect(deletedProject.status).toBe(projectTobeDeleted.status);
       expect(new Date(deletedProject.milestone)).toEqual(
@@ -419,12 +436,16 @@ describe('/projects', () => {
     });
 
     it('should return a 404 if project does not exist', async () => {
+      // First create a user
       await request(app.getHttpServer())
         .post('/register')
         .send(defaultCreateUserDto)
         .expect(201);
 
-      await createProjectInDB(prismaService, defaultCreateProjectDto);
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
+      await createProject(prismaService, defaultCreateProjectRequestDto);
 
       const loginResponse = await request(app.getHttpServer())
         .post('/login')
@@ -446,15 +467,18 @@ describe('/projects', () => {
     });
 
     it('should return a 403 if user is not the owner of the project', async () => {
-      // Create original project with its owner
+      // First create a user
       await request(app.getHttpServer())
         .post('/register')
         .send(defaultCreateUserDto)
         .expect(201);
 
-      const originalProject = await createProjectInDB(
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
+      const originalProject = await createProject(
         prismaService,
-        defaultCreateProjectDto,
+        defaultCreateProjectRequestDto,
       );
 
       // Create another user who will try to update the project
@@ -496,16 +520,19 @@ describe('/projects', () => {
 
   describe('/projects/:id/save POST (Save Project)', () => {
     it('should successfully save a project', async () => {
-      // Create a user
+      // Create a founder User
       const registerResponse = await request(app.getHttpServer())
         .post('/register')
         .send(defaultCreateUserDto)
         .expect(201);
 
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
       // Create a project
-      const createdProject = await createProjectInDB(
+      const createdProject = await createProject(
         prismaService,
-        defaultCreateProjectDto,
+        defaultCreateProjectRequestDto,
       );
 
       // Login to get auth token
@@ -544,11 +571,14 @@ describe('/projects', () => {
     });
 
     it('should return 404 when project does not exist', async () => {
-      // Create and login a user first
+      // First create a user
       await request(app.getHttpServer())
         .post('/register')
         .send(defaultCreateUserDto)
         .expect(201);
+
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
 
       const loginResponse = await request(app.getHttpServer())
         .post('/login')
@@ -572,16 +602,19 @@ describe('/projects', () => {
     });
 
     it('should return 400 when project is already saved by user', async () => {
-      // Create a user
+      // Create a founder User
       const registerResponse = await request(app.getHttpServer())
         .post('/register')
         .send(defaultCreateUserDto)
         .expect(201);
 
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
       // Create a project
-      const createdProject = await createProjectInDB(
+      const createdProject = await createProject(
         prismaService,
-        defaultCreateProjectDto,
+        defaultCreateProjectRequestDto,
       );
 
       // Login to get auth token
@@ -644,9 +677,9 @@ describe('/projects', () => {
       token = loginResponse.headers.authorization;
 
       // Create project
-      createdProject = await createProjectInDB(
+      createdProject = await createProject(
         prismaService,
-        defaultCreateProjectDto,
+        defaultCreateProjectRequestDto,
       );
 
       // Save project
@@ -710,16 +743,19 @@ describe('/projects', () => {
 
   describe('/:id/join-requests POST (Create Join Request)', () => {
     it('should return a 201 when creating a join request successfully', async () => {
-      // Create project founder
+      // First create a user
       await request(app.getHttpServer())
         .post('/register')
         .send(defaultCreateUserDto)
         .expect(201);
 
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
       // Create a project
-      const createdProject = await createProjectInDB(
+      const createdProject = await createProject(
         prismaService,
-        defaultCreateProjectDto,
+        defaultCreateProjectRequestDto,
       );
 
       // Create another user who will make the join request
@@ -801,16 +837,19 @@ describe('/projects', () => {
     });
 
     it('should return a 401 when user is not authenticated', async () => {
-      // Create project founder
+      // First create a user
       await request(app.getHttpServer())
         .post('/register')
         .send(defaultCreateUserDto)
         .expect(201);
 
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
       // Create a project
-      const createdProject = await createProjectInDB(
+      const createdProject = await createProject(
         prismaService,
-        defaultCreateProjectDto,
+        defaultCreateProjectRequestDto,
       );
 
       const joinRequestDto = {
@@ -825,16 +864,19 @@ describe('/projects', () => {
     });
 
     it('should return a 400 when required fields are missing', async () => {
-      // Create project founder
+      // First create a user
       await request(app.getHttpServer())
         .post('/register')
         .send(defaultCreateUserDto)
         .expect(201);
 
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
       // Create a project
-      const createdProject = await createProjectInDB(
+      const createdProject = await createProject(
         prismaService,
-        defaultCreateProjectDto,
+        defaultCreateProjectRequestDto,
       );
 
       // Create another user who will make the join request
@@ -874,16 +916,16 @@ describe('/projects', () => {
   });
 
   it('should return 400 if join request already exists', async () => {
-    // Create project founder
-    await request(app.getHttpServer())
-      .post('/register')
-      .send(defaultCreateUserDto)
-      .expect(201);
+    // Create a founder User
+    await createUserInDB(prismaService, defaultCreateUserDto);
+
+    // Create languages for DB
+    await createLanguagesInDB(prismaService);
 
     // Create a project
-    const createdProject = await createProjectInDB(
+    const createdProject = await createProject(
       prismaService,
-      defaultCreateProjectDto,
+      defaultCreateProjectRequestDto,
     );
 
     // Create another user who will make the join request

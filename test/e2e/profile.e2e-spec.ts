@@ -14,7 +14,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { RedisThrottlerStorageService } from '../../src/common/throttler/redisThrottlerStorage.service';
 import { defaultE2ECreateProfileDto } from '../utils/profile.utils';
 import { errorMessages } from '../../src/common/enums/errorMessages';
-import { UserRole, LanguageCode } from '@think-storm/contracts';
+import { UserRole, LanguageName } from '@think-storm/contracts';
 import refreshDatabase from '../../src/prisma/prisma.dbreset';
 import prisma from '../../src/prisma/prisma.client';
 import { AppModule } from '../../src/app.module';
@@ -154,7 +154,7 @@ describe('/profiles', () => {
       createProfileResponse.body.data.languages.forEach((lang) => {
         expect(lang.userId).toBe(1);
         expect(defaultE2ECreateProfileDto.languages).toContain(
-          lang.languageCode,
+          lang.languageName,
         );
       });
 
@@ -203,7 +203,7 @@ describe('/profiles', () => {
           location: 'Another Location',
           website: 'https://example2.com',
           domain_labels: ['Mobile Development'],
-          languages: [LanguageCode.KR],
+          languages: [LanguageName.Korean],
           technical_labels: ['react'],
         });
 
@@ -369,7 +369,7 @@ describe('/profiles', () => {
         location: 'New Location',
         website: 'https://example.com/new',
         domain_labels: ['Cloud Computing', 'DevOps'],
-        languages: [LanguageCode.KR, LanguageCode.JA],
+        languages: [LanguageName.Korean, LanguageName.Japanese],
         technical_labels: ['docker', 'kubernetes'],
       };
 

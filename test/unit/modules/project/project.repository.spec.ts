@@ -3,8 +3,7 @@ import { PrismaService } from '../../../../src/prisma/prisma.service';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   createProject,
-  createProjectInDB,
-  createProjectInDBWithUser,
+  createLanguagesInDB,
   defaultCreateProjectDto,
   defaultCreateProjectRequestDto,
   defaultDeleteProjectDto,
@@ -15,8 +14,10 @@ import {
   secondSearchProjectDto,
 } from '../../../utils/project.utils';
 import prisma from '../../../../src/prisma/prisma.client';
-import { defaultCreateUserDto } from '../../../utils/user.utils';
-import { defaultPasswordSalt } from '../../common/passwordEncryption.utils';
+import {
+  defaultCreateUserDto,
+  createUserInDB,
+} from '../../../utils/user.utils';
 import { Project } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
@@ -30,7 +31,6 @@ import { SaveProjectRequestDto } from '../../../../src/modules/project/dtos/save
 describe('ProjectRepository', () => {
   let prismaService: PrismaService;
   let projectRepository: ProjectRepository;
-  let userRepository: UserRepository;
 
   beforeAll(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -41,7 +41,6 @@ describe('ProjectRepository', () => {
 
     prismaService = module.get<PrismaService>(PrismaService);
     projectRepository = module.get<ProjectRepository>(ProjectRepository);
-    userRepository = module.get<UserRepository>(UserRepository);
 
     await prismaService.$connect();
     await refreshDatabase();
@@ -54,9 +53,15 @@ describe('ProjectRepository', () => {
 
   describe('searchProjects function', () => {
     it('should retrieve 1 searched project in DB with request queries', async () => {
-      const createdProject = await createProjectInDBWithUser(
+      // Create a founder User
+      await createUserInDB(prismaService, defaultCreateUserDto);
+
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
+      // Create project with the founder user
+      const createdProject = await createProject(
         prismaService,
-        userRepository,
         defaultCreateProjectRequestDto,
       );
 
@@ -80,11 +85,14 @@ describe('ProjectRepository', () => {
     });
 
     it('should retrieve 2 searched projects in DB with request queries', async () => {
-      await createProjectInDBWithUser(
-        prismaService,
-        userRepository,
-        defaultCreateProjectRequestDto,
-      );
+      // Create a founder User
+      await createUserInDB(prismaService, defaultCreateUserDto);
+
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
+      // Create project with the founder user
+      await createProject(prismaService, defaultCreateProjectRequestDto);
 
       const createdProject2 = await createProject(
         prismaService,
@@ -114,10 +122,7 @@ describe('ProjectRepository', () => {
   describe('findProjectById function', () => {
     it('should retrieve a project in DB with id', async () => {
       // Create a founder User
-      const user = await userRepository.createUser(
-        defaultCreateUserDto,
-        defaultPasswordSalt,
-      );
+      const user = await createUserInDB(prismaService, defaultCreateUserDto);
 
       // Add founderId to the project DTO
       const createProjectDto = {
@@ -125,8 +130,8 @@ describe('ProjectRepository', () => {
         founderId: user.id,
       };
 
-      // Create a Project in DB
-      const insertedProject = await createProjectInDB(
+      // Create a founder User and Create a Project in DB
+      const insertedProject = await createProject(
         prismaService,
         createProjectDto,
       );
@@ -141,10 +146,7 @@ describe('ProjectRepository', () => {
 
     it('should not retrieve a project in DB if there is no project with id', async () => {
       // Create a founder User
-      const user = await userRepository.createUser(
-        defaultCreateUserDto,
-        defaultPasswordSalt,
-      );
+      const user = await createUserInDB(prismaService, defaultCreateUserDto);
 
       // Add founderId to the project DTO
       const createProjectDto = {
@@ -153,7 +155,7 @@ describe('ProjectRepository', () => {
       };
 
       // Create a Project in DB
-      const insertedProject = await createProjectInDB(
+      const insertedProject = await createProject(
         prismaService,
         createProjectDto,
       );
@@ -167,13 +169,10 @@ describe('ProjectRepository', () => {
   describe('createProject function', () => {
     it('should create a project in DB', async () => {
       // Create a founder User
-      const user = await userRepository.createUser(
-        defaultCreateUserDto,
-        defaultPasswordSalt,
-      );
+      const user = await createUserInDB(prismaService, defaultCreateUserDto);
 
       // Add founderId
-      const createProjectDto = defaultCreateProjectDto;
+      const createProjectDto = { ...defaultCreateProjectDto };
       createProjectDto.founderId = user.id;
       const createdProject =
         await projectRepository.createProject(createProjectDto);
@@ -185,7 +184,7 @@ describe('ProjectRepository', () => {
       expect(createdProject.founderId).toBe(createProjectDto.founderId);
       expect(createdProject.description).toBe(createProjectDto.description);
       expect(createdProject.goal).toBe(createProjectDto.goal);
-      expect(createdProject.languageCode).toBe(createProjectDto.languageCode);
+      expect(createdProject.languageName).toBe(createProjectDto.languageName);
       expect(createdProject.title).toBe(createProjectDto.title);
       expect(createdProject.status).toBe(createProjectDto.status);
       expect(createdProject.milestone).toStrictEqual(
@@ -197,13 +196,10 @@ describe('ProjectRepository', () => {
   describe('updateProject function', () => {
     it('should update a project in DB', async () => {
       // Create a founder User
-      await userRepository.createUser(
-        defaultCreateUserDto,
-        defaultPasswordSalt,
-      );
+      await createUserInDB(prismaService, defaultCreateUserDto);
 
       // Create a Project in DB
-      await createProjectInDB(prismaService, defaultCreateProjectDto);
+      await createProject(prismaService, defaultCreateProjectDto);
 
       // Update the Project using a domain label from seed data
       const updatedProject = (await projectRepository.updateProject(
@@ -219,8 +215,8 @@ describe('ProjectRepository', () => {
         defaultUpdateProjectDto.description,
       );
       expect(updatedProject.goal).toBe(defaultUpdateProjectDto.goal);
-      expect(updatedProject.language.code).toBe(
-        defaultUpdateProjectDto.languageCode,
+      expect(updatedProject.language.name).toBe(
+        defaultUpdateProjectDto.languageName,
       );
       expect(updatedProject.title).toBe(defaultUpdateProjectDto.title);
       expect(updatedProject.status).toBe(defaultUpdateProjectDto.status);
@@ -231,10 +227,10 @@ describe('ProjectRepository', () => {
       expect(updatedProject.domainLabels).toBeDefined();
       expect(updatedProject.technicalLabels).toBeDefined();
       expect(
-        updatedProject.domainLabels.map((dl) => dl.label.name).sort(),
+        updatedProject.domainLabels.map((dl) => dl.labelName).sort(),
       ).toStrictEqual(defaultUpdateProjectDto.domainLabels.sort());
       expect(
-        updatedProject.technicalLabels.map((tl) => tl.label.name).sort(),
+        updatedProject.technicalLabels.map((tl) => tl.labelName).sort(),
       ).toStrictEqual(defaultUpdateProjectDto.technicalLabels.sort());
     });
   });
@@ -242,13 +238,13 @@ describe('ProjectRepository', () => {
   describe('deleteProject function', () => {
     it('should delete a project in DB', async () => {
       // Create a founder User
-      const createdUser = await userRepository.createUser(
+      const createdUser = await createUserInDB(
+        prismaService,
         defaultCreateUserDto,
-        defaultPasswordSalt,
       );
 
       // Create a Project in DB
-      const projectTobeDeleted = (await createProjectInDB(
+      const projectTobeDeleted = (await createProject(
         prismaService,
         defaultCreateProjectDto,
       )) as ProjectWithRelations;
@@ -265,8 +261,8 @@ describe('ProjectRepository', () => {
       expect(deletedProject.founderId).toBe(createdUser.id);
       expect(deletedProject.description).toBe(projectTobeDeleted.description);
       expect(deletedProject.goal).toBe(projectTobeDeleted.goal);
-      expect(deletedProject.language.code).toBe(
-        projectTobeDeleted.languageCode,
+      expect(deletedProject.language.name).toBe(
+        projectTobeDeleted.languageName,
       );
       expect(deletedProject.title).toBe(projectTobeDeleted.title);
       expect(deletedProject.status).toBe(projectTobeDeleted.status);
@@ -292,12 +288,9 @@ describe('ProjectRepository', () => {
   describe('saveProject', () => {
     it('should save project successfully', async () => {
       // Create initial test data
-      const user = await userRepository.createUser(
-        defaultCreateUserDto,
-        defaultPasswordSalt,
-      );
+      const user = await createUserInDB(prismaService, defaultCreateUserDto);
 
-      const project = await createProjectInDB(
+      const project = await createProject(
         prismaService,
         defaultCreateProjectDto,
       );
@@ -331,11 +324,8 @@ describe('ProjectRepository', () => {
   describe('unsaveProject', () => {
     it('should unsave project for given user(s)', async () => {
       // Create initial test data
-      const user = await userRepository.createUser(
-        defaultCreateUserDto,
-        defaultPasswordSalt,
-      );
-      const project = await createProjectInDB(
+      const user = await createUserInDB(prismaService, defaultCreateUserDto);
+      const project = await createProject(
         prismaService,
         defaultCreateProjectDto,
       );
@@ -374,11 +364,8 @@ describe('ProjectRepository', () => {
   describe('createJoinRequest', () => {
     it('should create a join request successfully', async () => {
       // Arrange
-      const user = await userRepository.createUser(
-        defaultCreateUserDto,
-        defaultPasswordSalt,
-      );
-      const project = await createProjectInDB(
+      const user = await createUserInDB(prismaService, defaultCreateUserDto);
+      const project = await createProject(
         prismaService,
         defaultCreateProjectDto,
       );

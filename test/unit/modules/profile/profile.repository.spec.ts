@@ -141,9 +141,9 @@ describe('ProfileRepository', () => {
           },
           languages: {
             deleteMany: {},
-            create: defaultUpdateProfileDto.languages.map((code) => ({
+            create: defaultUpdateProfileDto.languages.map((name) => ({
               language: {
-                connect: { code },
+                connect: { name },
               },
             })),
           },

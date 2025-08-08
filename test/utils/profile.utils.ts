@@ -1,5 +1,5 @@
 import { UserProfile } from '@prisma/client';
-import { LanguageCode, UserRole } from '@think-storm/contracts';
+import { LanguageName, UserRole } from '@think-storm/contracts';
 import { CreateUserProfileDto } from '../../src/modules/profile/dtos/createUserProfile.dto';
 import { UpdateUserProfileDto } from '../../src/modules/profile/dtos/updateUserProfile.dto';
 
@@ -12,7 +12,7 @@ export const defaultCreateProfileDto: CreateUserProfileDto = {
   location: 'Test Location',
   website: 'https://example.com',
   domain_labels: ['Web Development'],
-  languages: [LanguageCode.EN],
+  languages: [LanguageName.English],
   technical_labels: ['nestjs'],
 };
 
@@ -56,7 +56,7 @@ export const defaultMockUser = {
 export const defaultProfileWithAssociations = {
   ...defaultMockUserProfile,
   interests: [{ label: { name: 'Web Development' } }],
-  languages: [{ language: { code: LanguageCode.EN } }],
+  languages: [{ language: { name: LanguageName.English } }],
   skills: [{ label: { name: 'nestjs' } }],
 };
 
@@ -69,13 +69,13 @@ export const defaultE2ECreateProfileDto = {
   location: 'Test Location',
   website: 'https://example.com',
   domain_labels: ['Web Development', 'Cloud Computing'],
-  languages: [LanguageCode.EN, LanguageCode.KR],
+  languages: [LanguageName.English, LanguageName.Korean],
   technical_labels: ['nestjs', 'typescript', 'postgresql'],
 };
 
 export const defaultUpdateProfileDto: UpdateUserProfileDto = {
   domain_labels: ['AI', 'ML'],
-  languages: [LanguageCode.EN],
+  languages: [LanguageName.English],
   technical_labels: ['python'],
   preferred_role: [UserRole.DataScientist],
 };

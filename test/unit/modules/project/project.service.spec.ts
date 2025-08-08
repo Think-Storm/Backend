@@ -149,7 +149,7 @@ describe('ProjectService', () => {
       bothSearchProjectQuery.technicalLabels = 'aws,nestjs';
       bothSearchProjectQuery.domainLabels = undefined;
       bothSearchProjectQuery.title = undefined;
-      bothSearchProjectQuery.languageCode = undefined;
+      bothSearchProjectQuery.languageName = undefined;
       bothSearchProjectQuery.description = undefined;
       bothSearchProjectQuery.status = undefined;
       bothSearchProjectQuery.goal = undefined;
@@ -265,18 +265,13 @@ describe('ProjectService', () => {
         description: defaultProject.description,
         goal: defaultProject.goal,
         status: defaultProject.status,
+        languageName: defaultProject.languageName,
         users: [],
         founder: defaultUser,
-        language: {
-          code: LanguageCode.EN,
-          name: LanguageName.English,
-          createdAt: expect.any(Date),
-          lastUpdatedAt: expect.any(Date),
-        },
         savedByUsers: [],
         joinRequest: [],
-        domainLabels: [],
-        technicalLabels: [],
+        domainLabels: ['Cooking', 'Design', 'Geography'],
+        technicalLabels: ['nestjs', 'js', 'jest'],
         createdAt: defaultProject.createdAt,
         lastUpdatedAt: defaultProject.lastUpdatedAt,
         milestone: defaultProject.milestone,
@@ -342,15 +337,9 @@ describe('ProjectService', () => {
 
       const expectedResponseDto = {
         ...defaultProjectResponseDto,
-        domainLabels: [],
-        technicalLabels: [],
+        domainLabels: ['Cooking', 'Design', 'Geography'],
+        technicalLabels: ['nestjs', 'js', 'jest'],
         users: [],
-        language: {
-          code: defaultProject.languageCode,
-          name: LanguageName.English,
-          createdAt: expect.any(Date),
-          lastUpdatedAt: expect.any(Date),
-        },
         founder: defaultUser,
         savedByUsers: [],
         joinRequest: [],
@@ -429,17 +418,13 @@ describe('ProjectService', () => {
 
       const expectedResponseDto = {
         ...defaultProjectResponseDto,
-        language: {
-          code: defaultProject.languageCode,
-          name: LanguageName.English,
-          createdAt: expect.any(Date),
-          lastUpdatedAt: expect.any(Date),
-        },
+        languageName: LanguageName.English,
         users: [],
-        domainLabels: [],
-        technicalLabels: [],
+        domainLabels: ['Cooking', 'Design', 'Geography'],
+        technicalLabels: ['nestjs', 'js', 'jest'],
         founder: defaultUser,
         savedByUsers: [],
+        joinRequest: [],
       };
 
       const projectResponseDto = await projectService.deleteProject(
@@ -507,7 +492,7 @@ describe('ProjectService', () => {
       const mockProjectWithSavedUser = {
         ...defaultProject,
         language: {
-          code: defaultProject.languageCode,
+          code: LanguageCode.EN,
           name: LanguageName.English,
           createdAt: new Date(),
           lastUpdatedAt: new Date(),
