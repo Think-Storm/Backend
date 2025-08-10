@@ -105,7 +105,7 @@ case $command in
                 export $(cat .env | xargs) HOST_PORT=$host_port && docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.dev.yml up -d 
                 ;;
             "prod")
-                export $(cat .env | xargs) HOST_PORT=$host_port docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.prod.yml up  -d
+                export $(cat .env | xargs) HOST_PORT=$host_port && docker compose -f docker/docker-compose.db.yml -f docker/docker-compose.prod.yml up  -d
                 ;;
             *)
                 echo "Invalid environment type. Use 'dev' or 'prod'"
