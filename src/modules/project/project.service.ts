@@ -451,7 +451,16 @@ export class ProjectService {
         projectId,
         joinRequest.roleName,
       );
-      await this.projectRepository.connectProjectUsers(requestId, projectId);
+
+      if (!project.founder) {
+        throw ServiceException.EntityNotFoundException(
+          errorMessages.ENTITY_NOT_FOUND(
+            'Project Founder',
+            project.founderId.toString(),
+          ),
+        );
+      }
+
       await this.mailService.sendMail({
         to: user.email,
         subject: `Your request to join ${project.title} has been accepted`,

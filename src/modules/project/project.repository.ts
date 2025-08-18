@@ -585,30 +585,28 @@ export class ProjectRepository {
   }
 
   async createInvolvement(userId: number, projectId: number, roleName: string) {
-    return this.prisma.involvement.create({
+    return this.prisma.project.update({
+      where: { id: projectId },
       data: {
-        userId,
-        projectId,
-        roleName,
-      },
-    });
-  }
-
-  async connectProjectUsers(userId: number, projectId: number) {
-    try {
-      return this.prisma.project.update({
-        where: { id: projectId },
-        data: {
-          users: {
-            connect: { id: userId },
+        involvement: {
+          create: {
+            userId,
+            roleName,
           },
         },
-      });
-    } catch (error) {
-      throw ServiceException.ErrorException(
-        errorMessages.ERROR_CONNECTING_PROJECT_USERS,
-        error,
-      );
-    }
+        users: {
+          connect: { id: userId },
+        },
+      },
+      include: {
+        users: true, // Return updated users list
+        involvement: {
+          include: {
+            user: true,
+            role: true,
+          },
+        },
+      },
+    });
   }
 }

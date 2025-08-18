@@ -185,8 +185,9 @@ model Involvement {
   userId    Int     @map("user_id")
   projectId Int     @map("project_id")
   roleName  String  @map("role_name")
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  user      User    @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  project   Project @relation(fields: [projectId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   role      Role    @relation(fields: [roleName], references: [name])
 
   @@id([userId, projectId])
