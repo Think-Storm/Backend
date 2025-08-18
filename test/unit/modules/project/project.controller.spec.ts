@@ -439,7 +439,7 @@ describe('ProjectController', () => {
       const projectId = 1;
       const requestId = 2;
       const updateJoinRequestDto = {
-        status: 'Declined' as any,
+        status: 'Rejected' as any,
       };
 
       const serviceSpy = jest

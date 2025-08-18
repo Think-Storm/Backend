@@ -932,7 +932,7 @@ describe('ProjectService', () => {
         .spyOn(projectRepository, 'updateJoinRequestStatus')
         .mockResolvedValue({
           ...mockJoinRequest,
-          status: 'Declined',
+          status: 'Rejected',
         });
       jest.spyOn(userService, 'getUserById').mockResolvedValue(mockUser);
 
@@ -940,7 +940,7 @@ describe('ProjectService', () => {
         authUserId,
         projectId,
         requestId,
-        'Declined',
+        'Rejected',
       );
 
       // Verify all calls
@@ -952,7 +952,7 @@ describe('ProjectService', () => {
       expect(projectRepository.updateJoinRequestStatus).toHaveBeenCalledWith(
         requestId,
         projectId,
-        'Declined',
+        'Rejected',
       );
       expect(userService.getUserById).toHaveBeenCalledWith(requestId);
       expect(projectRepository.createInvolvement).not.toHaveBeenCalled();
