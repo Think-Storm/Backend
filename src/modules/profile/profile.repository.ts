@@ -36,6 +36,7 @@ export class ProfileRepository {
       languages,
       technical_labels,
       preferred_role,
+      website,
       ...profileData
     } = createProfileDto;
 
@@ -44,6 +45,9 @@ export class ProfileRepository {
         data: {
           ...profileData,
           userId,
+          website: {
+            set: website,
+          },
           preferredRole: preferred_role
             ? {
                 create: preferred_role.map((roleName) => ({
@@ -183,6 +187,7 @@ export class ProfileRepository {
       languages,
       technical_labels,
       preferred_role,
+      website,
       ...profileData
     } = updateProfileDto;
 
@@ -193,6 +198,9 @@ export class ProfileRepository {
         },
         data: {
           ...profileData,
+          website: {
+            set: website,
+          },
           preferredRole: preferred_role
             ? {
                 deleteMany: {},

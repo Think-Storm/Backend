@@ -46,7 +46,7 @@ model UserProfile {
   birthdate         DateTime?
   preferredRole UserProfileRole[]                  
   location     String?
-  website      String?
+  website      String[]
   interests    UserProfileDomainLabel[]
   skills       UserProfileTechnicalLabel[]
   user         User                        @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
