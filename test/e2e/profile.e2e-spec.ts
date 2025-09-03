@@ -119,14 +119,15 @@ describe('/profiles', () => {
       expect(createProfileResponse.body.data.location).toBe(
         defaultE2ECreateProfileDto.location,
       );
-      expect(createProfileResponse.body.data.website).toBe(
-        defaultE2ECreateProfileDto.website,
-      );
       expect(createProfileResponse.body.data.fullName).toBe(
         defaultE2ECreateProfileDto.fullName,
       );
       expect(createProfileResponse.body.data.birthdate).toBe(
         defaultE2ECreateProfileDto.birthdate.toISOString(),
+      );
+      // Test websites
+      expect(createProfileResponse.body.data.website[0]).toBe(
+        defaultE2ECreateProfileDto.website[0],
       );
       // Test roles
       expect(createProfileResponse.body.data.preferredRole).toHaveLength(1);
@@ -201,7 +202,7 @@ describe('/profiles', () => {
           birthdate: new Date('2000-01-01'),
           preferred_role: [UserRole.FrontendDeveloper],
           location: 'Another Location',
-          website: 'https://example2.com',
+          website: ['https://example1.com', 'https://example2.com'],
           domain_labels: ['Mobile Development'],
           languages: [LanguageName.Korean],
           technical_labels: ['react'],
@@ -276,14 +277,15 @@ describe('/profiles', () => {
       expect(getProfileResponse.body.data.location).toBe(
         defaultE2ECreateProfileDto.location,
       );
-      expect(getProfileResponse.body.data.website).toBe(
-        defaultE2ECreateProfileDto.website,
-      );
       expect(getProfileResponse.body.data.fullName).toBe(
         defaultE2ECreateProfileDto.fullName,
       );
       expect(getProfileResponse.body.data.birthdate).toBe(
         defaultE2ECreateProfileDto.birthdate.toISOString(),
+      );
+
+      expect(getProfileResponse.body.data.website[0]).toBe(
+        defaultE2ECreateProfileDto.website[0],
       );
 
       // Verify associations
@@ -367,7 +369,7 @@ describe('/profiles', () => {
         bio: 'Updated bio',
         preferred_role: [UserRole.FullStackDeveloper],
         location: 'New Location',
-        website: 'https://example.com/new',
+        website: ['https://example.com/new'],
         domain_labels: ['Cloud Computing', 'DevOps'],
         languages: [LanguageName.Korean, LanguageName.Japanese],
         technical_labels: ['docker', 'kubernetes'],
@@ -384,7 +386,7 @@ describe('/profiles', () => {
       expect(updateResponse.body.data.avatar).toBe(updateData.avatar);
       expect(updateResponse.body.data.bio).toBe(updateData.bio);
       expect(updateResponse.body.data.location).toBe(updateData.location);
-      expect(updateResponse.body.data.website).toBe(updateData.website);
+      expect(updateResponse.body.data.website[0]).toBe(updateData.website[0]);
 
       // Verify updated associations
       expect(updateResponse.body.data.preferredRole).toHaveLength(1);

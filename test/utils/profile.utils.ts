@@ -10,7 +10,7 @@ export const defaultCreateProfileDto: CreateUserProfileDto = {
   birthdate: new Date('2000-01-01'),
   preferred_role: [UserRole.BackendDeveloper],
   location: 'Test Location',
-  website: 'https://example.com',
+  website: ['https://example.com'],
   domain_labels: ['Web Development'],
   languages: [LanguageName.English],
   technical_labels: ['nestjs'],
@@ -27,7 +27,7 @@ export const defaultProfileResponse = {
     bio: 'Test bio',
     preferredRole: [UserRole.BackendDeveloper],
     location: 'Test Location',
-    website: 'https://example.com',
+    website: ['https://example.com'],
   },
 };
 
@@ -67,7 +67,7 @@ export const defaultE2ECreateProfileDto = {
   birthdate: new Date('2000-01-01'),
   preferred_role: [UserRole.BackendDeveloper],
   location: 'Test Location',
-  website: 'https://example.com',
+  website: ['https://example.com'],
   domain_labels: ['Web Development', 'Cloud Computing'],
   languages: [LanguageName.English, LanguageName.Korean],
   technical_labels: ['nestjs', 'typescript', 'postgresql'],

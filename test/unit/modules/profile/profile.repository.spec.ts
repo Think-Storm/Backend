@@ -127,6 +127,9 @@ describe('ProfileRepository', () => {
       expect(mockPrismaService.userProfile.update).toHaveBeenCalledWith({
         where: { id: profileId },
         data: {
+          website: {
+            set: defaultUpdateProfileDto.website,
+          },
           preferredRole: {
             deleteMany: {},
             create: defaultUpdateProfileDto.preferred_role.map((roleName) => ({

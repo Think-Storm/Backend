@@ -67,8 +67,9 @@ export class CreateUserProfileDto implements CreateProfile {
     required: false,
   })
   @IsOptional()
-  @IsUrl({}, { message: 'Website must be a valid URL' })
-  website?: string;
+  @IsArray()
+  @IsUrl({}, { each: true, message: 'Each website must be a valid URL' })
+  website?: string[];
 
   @ApiProperty({
     description: 'Domain labels associated with the user profile',
