@@ -119,6 +119,9 @@ describe('/profiles', () => {
       expect(createProfileResponse.body.data.location).toBe(
         defaultE2ECreateProfileDto.location,
       );
+      expect(createProfileResponse.body.data.timezone).toBe(
+        defaultE2ECreateProfileDto.timezone,
+      );
       expect(createProfileResponse.body.data.fullName).toBe(
         defaultE2ECreateProfileDto.fullName,
       );
@@ -126,6 +129,9 @@ describe('/profiles', () => {
         defaultE2ECreateProfileDto.birthdate.toISOString(),
       );
       // Test websites
+      expect(createProfileResponse.body.data.websiteType[0]).toBe(
+        defaultE2ECreateProfileDto.websiteType[0],
+      );
       expect(createProfileResponse.body.data.website[0]).toBe(
         defaultE2ECreateProfileDto.website[0],
       );
@@ -202,6 +208,8 @@ describe('/profiles', () => {
           birthdate: new Date('2000-01-01'),
           preferred_role: [UserRole.FrontendDeveloper],
           location: 'Another Location',
+          timezone: 'Another Timezone',
+          websiteType: ['linkedin', 'github'],
           website: ['https://example1.com', 'https://example2.com'],
           domain_labels: ['Mobile Development'],
           languages: [LanguageName.Korean],
@@ -277,13 +285,18 @@ describe('/profiles', () => {
       expect(getProfileResponse.body.data.location).toBe(
         defaultE2ECreateProfileDto.location,
       );
+      expect(getProfileResponse.body.data.timezone).toBe(
+        defaultE2ECreateProfileDto.timezone,
+      );
       expect(getProfileResponse.body.data.fullName).toBe(
         defaultE2ECreateProfileDto.fullName,
       );
       expect(getProfileResponse.body.data.birthdate).toBe(
         defaultE2ECreateProfileDto.birthdate.toISOString(),
       );
-
+      expect(getProfileResponse.body.data.websiteType[0]).toBe(
+        defaultE2ECreateProfileDto.websiteType[0],
+      );
       expect(getProfileResponse.body.data.website[0]).toBe(
         defaultE2ECreateProfileDto.website[0],
       );
@@ -369,6 +382,8 @@ describe('/profiles', () => {
         bio: 'Updated bio',
         preferred_role: [UserRole.FullStackDeveloper],
         location: 'New Location',
+        timezone: 'New Timezone',
+        websiteType: ['linkedin'],
         website: ['https://example.com/new'],
         domain_labels: ['Cloud Computing', 'DevOps'],
         languages: [LanguageName.Korean, LanguageName.Japanese],
@@ -386,6 +401,10 @@ describe('/profiles', () => {
       expect(updateResponse.body.data.avatar).toBe(updateData.avatar);
       expect(updateResponse.body.data.bio).toBe(updateData.bio);
       expect(updateResponse.body.data.location).toBe(updateData.location);
+      expect(updateResponse.body.data.timezone).toBe(updateData.timezone);
+      expect(updateResponse.body.data.websiteType[0]).toBe(
+        updateData.websiteType[0],
+      );
       expect(updateResponse.body.data.website[0]).toBe(updateData.website[0]);
 
       // Verify updated associations
