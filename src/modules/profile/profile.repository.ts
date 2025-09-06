@@ -37,6 +37,7 @@ export class ProfileRepository {
       technical_labels,
       preferred_role,
       website,
+      websiteType,
       ...profileData
     } = createProfileDto;
 
@@ -47,6 +48,9 @@ export class ProfileRepository {
           userId,
           website: {
             set: website,
+          },
+          websiteType: {
+            set: websiteType,
           },
           preferredRole: preferred_role
             ? {

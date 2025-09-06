@@ -10,6 +10,8 @@ export const defaultCreateProfileDto: CreateUserProfileDto = {
   birthdate: new Date('2000-01-01'),
   preferred_role: [UserRole.BackendDeveloper],
   location: 'Test Location',
+  timezone: 'Test Timezone',
+  websiteType: ['linkedin'],
   website: ['https://example.com'],
   domain_labels: ['Web Development'],
   languages: [LanguageName.English],
@@ -27,6 +29,8 @@ export const defaultProfileResponse = {
     bio: 'Test bio',
     preferredRole: [UserRole.BackendDeveloper],
     location: 'Test Location',
+    timezone: 'Test Timezone',
+    websiteType: ['linkedin'],
     website: ['https://example.com'],
   },
 };
@@ -39,6 +43,8 @@ export const defaultMockUserProfile: UserProfile = {
   fullName: defaultCreateProfileDto.fullName,
   birthdate: defaultCreateProfileDto.birthdate,
   location: defaultCreateProfileDto.location,
+  timezone: defaultCreateProfileDto.timezone,
+  websiteType: defaultCreateProfileDto.websiteType,
   website: defaultCreateProfileDto.website,
 };
 
@@ -67,6 +73,8 @@ export const defaultE2ECreateProfileDto = {
   birthdate: new Date('2000-01-01'),
   preferred_role: [UserRole.BackendDeveloper],
   location: 'Test Location',
+  timezone: 'Test Timezone',
+  websiteType: ['linkedin'],
   website: ['https://example.com'],
   domain_labels: ['Web Development', 'Cloud Computing'],
   languages: [LanguageName.English, LanguageName.Korean],

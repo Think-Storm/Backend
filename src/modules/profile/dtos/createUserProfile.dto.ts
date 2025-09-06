@@ -63,6 +63,14 @@ export class CreateUserProfileDto implements CreateProfile {
   location?: string;
 
   @ApiProperty({
+    description: 'User timezone',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  timezone?: string;
+
+  @ApiProperty({
     description: 'Personal website URL',
     required: false,
   })
@@ -70,6 +78,15 @@ export class CreateUserProfileDto implements CreateProfile {
   @IsArray()
   @IsUrl({}, { each: true, message: 'Each website must be a valid URL' })
   website?: string[];
+
+  @ApiProperty({
+    description: 'Personal website URL Type',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true, message: 'Each website type must be string' })
+  websiteType?: string[];
 
   @ApiProperty({
     description: 'Domain labels associated with the user profile',
