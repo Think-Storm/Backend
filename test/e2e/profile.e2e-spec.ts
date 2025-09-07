@@ -105,6 +105,8 @@ describe('/profiles', () => {
         .set('Authorization', authHeader)
         .send(defaultE2ECreateProfileDto);
 
+      console.log(createProfileResponse.body.data.languages);
+
       expect(createProfileResponse.status).toBe(201);
       expect(createProfileResponse.body.message).toBe(
         'Create User Profile Success',
@@ -137,46 +139,27 @@ describe('/profiles', () => {
       );
       // Test roles
       expect(createProfileResponse.body.data.preferredRole).toHaveLength(1);
-      createProfileResponse.body.data.preferredRole.forEach((role) => {
-        expect(role.roleName).toBe(
-          defaultE2ECreateProfileDto.preferred_role[0],
-        );
-        expect(defaultE2ECreateProfileDto.preferred_role).toContain(
-          role.roleName,
-        );
-      });
+      expect(new Set(createProfileResponse.body.data.preferredRole)).toEqual(
+        new Set(defaultE2ECreateProfileDto.preferred_role),
+      );
 
       // Test interests (domain_labels)
-      expect(createProfileResponse.body.data.interests).toHaveLength(2);
-      expect(createProfileResponse.body.data.interests[0].userId).toBe(1);
-      expect(createProfileResponse.body.data.interests[0].labelName).toBe(
-        defaultE2ECreateProfileDto.domain_labels[0],
-      );
-      expect(createProfileResponse.body.data.interests[1].labelName).toBe(
-        defaultE2ECreateProfileDto.domain_labels[1],
+      expect(createProfileResponse.body.data.domainLabels).toHaveLength(2);
+      expect(new Set(createProfileResponse.body.data.domainLabels)).toEqual(
+        new Set(defaultE2ECreateProfileDto.domain_labels),
       );
 
       // Test languages
       expect(createProfileResponse.body.data.languages).toHaveLength(2);
-      createProfileResponse.body.data.languages.forEach((lang) => {
-        expect(lang.userId).toBe(1);
-        expect(defaultE2ECreateProfileDto.languages).toContain(
-          lang.languageName,
-        );
-      });
+      expect(new Set(createProfileResponse.body.data.languages)).toEqual(
+        new Set(defaultE2ECreateProfileDto.languages),
+      );
 
       // Test skills (technical_labels)
-      expect(createProfileResponse.body.data.skills).toHaveLength(3);
-      const skillNames = createProfileResponse.body.data.skills.map(
-        (skill) => skill.labelName,
+      expect(createProfileResponse.body.data.technicalLabels).toHaveLength(3);
+      expect(new Set(createProfileResponse.body.data.technicalLabels)).toEqual(
+        new Set(defaultE2ECreateProfileDto.technical_labels),
       );
-      expect(skillNames).toEqual(
-        expect.arrayContaining(defaultE2ECreateProfileDto.technical_labels),
-      );
-      createProfileResponse.body.data.skills.forEach((skill) => {
-        expect(skill.userId).toBe(1);
-        expect(skill.label.name).toBe(skill.labelName);
-      });
     });
 
     it('should return 400 if profile already exists', async () => {
@@ -302,12 +285,12 @@ describe('/profiles', () => {
       );
 
       // Verify associations
-      expect(getProfileResponse.body.data.preferredRole[0].roleName).toBe(
+      expect(getProfileResponse.body.data.preferredRole[0]).toBe(
         defaultE2ECreateProfileDto.preferred_role[0],
       );
-      expect(getProfileResponse.body.data.interests).toHaveLength(2);
+      expect(getProfileResponse.body.data.domainLabels).toHaveLength(2);
       expect(getProfileResponse.body.data.languages).toHaveLength(2);
-      expect(getProfileResponse.body.data.skills).toHaveLength(3);
+      expect(getProfileResponse.body.data.technicalLabels).toHaveLength(3);
     });
 
     it('should return 403 when trying to access another user profile', async () => {
@@ -409,15 +392,15 @@ describe('/profiles', () => {
 
       // Verify updated associations
       expect(updateResponse.body.data.preferredRole).toHaveLength(1);
-      expect(updateResponse.body.data.preferredRole[0].roleName).toBe(
+      expect(updateResponse.body.data.preferredRole[0]).toBe(
         updateData.preferred_role[0],
       );
-      expect(updateResponse.body.data.interests).toHaveLength(2);
-      expect(updateResponse.body.data.interests[0].labelName).toBe(
+      expect(updateResponse.body.data.domainLabels).toHaveLength(2);
+      expect(updateResponse.body.data.domainLabels[0]).toBe(
         updateData.domain_labels[0],
       );
       expect(updateResponse.body.data.languages).toHaveLength(2);
-      expect(updateResponse.body.data.skills).toHaveLength(2);
+      expect(updateResponse.body.data.technicalLabels).toHaveLength(2);
     });
 
     it('should return 403 when trying to update another user profile', async () => {

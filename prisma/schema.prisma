@@ -53,6 +53,8 @@ model UserProfile {
   skills       UserProfileTechnicalLabel[]
   user         User                        @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   languages    UserProfileLanguage[]          
+  createdAt     DateTime @default(now()) @map("created_at")
+  lastUpdatedAt DateTime @updatedAt @map("last_updated_at")
 
   @@map("user_profiles")
 }

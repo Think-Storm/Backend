@@ -5,12 +5,14 @@ import { errorMessages } from '../../common/enums/errorMessages';
 import { CreateUserProfileDto } from './dtos/createUserProfile.dto';
 import { UpdateUserProfileDto } from './dtos/updateUserProfile.dto';
 import { UserRepository } from '../user/user.repository';
+import { ProfileMapper } from './dtos/profile.mapper';
 
 @Injectable()
 export class ProfileService {
   constructor(
     private profileRepository: ProfileRepository,
     private userRepository: UserRepository,
+    private profileMapper: ProfileMapper,
   ) {}
 
   async createUserProfile(
@@ -44,10 +46,12 @@ export class ProfileService {
       );
     }
 
-    return await this.profileRepository.createUserProfile(
+    const createdProfile = await this.profileRepository.createUserProfile(
       profileUserId,
       createProfileDto,
     );
+
+    return this.profileMapper.profileToProfileResponseDto(createdProfile);
   }
 
   /**
@@ -72,7 +76,7 @@ export class ProfileService {
       );
     }
 
-    return profile;
+    return this.profileMapper.profileToProfileResponseDto(profile);
   }
 
   /**
@@ -102,10 +106,12 @@ export class ProfileService {
       );
     }
 
-    return await this.profileRepository.updateProfile(
+    const updatedProfile = await this.profileRepository.updateProfile(
       profileId,
       updateProfileDto,
     );
+
+    return this.profileMapper.profileToProfileResponseDto(updatedProfile);
   }
 
   /**
@@ -130,6 +136,9 @@ export class ProfileService {
       );
     }
 
-    return await this.profileRepository.deleteProfile(profileId);
+    const deletedProfile =
+      await this.profileRepository.deleteProfile(profileId);
+
+    return this.profileMapper.profileToProfileResponseDto(deletedProfile);
   }
 }
