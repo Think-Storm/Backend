@@ -105,8 +105,6 @@ describe('/profiles', () => {
         .set('Authorization', authHeader)
         .send(defaultE2ECreateProfileDto);
 
-      console.log(createProfileResponse.body.data.languages);
-
       expect(createProfileResponse.status).toBe(201);
       expect(createProfileResponse.body.message).toBe(
         'Create User Profile Success',
@@ -140,13 +138,13 @@ describe('/profiles', () => {
       // Test roles
       expect(createProfileResponse.body.data.preferredRole).toHaveLength(1);
       expect(new Set(createProfileResponse.body.data.preferredRole)).toEqual(
-        new Set(defaultE2ECreateProfileDto.preferred_role),
+        new Set(defaultE2ECreateProfileDto.preferredRole),
       );
 
       // Test interests (domain_labels)
       expect(createProfileResponse.body.data.domainLabels).toHaveLength(2);
       expect(new Set(createProfileResponse.body.data.domainLabels)).toEqual(
-        new Set(defaultE2ECreateProfileDto.domain_labels),
+        new Set(defaultE2ECreateProfileDto.domainLabels),
       );
 
       // Test languages
@@ -155,10 +153,10 @@ describe('/profiles', () => {
         new Set(defaultE2ECreateProfileDto.languages),
       );
 
-      // Test skills (technical_labels)
+      // Test skills (technicalLabels)
       expect(createProfileResponse.body.data.technicalLabels).toHaveLength(3);
       expect(new Set(createProfileResponse.body.data.technicalLabels)).toEqual(
-        new Set(defaultE2ECreateProfileDto.technical_labels),
+        new Set(defaultE2ECreateProfileDto.technicalLabels),
       );
     });
 
@@ -189,14 +187,14 @@ describe('/profiles', () => {
           bio: 'Another bio',
           fullName: 'Full Name2',
           birthdate: new Date('2000-01-01'),
-          preferred_role: [UserRole.FrontendDeveloper],
+          preferredRole: [UserRole.FrontendDeveloper],
           location: 'Another Location',
           timezone: 'Another Timezone',
           websiteType: ['linkedin', 'github'],
           website: ['https://example1.com', 'https://example2.com'],
-          domain_labels: ['Mobile Development'],
+          domainLabels: ['Mobile Development'],
           languages: [LanguageName.Korean],
-          technical_labels: ['react'],
+          technicalLabels: ['react'],
         });
 
       expect(duplicateProfileResponse.status).toBe(400);
@@ -286,7 +284,7 @@ describe('/profiles', () => {
 
       // Verify associations
       expect(getProfileResponse.body.data.preferredRole[0]).toBe(
-        defaultE2ECreateProfileDto.preferred_role[0],
+        defaultE2ECreateProfileDto.preferredRole[0],
       );
       expect(getProfileResponse.body.data.domainLabels).toHaveLength(2);
       expect(getProfileResponse.body.data.languages).toHaveLength(2);
@@ -363,14 +361,14 @@ describe('/profiles', () => {
       const updateData = {
         avatar: 'https://example.com/new-avatar.jpg',
         bio: 'Updated bio',
-        preferred_role: [UserRole.FullStackDeveloper],
+        preferredRole: [UserRole.FullStackDeveloper],
         location: 'New Location',
         timezone: 'New Timezone',
         websiteType: ['linkedin'],
         website: ['https://example.com/new'],
-        domain_labels: ['Cloud Computing', 'DevOps'],
+        domainLabels: ['Cloud Computing', 'DevOps'],
         languages: [LanguageName.Korean, LanguageName.Japanese],
-        technical_labels: ['docker', 'kubernetes'],
+        technicalLabels: ['docker', 'kubernetes'],
       };
 
       const updateResponse = await request(app.getHttpServer())
@@ -393,11 +391,11 @@ describe('/profiles', () => {
       // Verify updated associations
       expect(updateResponse.body.data.preferredRole).toHaveLength(1);
       expect(updateResponse.body.data.preferredRole[0]).toBe(
-        updateData.preferred_role[0],
+        updateData.preferredRole[0],
       );
       expect(updateResponse.body.data.domainLabels).toHaveLength(2);
       expect(updateResponse.body.data.domainLabels[0]).toBe(
-        updateData.domain_labels[0],
+        updateData.domainLabels[0],
       );
       expect(updateResponse.body.data.languages).toHaveLength(2);
       expect(updateResponse.body.data.technicalLabels).toHaveLength(2);

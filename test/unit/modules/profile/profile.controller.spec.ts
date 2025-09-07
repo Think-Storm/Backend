@@ -95,10 +95,10 @@ describe('ProfileController', () => {
   describe('updateProfile', () => {
     const profileId = defaultMockUserProfile.id;
     const updateProfileDto: UpdateUserProfileDto = {
-      domain_labels: ['AI', 'ML'],
+      domainLabels: ['AI', 'ML'],
       languages: [LanguageName.English],
-      technical_labels: ['Python'],
-      preferred_role: [UserRole.DataScientist],
+      technicalLabels: ['Python'],
+      preferredRole: [UserRole.DataScientist],
     };
 
     it('should update a profile successfully', async () => {

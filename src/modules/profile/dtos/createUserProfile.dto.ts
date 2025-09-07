@@ -52,7 +52,7 @@ export class CreateUserProfileDto implements CreateProfile {
   @IsOptional()
   @IsArray()
   @IsEnum(UserRole, { each: true })
-  preferred_role?: UserRole[];
+  preferredRole?: UserRole[];
 
   @ApiProperty({
     description: 'User location',
@@ -96,7 +96,7 @@ export class CreateUserProfileDto implements CreateProfile {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  domain_labels?: string[];
+  domainLabels?: string[];
 
   @ApiProperty({
     description: 'Programming languages known by the user',
@@ -117,5 +117,5 @@ export class CreateUserProfileDto implements CreateProfile {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  technical_labels?: string[];
+  technicalLabels?: string[];
 }

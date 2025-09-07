@@ -132,13 +132,13 @@ describe('ProfileRepository', () => {
           },
           preferredRole: {
             deleteMany: {},
-            create: defaultUpdateProfileDto.preferred_role.map((roleName) => ({
+            create: defaultUpdateProfileDto.preferredRole.map((roleName) => ({
               roleName,
             })),
           },
           interests: {
             deleteMany: {},
-            create: defaultUpdateProfileDto.domain_labels.map((labelName) => ({
+            create: defaultUpdateProfileDto.domainLabels.map((labelName) => ({
               labelName,
             })),
           },
@@ -152,7 +152,7 @@ describe('ProfileRepository', () => {
           },
           skills: {
             deleteMany: {},
-            create: defaultUpdateProfileDto.technical_labels.map(
+            create: defaultUpdateProfileDto.technicalLabels.map(
               (labelName) => ({
                 labelName,
               }),
