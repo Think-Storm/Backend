@@ -27,6 +27,9 @@ export const defaultProfileResponse = {
     birthdate: new Date('2000-01-01'),
     avatar: 'https://example.com/avatar.jpg',
     bio: 'Test bio',
+    domainLabels: ['Web Development'],
+    technicalLabels: ['nestjs'],
+    languages: [LanguageName.English],
     preferredRole: [UserRole.BackendDeveloper],
     location: 'Test Location',
     timezone: 'Test Timezone',
@@ -46,6 +49,8 @@ export const defaultMockUserProfile: UserProfile = {
   timezone: defaultCreateProfileDto.timezone,
   websiteType: defaultCreateProfileDto.websiteType,
   website: defaultCreateProfileDto.website,
+  createdAt: new Date(),
+  lastUpdatedAt: new Date(),
 };
 
 export const defaultMockUser = {
@@ -61,9 +66,10 @@ export const defaultMockUser = {
 
 export const defaultProfileWithAssociations = {
   ...defaultMockUserProfile,
-  interests: [{ label: { name: 'Web Development' } }],
-  languages: [{ language: { name: LanguageName.English } }],
-  skills: [{ label: { name: 'nestjs' } }],
+  domainLabels: ['Web Development'],
+  technicalLabels: ['nestjs'],
+  languages: [{ languageName: LanguageName.English }],
+  preferredRole: [{ roleName: UserRole.DataScientist }],
 };
 
 export const defaultE2ECreateProfileDto = {

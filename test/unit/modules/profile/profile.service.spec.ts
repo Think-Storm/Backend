@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProfileService } from '../../../../src/modules/profile/profile.service';
 import { ProfileRepository } from '../../../../src/modules/profile/profile.repository';
+import { ProfileMapper } from '../../../../src/modules/profile/dtos/profile.mapper';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UpdateUserProfileDto } from '../../../../src/modules/profile/dtos/updateUserProfile.dto';
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
@@ -11,6 +12,7 @@ import {
   defaultProfileWithAssociations,
 } from '../../../utils/profile.utils';
 import { LanguageName, UserRole } from '@think-storm/contracts';
+import { ProfileResponseDto } from '../../../../src/modules/profile/dtos/profileResponse.dto';
 
 describe('ProfileService', () => {
   let service: ProfileService;
@@ -31,6 +33,7 @@ describe('ProfileService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProfileService,
+        ProfileMapper,
         {
           provide: ProfileRepository,
           useValue: mockProfileRepository,
@@ -125,7 +128,14 @@ describe('ProfileService', () => {
 
       const result = await service.getProfileById(profileId, requestUserId);
 
-      expect(result).toEqual(defaultProfileWithAssociations);
+      const expectedProfileResponse: ProfileResponseDto = {
+        ...defaultProfileWithAssociations,
+        languages: [LanguageName.English],
+        preferredRole: [UserRole.DataScientist],
+        createdAt: expect.any(Date),
+        lastUpdatedAt: expect.any(Date),
+      };
+      expect(result).toEqual(expectedProfileResponse);
       expect(mockProfileRepository.getProfileById).toHaveBeenCalledWith(
         profileId,
       );
@@ -166,7 +176,16 @@ describe('ProfileService', () => {
     it('should update profile successfully', async () => {
       const updatedProfile = {
         ...defaultMockUserProfile,
-        ...updateProfileDto,
+        domainLabels: ['AI', 'ML'],
+        languages: [{ languageName: LanguageName.English }],
+        technicalLabels: ['Python'],
+        preferredRole: [{ roleName: UserRole.DataScientist }],
+      };
+
+      const expectedProfileResponse: ProfileResponseDto = {
+        ...updatedProfile,
+        languages: [LanguageName.English],
+        preferredRole: [UserRole.DataScientist],
       };
 
       mockProfileRepository.getProfileById.mockResolvedValue(
@@ -180,7 +199,7 @@ describe('ProfileService', () => {
         requestUserId,
       );
 
-      expect(result).toEqual(updatedProfile);
+      expect(result).toEqual(expectedProfileResponse);
       expect(mockProfileRepository.updateProfile).toHaveBeenCalledWith(
         profileId,
         updateProfileDto,
