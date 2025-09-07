@@ -14,10 +14,10 @@ export class ProfileRepository {
    * Creates a new user profile with associated domain interests, languages, and technical skills
    * @param userId - The ID of the user to create the profile for
    * @param createProfileDto - Data transfer object containing profile information
-   * @param createProfileDto.domain_labels - Array of domain/interest areas (e.g., "AI", "Web Development")
+   * @param createProfileDto.domainLabels - Array of domain/interest areas (e.g., "AI", "Web Development")
    * @param createProfileDto.languages - Array of language names the user knows
-   * @param createProfileDto.technical_labels - Array of technical skills/technologies
-   * @param createProfileDto.preferred_role - User's preferred role in projects
+   * @param createProfileDto.technicalLabels - Array of technical skills/technologies
+   * @param createProfileDto.preferredRole - User's preferred role in projects
    * @param createProfileDto.profileData - Additional profile data (spread from remaining DTO fields)
    * @returns Promise resolving to the created UserProfile with all related entities included
    *
@@ -32,10 +32,10 @@ export class ProfileRepository {
     createProfileDto: CreateUserProfileDto,
   ): Promise<UserProfile> {
     const {
-      domain_labels,
+      domainLabels,
       languages,
-      technical_labels,
-      preferred_role,
+      technicalLabels,
+      preferredRole,
       website,
       websiteType,
       ...profileData
@@ -52,16 +52,16 @@ export class ProfileRepository {
           websiteType: {
             set: websiteType,
           },
-          preferredRole: preferred_role
+          preferredRole: preferredRole
             ? {
-                create: preferred_role.map((roleName) => ({
+                create: preferredRole.map((roleName) => ({
                   roleName,
                 })),
               }
             : undefined,
-          interests: domain_labels
+          interests: domainLabels
             ? {
-                create: domain_labels.map((labelName) => ({
+                create: domainLabels.map((labelName) => ({
                   labelName,
                 })),
               }
@@ -75,9 +75,9 @@ export class ProfileRepository {
                 })),
               }
             : undefined,
-          skills: technical_labels
+          skills: technicalLabels
             ? {
-                create: technical_labels.map((labelName) => ({
+                create: technicalLabels.map((labelName) => ({
                   labelName,
                 })),
               }
@@ -187,10 +187,10 @@ export class ProfileRepository {
     updateProfileDto: UpdateUserProfileDto,
   ): Promise<UserProfile> {
     const {
-      domain_labels,
+      domainLabels,
       languages,
-      technical_labels,
-      preferred_role,
+      technicalLabels,
+      preferredRole,
       website,
       ...profileData
     } = updateProfileDto;
@@ -205,18 +205,18 @@ export class ProfileRepository {
           website: {
             set: website,
           },
-          preferredRole: preferred_role
+          preferredRole: preferredRole
             ? {
                 deleteMany: {},
-                create: preferred_role.map((roleName) => ({
+                create: preferredRole.map((roleName) => ({
                   roleName,
                 })),
               }
             : undefined,
-          interests: domain_labels
+          interests: domainLabels
             ? {
                 deleteMany: {},
-                create: domain_labels.map((labelName) => ({
+                create: domainLabels.map((labelName) => ({
                   labelName,
                 })),
               }
@@ -231,10 +231,10 @@ export class ProfileRepository {
                 })),
               }
             : undefined,
-          skills: technical_labels
+          skills: technicalLabels
             ? {
                 deleteMany: {},
-                create: technical_labels.map((labelName) => ({
+                create: technicalLabels.map((labelName) => ({
                   labelName,
                 })),
               }

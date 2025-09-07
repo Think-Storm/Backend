@@ -167,10 +167,10 @@ describe('ProfileService', () => {
     const profileId = defaultMockUserProfile.id;
     const requestUserId = defaultMockUser.id;
     const updateProfileDto: UpdateUserProfileDto = {
-      domain_labels: ['AI', 'ML'],
+      domainLabels: ['AI', 'ML'],
       languages: [LanguageName.English],
-      technical_labels: ['Python'],
-      preferred_role: [UserRole.DataScientist],
+      technicalLabels: ['Python'],
+      preferredRole: [UserRole.DataScientist],
     };
 
     it('should update profile successfully', async () => {

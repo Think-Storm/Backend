@@ -8,14 +8,14 @@ export const defaultCreateProfileDto: CreateUserProfileDto = {
   bio: 'Test bio',
   fullName: 'Full Name',
   birthdate: new Date('2000-01-01'),
-  preferred_role: [UserRole.BackendDeveloper],
+  preferredRole: [UserRole.BackendDeveloper],
   location: 'Test Location',
   timezone: 'Test Timezone',
   websiteType: ['linkedin'],
   website: ['https://example.com'],
-  domain_labels: ['Web Development'],
+  domainLabels: ['Web Development'],
   languages: [LanguageName.English],
-  technical_labels: ['nestjs'],
+  technicalLabels: ['nestjs'],
 };
 
 export const defaultProfileResponse = {
@@ -77,19 +77,19 @@ export const defaultE2ECreateProfileDto = {
   bio: 'Test bio',
   fullName: 'Full Name',
   birthdate: new Date('2000-01-01'),
-  preferred_role: [UserRole.BackendDeveloper],
+  preferredRole: [UserRole.BackendDeveloper],
   location: 'Test Location',
   timezone: 'Test Timezone',
   websiteType: ['linkedin'],
   website: ['https://example.com'],
-  domain_labels: ['Web Development', 'Cloud Computing'],
+  domainLabels: ['Web Development', 'Cloud Computing'],
   languages: [LanguageName.English, LanguageName.Korean],
-  technical_labels: ['nestjs', 'typescript', 'postgresql'],
+  technicalLabels: ['nestjs', 'typescript', 'postgresql'],
 };
 
 export const defaultUpdateProfileDto: UpdateUserProfileDto = {
-  domain_labels: ['AI', 'ML'],
+  domainLabels: ['AI', 'ML'],
   languages: [LanguageName.English],
-  technical_labels: ['python'],
-  preferred_role: [UserRole.DataScientist],
+  technicalLabels: ['python'],
+  preferredRole: [UserRole.DataScientist],
 };
