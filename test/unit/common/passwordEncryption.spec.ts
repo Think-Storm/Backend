@@ -1,6 +1,6 @@
 import * as bcrypt from 'bcrypt';
-import { User } from '@prisma/client';
 import { PasswordEncryption } from '../../../src/common/encryption/passwordEncryption';
+import { User } from '@think-storm/contracts';
 
 jest.mock('bcrypt', () => ({
   genSalt: jest.fn(),

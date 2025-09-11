@@ -1,7 +1,10 @@
-import { NotificationResponse, NotificationType } from '@think-storm/contracts';
+import {
+  NotificationResponse,
+  NotificationType,
+  User,
+} from '@think-storm/contracts';
 import { notificationMessages } from '../../src/common/enums/notificationMessages';
 import { CreateNotificationDto } from '../../src/modules/notification/dtos/createNotification.dto';
-import { User } from '@prisma/client';
 
 export const mockUser: User = {
   id: 1,

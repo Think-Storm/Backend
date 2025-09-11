@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { UserProfile } from '@prisma/client';
 import { CreateUserProfileDto } from './dtos/createUserProfile.dto';
 import { UpdateUserProfileDto } from './dtos/updateUserProfile.dto';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { errorMessages } from '../../common/enums/errorMessages';
+import { UserProfile } from '@think-storm/contracts';
 
 @Injectable()
 export class ProfileRepository {

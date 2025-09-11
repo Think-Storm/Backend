@@ -5,6 +5,7 @@ import {
   ProjectStatus,
   JoinRequestStatus,
   CreateJoinRequest,
+  Project,
 } from '@think-storm/contracts';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { CreateProjectRequestDto } from '../../src/modules/project/dtos/createProjectRequest.dto';
@@ -16,7 +17,6 @@ import { SearchProjectDto } from '../../src/modules/project/dtos/searchProject.d
 import { GetProjectRequestDto } from '../../src/modules/project/dtos/getProjectRequest.dto';
 import { SearchProjectResponseDto } from './../../src/modules/project/dtos/searchProjectResponse.dto';
 import { JoinRequestResponseDto } from '../../src/modules/project/dtos/joinRequestResponse.dto';
-import { Project } from '@prisma/client';
 
 /**
  *

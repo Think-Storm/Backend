@@ -5,7 +5,7 @@ import { UserRepository } from '../../user/user.repository';
 import { Request } from 'express';
 import { ServiceException } from '../../../common/exception-filter/serviceException';
 import { errorMessages } from '../../../common/enums/errorMessages';
-import { User } from '@prisma/client';
+import { User } from '@think-storm/contracts';
 
 @Injectable()
 export class JwtHelperService {

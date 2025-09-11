@@ -1,5 +1,4 @@
-import { UserProfile } from '@prisma/client';
-import { LanguageName, UserRole } from '@think-storm/contracts';
+import { LanguageName, UserProfile, UserRole } from '@think-storm/contracts';
 import { CreateUserProfileDto } from '../../src/modules/profile/dtos/createUserProfile.dto';
 import { UpdateUserProfileDto } from '../../src/modules/profile/dtos/updateUserProfile.dto';
 

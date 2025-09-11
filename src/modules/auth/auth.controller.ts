@@ -16,8 +16,9 @@ import { LoginUserDto } from './dtos/loginUser.dto';
 import { JwtAuthGuard } from './jwt/jwt.guard';
 import { GetUser } from './decorators/getUser.decorator';
 import { UserResponseDto } from '../user/dtos/userResponse.dto';
-import { UpdatePasswordDto } from './dtos/updatePassword.dto';
+import { ForgotUpdatePasswordDto } from './dtos/forgotUpdatePassword.dto';
 import { ForgotPasswordDto } from './dtos/forgotPassword.dto';
+import { UpdatePasswordDto } from './dtos/updatePassword.dto';
 
 @ApiTags('auth')
 @Controller()
@@ -103,18 +104,14 @@ export class AuthController {
   @HttpCode(200)
   @Put('/forgot-password')
   @ApiOperation({ summary: 'Update user password' })
-  @ApiBody({ type: UpdatePasswordDto })
+  @ApiBody({ type: ForgotUpdatePasswordDto })
   @ApiResponse({ status: 200, description: 'Update User Password Success' })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized. Token is invalid.',
   })
   @ApiResponse({
-    status: 401,
-    description: 'Unauthorized. Token is expired.',
-  })
-  @ApiResponse({
-    status: 401,
+    status: 404,
     description: 'User to be updated is not found.',
   })
   @ApiResponse({
@@ -122,11 +119,44 @@ export class AuthController {
     description:
       'Forbidden. Only owner of the account can update user password information.',
   })
+  async forgotUpdatePassword(
+    @Body() updatedUserData: ForgotUpdatePasswordDto,
+    @Res() res: Response,
+  ): Promise<any> {
+    const updatedUser =
+      await this.authService.forgotUpdatePassword(updatedUserData);
+
+    const updatedUserWithJwt = this.authService.authentication(
+      updatedUser,
+      res,
+    );
+
+    return res.send({
+      message: 'Update User Password Success',
+      data: updatedUserWithJwt,
+    });
+  }
+
+  @HttpCode(200)
+  @Put('/update-password')
+  @ApiOperation({ summary: 'Update user password' })
+  @ApiBody({ type: UpdatePasswordDto })
+  @ApiResponse({ status: 200, description: 'Update User Password Success' })
+  @ApiResponse({
+    status: 403,
+    description:
+      'Forbidden. Only owner of the account can update user password information.',
+  })
+  @UseGuards(JwtAuthGuard)
   async updatePassword(
+    @GetUser() user: any,
     @Body() updatedUserData: UpdatePasswordDto,
     @Res() res: Response,
   ): Promise<any> {
-    const updatedUser = await this.authService.updatePassword(updatedUserData);
+    const updatedUser = await this.authService.updatePassword(
+      user,
+      updatedUserData,
+    );
 
     const updatedUserWithJwt = this.authService.authentication(
       updatedUser,

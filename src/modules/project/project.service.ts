@@ -11,7 +11,6 @@ import { Cache } from 'cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../../common/caching/redisCaching.service';
 import { GetProjectRequestDto } from './dtos/getProjectRequest.dto';
-import { Project } from '@prisma/client';
 import { SearchProjectResponseDto } from './dtos/searchProjectResponse.dto';
 import { ProjectResponseDto } from './dtos/projectResponse.dto';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
@@ -21,6 +20,7 @@ import { SaveProjectRequestDto } from './dtos/saveProjectRequest.dto';
 import { NotificationService } from '../notification/notification.service';
 import { JoinRequestResponseDto } from './dtos/joinRequestResponse.dto';
 import { CreateJoinRequestBodyDto } from './dtos/createJoinRequest.dto';
+import { Project } from '@think-storm/contracts';
 
 @Injectable()
 export class ProjectService {

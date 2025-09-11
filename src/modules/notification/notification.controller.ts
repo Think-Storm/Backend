@@ -12,10 +12,10 @@ import {
 } from '@nestjs/common';
 import { NotificationService } from './notification.service';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
-import { User } from '@prisma/client';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetUser } from '../auth/decorators/getUser.decorator';
 import { SetNotificationReadDto } from './dtos/setNotificationRead.dto';
+import { User } from '@think-storm/contracts';
 
 @ApiTags('notifications')
 @Controller()

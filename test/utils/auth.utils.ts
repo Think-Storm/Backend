@@ -2,7 +2,7 @@ import { ExecutionContext } from '@nestjs/common';
 import { defaultUser, defaultUserResponseDto } from './user.utils';
 import { mockJwtToken } from './jwt.utils';
 import { LoginUserDto } from '../../src/modules/auth/dtos/loginUser.dto';
-import { UpdatePasswordDto } from '../../src/modules/auth/dtos/updatePassword.dto';
+import { ForgotUpdatePasswordDto } from '../../src/modules/auth/dtos/forgotUpdatePassword.dto';
 import { sign } from 'jsonwebtoken';
 import { ForgotPasswordDto } from '../../src/modules/auth/dtos/forgotPassword.dto';
 
@@ -56,7 +56,7 @@ export const createAuthHeader = (token = mockJwtToken) => ({
   Authorization: `Bearer ${token}`,
 });
 
-export const defaultUpdatePasswordDto: UpdatePasswordDto = {
+export const defaultUpdatePasswordDto: ForgotUpdatePasswordDto = {
   email: defaultUser.email,
   password: 'newpassword',
   passwordResetToken: createMockPasswordResetToken(),

@@ -1,5 +1,5 @@
 import { ExecutionContext } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { User } from '@think-storm/contracts';
 
 export const mockJwtAuthGuard = (mockUser: User) => ({
   canActivate: (context: ExecutionContext) => {

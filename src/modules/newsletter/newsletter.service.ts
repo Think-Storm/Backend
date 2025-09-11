@@ -4,8 +4,8 @@ import { CreateNewsletterSubscriptionDto } from './dtos/createNewsletterSubscrip
 import { NewsletterSubscriptionResponseDto } from './dtos/newsletterSubscriptionResponse.dto';
 import { NewsletterRepository } from './newsletter.repository';
 import { errorMessages } from '../../common/enums/errorMessages';
-import { NewsletterSubscription } from '@prisma/client';
 import { NewsletterMapper } from './dtos/newsletter.mapper';
+import { NewsletterSubscription } from '@think-storm/contracts';
 
 @Injectable()
 export class NewsletterService {

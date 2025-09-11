@@ -1,5 +1,8 @@
-import { Prisma } from '@prisma/client';
 import { errorMessages } from '../enums/errorMessages';
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+} from '@prisma/client/runtime/library';
 
 export class ServiceException extends Error {
   status: string;
@@ -38,14 +41,14 @@ export class ServiceException extends Error {
   };
 
   static ErrorException = (message: string, error: Error): ServiceException => {
-    if (error instanceof Prisma.PrismaClientValidationError) {
+    if (error instanceof PrismaClientValidationError) {
       return new ServiceException(
         errorMessages.VALIDATION_ERROR + ' ' + message,
         400,
         error,
       );
-    } else if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      const prismaError = error as Prisma.PrismaClientKnownRequestError;
+    } else if (error instanceof PrismaClientKnownRequestError) {
+      const prismaError = error as PrismaClientKnownRequestError;
       switch (prismaError.code) {
         case 'P2025': // Record not found
           return new ServiceException(

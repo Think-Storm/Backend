@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { User } from '@prisma/client';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { UpdateUserDto } from '../user/dtos/updateUser.dto';
+import { User } from '@think-storm/contracts';
 import { UpdatePasswordDto } from '../auth/dtos/updatePassword.dto';
+import { ForgotUpdatePasswordDto } from '../auth/dtos/forgotUpdatePassword.dto';
 
 @Injectable()
 export class UserRepository {
@@ -143,7 +144,7 @@ export class UserRepository {
    * @returns A promise resolving to the updated User object
    */
   async udpatePassword(
-    updateUserDto: UpdatePasswordDto,
+    updateUserDto: UpdatePasswordDto | ForgotUpdatePasswordDto,
     passwordSalt: string,
     userId: number,
   ): Promise<User> {

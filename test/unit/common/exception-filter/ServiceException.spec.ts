@@ -1,6 +1,9 @@
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
-import { Prisma } from '@prisma/client';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+} from '@prisma/client/runtime/library';
 
 describe('ServiceException', () => {
   describe('constructor', () => {
@@ -60,7 +63,7 @@ describe('ServiceException', () => {
 
     describe('ErrorException', () => {
       it('should handle PrismaClientValidationError', () => {
-        const prismaError = new Prisma.PrismaClientValidationError(
+        const prismaError = new PrismaClientValidationError(
           'validation error',
           {
             clientVersion: '5.0.0',
@@ -79,13 +82,10 @@ describe('ServiceException', () => {
       });
 
       it('should handle PrismaClientKnownRequestError', () => {
-        const prismaError = new Prisma.PrismaClientKnownRequestError(
-          'known error',
-          {
-            code: 'P2002',
-            clientVersion: '5.0.0',
-          },
-        );
+        const prismaError = new PrismaClientKnownRequestError('known error', {
+          code: 'P2002',
+          clientVersion: '5.0.0',
+        });
 
         const error = ServiceException.ErrorException(
           'test error',

@@ -1,4 +1,4 @@
-import { Project, User } from '@think-storm/contracts';
+import { Project, User } from '@prisma/client';
 
 export type UserWithoutSensitiveData = Omit<
   User,

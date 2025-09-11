@@ -1,4 +1,4 @@
-import { NewsletterSubscription } from '@prisma/client';
+import { NewsletterSubscription } from '@think-storm/contracts';
 import { CreateNewsletterSubscriptionDto } from '../../src/modules/newsletter/dtos/createNewsletterSubscription.dto';
 import { NewsletterSubscriptionResponseDto } from '../../src/modules/newsletter/dtos/newsletterSubscriptionResponse.dto';
 

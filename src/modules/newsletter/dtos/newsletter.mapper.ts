@@ -1,7 +1,7 @@
-import { NewsletterSubscription } from '@prisma/client';
 import { NewsletterSubscriptionResponseDto } from './newsletterSubscriptionResponse.dto';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { NewsletterSubscription } from '@think-storm/contracts';
 
 export class NewsletterMapper {
   /**
