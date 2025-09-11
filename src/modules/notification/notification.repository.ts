@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Notification } from '@prisma/client';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { errorMessages } from '../../common/enums/errorMessages';
-import { NotificationType } from '@think-storm/contracts';
+import { Notification, NotificationType } from '@think-storm/contracts';
 
 @Injectable()
 export class NotificationRepository {

@@ -9,12 +9,13 @@ import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { UserMapper } from './../user/dtos/user.mapper';
 import { UserService } from './../user/user.service';
 import { PasswordEncryption } from '../../common/encryption/passwordEncryption';
-import { UpdatePasswordDto } from './dtos/updatePassword.dto';
+import { ForgotUpdatePasswordDto } from './dtos/forgotUpdatePassword.dto';
 import { NotificationService } from '../notification/notification.service';
 import { MailService } from '../mail/mail.service';
 import { UserRepository } from './../user/user.repository';
 import { JwtHelperService } from './jwt/jwt-helper.service';
 import { ForgotPasswordDto } from './dtos/forgotPassword.dto';
+import { UpdatePasswordDto } from './dtos/updatePassword.dto';
 
 @Injectable()
 export class AuthService {
@@ -193,11 +194,11 @@ export class AuthService {
 
   /**
    * update user
-   * @param UpdatePasswordDto - UpdatePasswordDto that has updated user's password information
+   * @param ForgotUpdatePasswordDto - UpdatePasswordDto that has updated user's password information
    * @returns A promise resolving to the updated User object or null
    */
-  updatePassword = async (
-    passwordDto: UpdatePasswordDto,
+  forgotUpdatePassword = async (
+    passwordDto: ForgotUpdatePasswordDto,
   ): Promise<UserResponseDto> => {
     // check if the password reset token is valid
     const decoded = await this.jwtHelperService.verifyAndDecodeToken(
@@ -212,6 +213,57 @@ export class AuthService {
     if (foundUser.email !== passwordDto.email) {
       throw ServiceException.ForbiddenException(
         errorMessages.FORBIDDEN('You are not the owner of this account'),
+      );
+    }
+
+    //password update
+    const passwordInformation =
+      await this.passwordEncryption.createSaltAndHashedPassword(
+        passwordDto.password,
+      );
+    passwordDto.password = passwordInformation.hashedPassword;
+
+    const updatedUserWithNewPw = await this.userRepository.udpatePassword(
+      passwordDto,
+      passwordInformation.passwordSalt,
+      foundUser.id,
+    );
+
+    return this.userMapper.userToUserResponseDTO(updatedUserWithNewPw);
+  };
+
+  /**
+   * update user
+   * @param UpdatePasswordDto - UpdatePasswordDto that has updated user's password information
+   * @returns A promise resolving to the updated User object or null
+   */
+  updatePassword = async (
+    user: UserResponseDto,
+    passwordDto: UpdatePasswordDto,
+  ): Promise<UserResponseDto> => {
+    const foundUser = await this.jwtHelperService.checkUserExistsInDB(user.id);
+
+    // Authorization check in service layer
+    if (foundUser.email !== user.email) {
+      throw ServiceException.ForbiddenException(
+        errorMessages.FORBIDDEN('You are not the owner of this account'),
+      );
+    }
+
+    const currentUser = await this.checkUserAndPassword(
+      user.email,
+      passwordDto.currentPassword,
+    );
+
+    if (!currentUser) {
+      throw ServiceException.ForbiddenException(
+        errorMessages.FORBIDDEN('You are not the owner of this account'),
+      );
+    }
+
+    if (passwordDto.password !== passwordDto.confirmPassword) {
+      throw ServiceException.BadRequestException(
+        errorMessages.BAD_REQUEST_PASSWORD,
       );
     }
 

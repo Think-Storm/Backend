@@ -402,7 +402,7 @@ describe('AuthService', () => {
 
       const originalPassword = 'newpassword';
 
-      const result = await authService.updatePassword({
+      const result = await authService.forgotUpdatePassword({
         ...defaultUpdatePasswordDto,
         password: originalPassword,
       });
@@ -438,7 +438,7 @@ describe('AuthService', () => {
         );
 
       await expect(
-        authService.updatePassword(defaultUpdatePasswordDto),
+        authService.forgotUpdatePassword(defaultUpdatePasswordDto),
       ).rejects.toThrow('Your token has expired.');
     });
 
@@ -450,7 +450,7 @@ describe('AuthService', () => {
         );
 
       await expect(
-        authService.updatePassword(defaultUpdatePasswordDto),
+        authService.forgotUpdatePassword(defaultUpdatePasswordDto),
       ).rejects.toThrow('Invalid Token.');
     });
 
@@ -470,7 +470,7 @@ describe('AuthService', () => {
         );
 
       await expect(
-        authService.updatePassword(defaultUpdatePasswordDto),
+        authService.forgotUpdatePassword(defaultUpdatePasswordDto),
       ).rejects.toThrow(
         `User with id ${mockJwtPayloadForPasswordReset.id} was not found`,
       );
@@ -485,7 +485,7 @@ describe('AuthService', () => {
         .mockResolvedValue({ ...defaultUser, email: 'other@email.com' });
 
       await expect(
-        authService.updatePassword(defaultUpdatePasswordDto),
+        authService.forgotUpdatePassword(defaultUpdatePasswordDto),
       ).rejects.toThrow(
         ServiceException.ForbiddenException(
           errorMessages.FORBIDDEN('You are not the owner of this account'),
@@ -505,7 +505,7 @@ describe('AuthService', () => {
         .mockRejectedValue(new Error('hash error'));
 
       await expect(
-        authService.updatePassword(defaultUpdatePasswordDto),
+        authService.forgotUpdatePassword(defaultUpdatePasswordDto),
       ).rejects.toThrow('hash error');
     });
   });

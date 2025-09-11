@@ -4,9 +4,9 @@ import { UserRepository } from './user.repository';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { UserResponseDto } from '../user/dtos/userResponse.dto';
 import { UserMapper } from '../user/dtos/user.mapper';
-import { User } from '@prisma/client';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
 import { UpdateUserDto } from './dtos/updateUser.dto';
+import { User } from '@think-storm/contracts';
 
 @Injectable()
 export class UserService {

@@ -18,7 +18,6 @@ import {
   defaultCreateUserDto,
   createUserInDB,
 } from '../../../utils/user.utils';
-import { Project } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
@@ -27,6 +26,7 @@ import { ProjectWithRelations } from '../../../../src/modules/project/types/proj
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { errorMessages } from '../../../../src/common/enums/errorMessages';
 import { SaveProjectRequestDto } from '../../../../src/modules/project/dtos/saveProjectRequest.dto';
+import { Project } from '@think-storm/contracts';
 
 describe('ProjectRepository', () => {
   let prismaService: PrismaService;

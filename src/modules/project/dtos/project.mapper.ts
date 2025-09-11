@@ -1,11 +1,14 @@
-import { Project } from '@prisma/client';
-import { stringToEnum, Goal, ProjectStatus } from '@think-storm/contracts';
+import {
+  stringToEnum,
+  Goal,
+  ProjectStatus,
+  Project,
+} from '@think-storm/contracts';
 import { ProjectResponseDto } from './projectResponse.dto';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { SearchProjectResponseDto } from './searchProjectResponse.dto';
 import { ProjectWithRelations } from '../types/project.types';
-
 export class ProjectMapper {
   /**
    * Maps a Project entity to a ProjectResponseDto

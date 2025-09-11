@@ -1,10 +1,10 @@
-import { User } from '@prisma/client';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { UserResponseDto } from '../../src/modules/user/dtos/userResponse.dto';
 import { CreateUserDto } from '../../src/modules/user/dtos/createUser.dto';
 import { UserRepository } from '../../src/modules/user/user.repository';
 import { defaultPasswordSalt } from '../unit/common/passwordEncryption.utils';
 import { UpdateUserDto } from '../../src/modules/user/dtos/updateUser.dto';
+import { User } from '@think-storm/contracts';
 
 export const loginUserDto = {
   email: 'email@email.com',

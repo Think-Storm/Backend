@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { NewsletterSubscription } from '@prisma/client';
 import { CreateNewsletterSubscriptionDto } from './dtos/createNewsletterSubscription.dto';
 import { ServiceException } from '../../common/exception-filter/serviceException';
+import { NewsletterSubscription } from '@think-storm/contracts';
 
 @Injectable()
 export class NewsletterRepository {

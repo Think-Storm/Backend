@@ -6,6 +6,7 @@ import { notificationMessages } from '../../../../src/common/enums/notificationM
 import { ServiceException } from '../../../../src/common/exception-filter/serviceException';
 import { mockNotification } from '../../../utils/notification.utils';
 import { NotificationMapper } from '../../../../src/modules/notification/dtos/notification.mapper';
+
 describe('NotificationService', () => {
   let service: NotificationService;
   let repository: NotificationRepository;

@@ -318,13 +318,13 @@ describe('AuthController', () => {
       const res = httpMocks.createResponse();
 
       jest
-        .spyOn(authService, 'updatePassword')
+        .spyOn(authService, 'forgotUpdatePassword')
         .mockResolvedValue(defaultUserResponseDto);
       jest
         .spyOn(authService, 'authentication')
         .mockReturnValue(defaultUserResponseDto);
 
-      const response = await authController.updatePassword(
+      const response = await authController.forgotUpdatePassword(
         defaultUpdatePasswordDto,
         res,
       );
@@ -339,13 +339,13 @@ describe('AuthController', () => {
       const res = httpMocks.createResponse();
 
       jest
-        .spyOn(authService, 'updatePassword')
+        .spyOn(authService, 'forgotUpdatePassword')
         .mockRejectedValue(
           ServiceException.UnAuthorizedException(errorMessages.INVALID_TOKEN),
         );
 
       await expect(
-        authController.updatePassword(defaultUpdatePasswordDto, res),
+        authController.forgotUpdatePassword(defaultUpdatePasswordDto, res),
       ).rejects.toThrow('Invalid Token');
     });
 
@@ -353,13 +353,13 @@ describe('AuthController', () => {
       const res = httpMocks.createResponse();
 
       jest
-        .spyOn(authService, 'updatePassword')
+        .spyOn(authService, 'forgotUpdatePassword')
         .mockRejectedValue(
           ServiceException.UnAuthorizedException(errorMessages.TOKEN_EXPIRED),
         );
 
       await expect(
-        authController.updatePassword(defaultUpdatePasswordDto, res),
+        authController.forgotUpdatePassword(defaultUpdatePasswordDto, res),
       ).rejects.toThrow('Your token has expired.');
     });
 
@@ -367,7 +367,7 @@ describe('AuthController', () => {
       const res = httpMocks.createResponse();
 
       jest
-        .spyOn(authService, 'updatePassword')
+        .spyOn(authService, 'forgotUpdatePassword')
         .mockRejectedValue(
           ServiceException.UnAuthorizedException(
             errorMessages.ENTITY_NOT_FOUND(
@@ -378,7 +378,7 @@ describe('AuthController', () => {
         );
 
       await expect(
-        authController.updatePassword(defaultUpdatePasswordDto, res),
+        authController.forgotUpdatePassword(defaultUpdatePasswordDto, res),
       ).rejects.toThrow(
         `User with id ${mockJwtPayloadForPasswordReset.id} was not found`,
       );
@@ -394,7 +394,7 @@ describe('AuthController', () => {
         .spyOn(jwtHelperService, 'checkUserExistsInDB')
         .mockResolvedValue(defaultUser);
       jest
-        .spyOn(authService, 'updatePassword')
+        .spyOn(authService, 'forgotUpdatePassword')
         .mockRejectedValue(
           ServiceException.ForbiddenException(
             errorMessages.FORBIDDEN('You are not the owner of this account'),
@@ -402,7 +402,7 @@ describe('AuthController', () => {
         );
 
       await expect(
-        authController.updatePassword(defaultUpdatePasswordDto, res),
+        authController.forgotUpdatePassword(defaultUpdatePasswordDto, res),
       ).rejects.toThrow('You are not the owner of this account');
     });
 
@@ -416,11 +416,11 @@ describe('AuthController', () => {
         .spyOn(jwtHelperService, 'checkUserExistsInDB')
         .mockResolvedValue(defaultUser);
       jest
-        .spyOn(authService, 'updatePassword')
+        .spyOn(authService, 'forgotUpdatePassword')
         .mockRejectedValue(new Error('hash error'));
 
       await expect(
-        authController.updatePassword(defaultUpdatePasswordDto, res),
+        authController.forgotUpdatePassword(defaultUpdatePasswordDto, res),
       ).rejects.toThrow('hash error');
     });
   });

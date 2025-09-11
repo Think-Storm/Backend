@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { Prisma, JoinRequest } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { JoinRequest } from '@think-storm/contracts';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';

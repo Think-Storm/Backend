@@ -1,7 +1,7 @@
-import { Notification } from '@prisma/client';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { NotificationResponseDto } from './notificationResponse.dto';
 import { ApiProperty } from '@nestjs/swagger';
+import { Notification } from '@think-storm/contracts';
 
 export class NotificationMapper {
   /**

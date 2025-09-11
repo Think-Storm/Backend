@@ -1,4 +1,4 @@
-import { JoinRequest } from '@prisma/client';
+import { JoinRequest } from '@think-storm/contracts';
 import { JoinRequestResponseDto } from './joinRequestResponse.dto';
 import { ApiProperty } from '@nestjs/swagger';
 

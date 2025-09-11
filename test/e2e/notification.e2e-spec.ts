@@ -3,7 +3,6 @@ import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { User } from '@prisma/client';
 import { JwtAuthGuard } from '../../src/modules/auth/jwt/jwt.guard';
 import { mockJwtAuthGuard } from '../utils/mock-jwt-auth-guard';
 import * as bcrypt from 'bcrypt';
@@ -13,6 +12,7 @@ import {
   createTestNotification,
   createTestNotifications,
 } from '../utils/notification.utils';
+import { User } from '@think-storm/contracts';
 
 describe('NotificationController (e2e)', () => {
   let app: INestApplication;

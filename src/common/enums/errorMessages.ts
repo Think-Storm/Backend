@@ -23,6 +23,8 @@ export const errorMessages = {
   ERROR_UPDATING_PASSWORD_USER:
     'An error occurred while updating user password.',
   BAD_REQUEST: 'Wrong client request. Check your request format again.',
+  BAD_REQUEST_PASSWORD:
+    'Password confirmation failed. Please retype your password confirmation.',
   ERROR_CREATING_PROJECT_IN_DB:
     'An error occurred while inserting Project in DB.',
   SERVER_ERROR: 'An error occurred in server.',
