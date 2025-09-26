@@ -28,6 +28,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 
 // Controllers
 import { AppController } from './app.controller';
+import { AwsS3Module } from './modules/aws-s3/aws-s3.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -61,7 +62,12 @@ import { AppController } from './app.controller';
     AuthModule,
     NewsletterModule,
     NotificationModule,
+    AwsS3Module,
     RouterModule.register([
+      {
+        path: 'aws-s3',
+        module: AwsS3Module,
+      },
       {
         path: 'users',
         module: UserModule,
