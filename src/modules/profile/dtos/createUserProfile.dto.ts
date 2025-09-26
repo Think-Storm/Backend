@@ -6,6 +6,7 @@ import {
   IsArray,
   IsEnum,
   IsDate,
+  Matches,
 } from 'class-validator';
 import { LanguageName, CreateProfile, UserRole } from '@think-storm/contracts';
 import { Transform } from 'class-transformer';
@@ -16,7 +17,9 @@ export class CreateUserProfileDto implements CreateProfile {
     required: false,
   })
   @IsOptional()
-  @IsUrl({}, { message: 'Avatar must be a valid URL' })
+  @Matches(/^https:\/\/.+\.amazonaws\.com\/.+$/, {
+    message: 'Avatar must be a valid S3 URL',
+  })
   avatar?: string;
 
   @ApiProperty({
