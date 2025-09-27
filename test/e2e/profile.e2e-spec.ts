@@ -183,7 +183,8 @@ describe('/profiles', () => {
         .set('Authorization', authHeader)
         .send({
           ...defaultE2ECreateProfileDto,
-          avatar: 'https://example.com/avatar2.jpg',
+          avatar:
+            'https://thinkstorm.s3.ap-northeast-2.amazonaws.com/profile/user1234.jpg',
           bio: 'Another bio',
           fullName: 'Full Name2',
           birthdate: new Date('2000-01-01'),
@@ -359,7 +360,8 @@ describe('/profiles', () => {
 
       // Update Profile
       const updateData = {
-        avatar: 'https://example.com/new-avatar.jpg',
+        avatar:
+          'https://thinkstorm.s3.ap-northeast-2.amazonaws.com/profile/new-user.jpg',
         bio: 'Updated bio',
         preferredRole: [UserRole.FullStackDeveloper],
         location: 'New Location',

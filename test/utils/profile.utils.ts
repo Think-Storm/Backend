@@ -3,7 +3,8 @@ import { CreateUserProfileDto } from '../../src/modules/profile/dtos/createUserP
 import { UpdateUserProfileDto } from '../../src/modules/profile/dtos/updateUserProfile.dto';
 
 export const defaultCreateProfileDto: CreateUserProfileDto = {
-  avatar: 'https://example.com/avatar.jpg',
+  avatar:
+    'https://thinkstorm.s3.ap-northeast-2.amazonaws.com/profile/user123.jpg',
   bio: 'Test bio',
   fullName: 'Full Name',
   birthdate: new Date('2000-01-01'),
@@ -24,7 +25,8 @@ export const defaultProfileResponse = {
     userId: 1,
     fullName: 'Full Name',
     birthdate: new Date('2000-01-01'),
-    avatar: 'https://example.com/avatar.jpg',
+    avatar:
+      'https://thinkstorm.s3.ap-northeast-2.amazonaws.com/profile/user123.jpg',
     bio: 'Test bio',
     domainLabels: ['Web Development'],
     technicalLabels: ['nestjs'],
@@ -72,7 +74,8 @@ export const defaultProfileWithAssociations = {
 };
 
 export const defaultE2ECreateProfileDto = {
-  avatar: 'https://example.com/avatar.jpg',
+  avatar:
+    'https://thinkstorm.s3.ap-northeast-2.amazonaws.com/profile/user123.jpg',
   bio: 'Test bio',
   fullName: 'Full Name',
   birthdate: new Date('2000-01-01'),
