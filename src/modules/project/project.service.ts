@@ -20,7 +20,7 @@ import { SaveProjectRequestDto } from './dtos/saveProjectRequest.dto';
 import { NotificationService } from '../notification/notification.service';
 import { JoinRequestResponseDto } from './dtos/joinRequestResponse.dto';
 import { CreateJoinRequestBodyDto } from './dtos/createJoinRequest.dto';
-import { Project } from '@think-storm/contracts';
+import { Project, JoinRequestStatus } from '@think-storm/contracts';
 
 @Injectable()
 export class ProjectService {
@@ -36,11 +36,6 @@ export class ProjectService {
     private readonly notificationService: NotificationService,
   ) {}
 
-  /**
-   * Finds a Project by id
-   * @param id - The id of the Project to find
-   * @returns A promise resolving to the ProjectResponseDto
-   */
   async getProjectById(id: number): Promise<ProjectResponseDto> {
     const fetchedProject = await this.projectRepository.findProjectById(id);
     if (!fetchedProject) {
@@ -51,31 +46,16 @@ export class ProjectService {
     return this.projectMapper.projectToProjectResponseDto(fetchedProject);
   }
 
-  /**
-   * Creates a new project
-   * @param createProjectDto - The data transfer object for creating a project
-   * @returns A promise resolving to a CreateProjectResponseDto
-   */
   async createProject(
     createProjectDto: CreateProjectRequestDto,
   ): Promise<ProjectResponseDto> {
-    // Checks if founder does exist
     await this.userService.getUserById(createProjectDto.founderId);
     const createdProject =
       await this.projectRepository.createProject(createProjectDto);
-
-    //cache invalidation
     await this.redisService.flushDb();
-
     return this.projectMapper.projectToProjectResponseDto(createdProject);
   }
 
-  /**
-   * Updates a project
-   * @param body - The data transfer object for updating a project
-   * @param userId - The id of the user updating the project
-   * @returns A promise resolving to the updated ProjectResponseDto
-   */
   async updateProject(
     body: UpdateProjectRequestDto,
     userId: number,
@@ -86,33 +66,20 @@ export class ProjectService {
         errorMessages.ENTITY_NOT_FOUND('Project', body.id.toString()),
       );
     }
-
-    // Authorization check in service layer
     if (project.founderId !== userId) {
       throw ServiceException.ForbiddenException(
         errorMessages.FORBIDDEN('You are not the owner of this project'),
       );
     }
-
     const updatedProject = await this.projectRepository.updateProject(body);
-
-    //cache invalidation
     await this.redisService.flushDb();
-
     return this.projectMapper.projectToProjectResponseDto(updatedProject);
   }
 
-  /**
-   * Search projects by query
-   * @param searchProjectDto - The data transfer object for searching projects
-   * @returns A promise resolving to a ProjectResponseDto
-   */
   async searchProjects(
     searchProjectDto: SearchProjectDto,
   ): Promise<SearchProjectResponseDto> {
     const cacheKey = this.generateCacheKey(searchProjectDto);
-
-    // Try to get cached result
     const cachedResult = await this.cacheManager.get<{
       projects: Project[];
       totalItems: number;
@@ -125,73 +92,49 @@ export class ProjectService {
       ({ projects, totalItems } = cachedResult);
     } else {
       const sortByArr = this.parseSortConditions(searchProjectDto.sort);
-
       const { projects: searchedProjects, totalItems: itemsCount } =
-        await this.projectRepository.searchProjects(
-          searchProjectDto,
-          sortByArr,
-        );
-
+        await this.projectRepository.searchProjects(searchProjectDto, sortByArr);
       projects = searchedProjects;
       totalItems = itemsCount;
-
       const cachePayload = { projects, totalItems };
       const ttl =
         Number(this.configService.get<number>('REDIS_CACHING_TTL')) || 3600;
-
       await this.cacheManager.set(cacheKey, cachePayload, ttl);
       await this.redisService.set(cacheKey, cachePayload, ttl);
     }
 
     const projectsResult =
       this.projectMapper.projectsToProjectResponseDtos(projects);
-
     const totalPages = Math.ceil(totalItems / searchProjectDto.limit);
-    const page = searchProjectDto.page;
-    const limit = searchProjectDto.limit;
-
     return this.projectMapper.projectResponseDtoToSearchProjectResponseDtos(
       projectsResult,
-      page,
-      limit,
+      searchProjectDto.page,
+      searchProjectDto.limit,
       totalPages,
       totalItems,
     );
   }
 
-  /**
-   * Generate a consistent cache key for project search
-   */
   private generateCacheKey(dto: SearchProjectDto): string {
     return JSON.stringify(dto);
   }
 
-  /**
-   * Parse sort query string into Prisma orderBy format
-   */
   private parseSortConditions(sort?: string): Array<Record<string, string>> {
     if (!sort) return [];
-
     return sort.split(',').map((sortCondition) => {
       const [field, order] = sortCondition.split('=');
       return { [field]: order };
     });
   }
 
-  /**
-   * Deletes a project
-   * @param deleteProjectDto - The data transfer object for deleting a project
-   * @returns A promise resolving to a DeleteProjectResponseDto
-   */
   async deleteProject(
     deleteProjectDto: GetProjectRequestDto,
     userId: number,
   ): Promise<ProjectResponseDto> {
-    const deltingProject = await this.projectRepository.findProjectById(
+    const deletingProject = await this.projectRepository.findProjectById(
       deleteProjectDto.id,
     );
-
-    if (!deltingProject) {
+    if (!deletingProject) {
       throw ServiceException.EntityNotFoundException(
         errorMessages.ENTITY_NOT_FOUND(
           'Project',
@@ -199,31 +142,18 @@ export class ProjectService {
         ),
       );
     }
-
-    // Authorization check in service layer
-    if (deltingProject.founderId !== userId) {
+    if (deletingProject.founderId !== userId) {
       throw ServiceException.ForbiddenException(
         errorMessages.FORBIDDEN('You are not the owner of this project'),
       );
     }
-
     const deletedProject = await this.projectRepository.deleteProjectById(
       deleteProjectDto.id,
     );
-
-    //cache invalidation
     await this.redisService.flushDb();
-
     return this.projectMapper.projectToProjectResponseDto(deletedProject);
   }
 
-  /**
-   * Saves a project
-   * @param projectId - project Id to be saved
-   * @param saveProjectDto - The data transfer object for saving a project
-   * @param userId - user Id requested to save the project
-   * @returns A promise resolving to a ProjectResponseDto
-   */
   async saveProject(
     projectId: number,
     saveProjectDto: SaveProjectRequestDto,
@@ -231,14 +161,11 @@ export class ProjectService {
   ): Promise<ProjectResponseDto> {
     const savingProject =
       await this.projectRepository.findProjectById(projectId);
-
     if (!savingProject) {
       throw ServiceException.EntityNotFoundException(
         errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
       );
     }
-
-    // Check saved_by_users array if each user id exists
     for (const id of saveProjectDto.saved_by_users) {
       const user = await this.userRepository.getUserById(id);
       if (!user) {
@@ -247,8 +174,6 @@ export class ProjectService {
         );
       }
     }
-
-    // create savedUsers Id array from database and check if current user already exists in saved users array
     const savedUsersArr = [];
     for (const user of savingProject.savedByUsers) {
       if (user.userId === userId) {
@@ -258,42 +183,25 @@ export class ProjectService {
       }
       savedUsersArr.push(user.userId);
     }
-
-    // add savedUsers Id array to saveProjectDto
     saveProjectDto.saved_by_users = [
       ...saveProjectDto.saved_by_users,
       ...savedUsersArr,
     ];
-
-    // add current user Id if current user doesn't exist in saveProjectDto
     if (!saveProjectDto.saved_by_users.includes(userId)) {
       saveProjectDto.saved_by_users = [
         ...saveProjectDto.saved_by_users,
         userId,
       ];
     }
-
-    // remove duplication
     saveProjectDto.saved_by_users = [...new Set(saveProjectDto.saved_by_users)];
-
     const savedProject = await this.projectRepository.saveProject(
       projectId,
       saveProjectDto,
     );
-
-    //cache invalidation
     await this.redisService.flushDb();
-
     return this.projectMapper.projectToProjectResponseDto(savedProject);
   }
 
-  /**
-   * Unsaves a project
-   * @param projectId - project Id to be unsaved
-   * @param unsaveProjectDto - The data transfer object for unsaving a project
-   * @param userId - user Id requested to unsave the project
-   * @returns A promise resolving to a ProjectResponseDto
-   */
   async unsaveProject(
     projectId: number,
     unsaveProjectDto: SaveProjectRequestDto,
@@ -301,14 +209,11 @@ export class ProjectService {
   ): Promise<ProjectResponseDto> {
     const savingProject =
       await this.projectRepository.findProjectById(projectId);
-
     if (!savingProject) {
       throw ServiceException.EntityNotFoundException(
         errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
       );
     }
-
-    // Check saved_by_users array if each user id exists
     for (const id of unsaveProjectDto.saved_by_users) {
       const user = await this.userRepository.getUserById(id);
       if (!user) {
@@ -317,56 +222,36 @@ export class ProjectService {
         );
       }
     }
-
-    // Check if current user exists in saved users array
-    const savedUsersArr = savingProject.savedByUsers.map((user) => user.userId);
-
+    const savedUsersArr = savingProject.savedByUsers.map((u) => u.userId);
     if (!savedUsersArr.includes(userId)) {
       throw ServiceException.BadRequestException(
         errorMessages.CURRENT_USER_NOT_SAVED_PROJECT,
       );
     }
-
-    // Check if each user in unsaveProjectDto exists in saved users array
-    unsaveProjectDto.saved_by_users.forEach((userId) => {
-      if (!savedUsersArr.includes(userId)) {
+    unsaveProjectDto.saved_by_users.forEach((id) => {
+      if (!savedUsersArr.includes(id)) {
         throw ServiceException.BadRequestException(
           errorMessages.UNSAVE_USER_IN_REQ_BODY_NOT_SAVED_PROJECT,
         );
       }
     });
-
-    // add current user Id if current user doesn't exist in unsaveProjectDto
     if (!unsaveProjectDto.saved_by_users.includes(userId)) {
       unsaveProjectDto.saved_by_users = [
         ...unsaveProjectDto.saved_by_users,
         userId,
       ];
     }
-
-    // remove duplication
     unsaveProjectDto.saved_by_users = [
       ...new Set(unsaveProjectDto.saved_by_users),
     ];
-
     const unsavedProject = await this.projectRepository.unsaveProject(
       projectId,
       unsaveProjectDto,
     );
-
-    //cache invalidation
     await this.redisService.flushDb();
-
     return this.projectMapper.projectToProjectResponseDto(unsavedProject);
   }
 
-  /**
-   * Creates a join request for a project
-   * @param userId - The ID of the user making the join request
-   * @param projectId - The ID of the project to join
-   * @param jonRequestDto - The join request Body containing roleName and message
-   * @returns A promise resolving to the created JoinRequest object
-   */
   async createJoinRequest(
     userId: number,
     projectId: number,
@@ -378,30 +263,126 @@ export class ProjectService {
         errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
       );
     }
-
-    // Check if user sent the join request before
-    const existingUsers = project.joinRequest.map((user) => user.user.id);
+    const existingUsers = project.joinRequest.map((jr) => jr.user.id);
     if (existingUsers.includes(userId)) {
       throw ServiceException.BadRequestException(
         errorMessages.USER_ALREADY_JOINED_REQUEST,
       );
     }
-
     const joinRequest = await this.projectRepository.createJoinRequest(
       userId,
       projectId,
       joinRequestDto.roleName,
       joinRequestDto.message,
     );
-
     await this.notificationService.createJoinRequestNotification(
       project.founder?.id,
       project.title,
       projectId,
     );
-
     return this.joinRequestMapper.joinRequestToJoinRequestResponseDto(
       joinRequest,
     );
+  }
+
+  async handleJoinRequest(
+    authUserId: number,
+    projectId: number,
+    requestUserId: number,
+    status: JoinRequestStatus,
+  ): Promise<void> {
+    const project = await this.projectRepository.findProjectById(projectId);
+    if (!project) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    }
+    if (project.founderId !== authUserId) {
+      throw ServiceException.ForbiddenException(
+        errorMessages.FORBIDDEN('You are not the owner of this project'),
+      );
+    }
+    const joinRequest = await this.projectRepository.findJoinRequest(
+      requestUserId,
+      projectId,
+    );
+    if (!joinRequest) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND(
+          'Join Request',
+          requestUserId.toString(),
+        ),
+      );
+    }
+    if (joinRequest.status !== JoinRequestStatus.Pending) {
+      throw ServiceException.BadRequestException(
+        errorMessages.JOIN_REQUEST_ALREADY_PROCESSED,
+      );
+    }
+    await this.projectRepository.updateJoinRequestStatus(
+      requestUserId,
+      projectId,
+      status,
+    );
+    if (status === JoinRequestStatus.Accepted) {
+      await this.projectRepository.createInvolvement(
+        requestUserId,
+        projectId,
+        joinRequest.roleName,
+      );
+      await this.notificationService.createAcceptJoinRequestNotification(
+        requestUserId,
+        project.title,
+        projectId,
+      );
+    }
+  }
+
+  async likeProject(
+    userId: number,
+    projectId: number,
+  ): Promise<ProjectResponseDto> {
+    const project = await this.projectRepository.findProjectById(projectId);
+    if (!project) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    }
+    const existingLike = await this.projectRepository.findLike(
+      userId,
+      projectId,
+    );
+    if (existingLike) {
+      throw ServiceException.BadRequestException(
+        errorMessages.USER_ALREADY_LIKED_PROJECT,
+      );
+    }
+    await this.projectRepository.likeProject(userId, projectId);
+    const updated = await this.projectRepository.findProjectById(projectId);
+    return this.projectMapper.projectToProjectResponseDto(updated);
+  }
+
+  async unlikeProject(
+    userId: number,
+    projectId: number,
+  ): Promise<ProjectResponseDto> {
+    const project = await this.projectRepository.findProjectById(projectId);
+    if (!project) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    }
+    const existingLike = await this.projectRepository.findLike(
+      userId,
+      projectId,
+    );
+    if (!existingLike) {
+      throw ServiceException.BadRequestException(
+        errorMessages.USER_NOT_LIKED_PROJECT,
+      );
+    }
+    await this.projectRepository.unlikeProject(userId, projectId);
+    const updated = await this.projectRepository.findProjectById(projectId);
+    return this.projectMapper.projectToProjectResponseDto(updated);
   }
 }
