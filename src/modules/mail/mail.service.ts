@@ -20,16 +20,7 @@ export class MailService {
     });
   }
 
-  /**
-   * Sends an email using Enveloop
-   */
-  async sendMail({
-    to,
-    from,
-    subject,
-    template,
-    templateVariables,
-  }: SendMailOptions): Promise<any> {
+  async sendMail({ to, from, subject, template, templateVariables }: SendMailOptions): Promise<any> {
     try {
       const response = await fetch('https://api.enveloop.com/messages', {
         method: 'POST',
@@ -37,60 +28,56 @@ export class MailService {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${this.enveloopClient.apiKey}`,
         },
-        body: JSON.stringify({
-          to,
-          template,
-          subject,
-          from,
-          templateVariables,
-        }),
+        body: JSON.stringify({ to, template, subject, from, templateVariables }),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Enveloop error:', errorData);
       }
-
       return response;
     } catch (error) {
-      // Log the error and rethrow
       console.error('Failed to send email:', error);
       throw error;
     }
   }
 
-  /**
-   * Sends a welcome email to a new user
-   */
   async sendWelcomeEmail(userEmail: string, userName: string): Promise<void> {
     await this.sendMail({
       to: userEmail,
       from: 'info@thinkstorm.app',
       template: 'user-welcome',
       subject: 'Welcome to Our Platform!',
-      templateVariables: {
-        name: userName,
-      },
+      templateVariables: { name: userName },
     });
   }
 
-  /**
-   * Send Forgot Password Link to a user
-   */
-  async forgotPassword(
-    userEmail: string,
-    userName: string,
-    passwordResetUrl: string,
-  ): Promise<void> {
+  async forgotPassword(userEmail: string, userName: string, passwordResetUrl: string): Promise<void> {
     await this.sendMail({
       to: userEmail,
       from: 'info@thinkstorm.app',
       template: 'forgot-password',
       subject: 'Password Reset Requested',
-      templateVariables: {
-        name: userName,
-        reset_url: passwordResetUrl,
-      },
+      templateVariables: { name: userName, reset_url: passwordResetUrl },
+    });
+  }
+
+  async sendJoinRequestAcceptedEmail(userEmail: string, projectName: string, projectOwner: string): Promise<void> {
+    await this.sendMail({
+      to: userEmail,
+      from: 'info@thinkstorm.app',
+      template: 'join-request-accepted',
+      subject: `Your request to join ${projectName} has been accepted`,
+      templateVariables: { projectName, projectOwner },
+    });
+  }
+
+  async sendJoinRequestDeclinedEmail(userEmail: string, projectName: string, projectOwner: string): Promise<void> {
+    await this.sendMail({
+      to: userEmail,
+      from: 'info@thinkstorm.app',
+      template: 'join-request-declined',
+      subject: `Your request to join ${projectName} has been declined`,
+      templateVariables: { projectName, projectOwner },
     });
   }
 }
