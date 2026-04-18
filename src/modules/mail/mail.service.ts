@@ -20,9 +20,6 @@ export class MailService {
     });
   }
 
-  /**
-   * Sends an email using Enveloop
-   */
   async sendMail({
     to,
     from,
@@ -53,15 +50,11 @@ export class MailService {
 
       return response;
     } catch (error) {
-      // Log the error and rethrow
       console.error('Failed to send email:', error);
       throw error;
     }
   }
 
-  /**
-   * Sends a welcome email to a new user
-   */
   async sendWelcomeEmail(userEmail: string, userName: string): Promise<void> {
     await this.sendMail({
       to: userEmail,
@@ -74,9 +67,6 @@ export class MailService {
     });
   }
 
-  /**
-   * Send Forgot Password Link to a user
-   */
   async forgotPassword(
     userEmail: string,
     userName: string,
