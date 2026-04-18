@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
-import { JoinRequest } from '@think-storm/contracts';
+import { JoinRequest, Like } from '@think-storm/contracts';
 import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
@@ -14,19 +14,12 @@ import { SaveProjectRequestDto } from './dtos/saveProjectRequest.dto';
 export class ProjectRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Finds a Project by id
-   * @param id - The id of the Project to find
-   * @returns A promise resolving to a Project object or null
-   */
   async findProjectById(
     id: number,
   ): Promise<PrismaProjectWithRelations | null> {
     try {
       return await this.prisma.project.findUnique({
-        where: {
-          id: id,
-        },
+        where: { id },
         include: {
           language: true,
           users: {
@@ -44,22 +37,10 @@ export class ProjectRepository {
             },
           },
           domainLabels: {
-            include: {
-              label: {
-                select: {
-                  name: true,
-                },
-              },
-            },
+            include: { label: { select: { name: true } } },
           },
           technicalLabels: {
-            include: {
-              label: {
-                select: {
-                  name: true,
-                },
-              },
-            },
+            include: { label: { select: { name: true } } },
           },
           like: true,
           involvement: true,
@@ -95,12 +76,6 @@ export class ProjectRepository {
     }
   }
 
-  /**
-   * Creates a new project
-   * @param createProjectRequestDto - The data transfer object containing project creation details
-   * @param passwordSalt - The password salt for hashing
-   * @returns A promise resolving to the created Project object
-   */
   async createProject(
     createProjectRequestDto: CreateProjectRequestDto,
   ): Promise<PrismaProjectWithRelations> {
@@ -112,38 +87,18 @@ export class ProjectRepository {
           goal: createProjectRequestDto.goal,
           status: createProjectRequestDto.status,
           milestone: createProjectRequestDto.milestone,
-          founder: {
-            connect: {
-              id: createProjectRequestDto.founderId,
-            },
-          },
-          language: {
-            connect: {
-              name: createProjectRequestDto.languageName,
-            },
-          },
+          founder: { connect: { id: createProjectRequestDto.founderId } },
+          language: { connect: { name: createProjectRequestDto.languageName } },
           domainLabels: {
-            create: createProjectRequestDto.domainLabels.map((domainLabel) => {
-              return {
-                label: {
-                  connect: {
-                    name: domainLabel,
-                  },
-                },
-              };
-            }),
+            create: createProjectRequestDto.domainLabels.map((domainLabel) => ({
+              label: { connect: { name: domainLabel } },
+            })),
           },
           technicalLabels: {
             create: createProjectRequestDto.technicalLabels.map(
-              (technicalLabel) => {
-                return {
-                  label: {
-                    connect: {
-                      name: technicalLabel,
-                    },
-                  },
-                };
-              },
+              (technicalLabel) => ({
+                label: { connect: { name: technicalLabel } },
+              }),
             ),
           },
         },
@@ -164,22 +119,10 @@ export class ProjectRepository {
             },
           },
           domainLabels: {
-            include: {
-              label: {
-                select: {
-                  name: true,
-                },
-              },
-            },
+            include: { label: { select: { name: true } } },
           },
           technicalLabels: {
-            include: {
-              label: {
-                select: {
-                  name: true,
-                },
-              },
-            },
+            include: { label: { select: { name: true } } },
           },
           like: true,
           involvement: true,
@@ -215,12 +158,6 @@ export class ProjectRepository {
     }
   }
 
-  /**
-   * Updates a project
-   * @param id - The id of the project to update
-   * @param updateProjectRequestDto - The data transfer object containing project update details
-   * @returns A promise resolving to the updated Project object
-   */
   async updateProject(
     updateProjectRequestDto: UpdateProjectRequestDto,
   ): Promise<PrismaProjectWithRelations> {
@@ -233,30 +170,18 @@ export class ProjectRepository {
           status: updateProjectRequestDto.status,
           milestone: updateProjectRequestDto.milestone,
           goal: updateProjectRequestDto.goal,
-          language: {
-            connect: {
-              name: updateProjectRequestDto.languageName,
-            },
-          },
+          language: { connect: { name: updateProjectRequestDto.languageName } },
           domainLabels: {
             deleteMany: {},
             create: updateProjectRequestDto.domainLabels.map((domainLabel) => ({
-              label: {
-                connect: {
-                  name: domainLabel,
-                },
-              },
+              label: { connect: { name: domainLabel } },
             })),
           },
           technicalLabels: {
             deleteMany: {},
             create: updateProjectRequestDto.technicalLabels.map(
               (technicalLabel) => ({
-                label: {
-                  connect: {
-                    name: technicalLabel,
-                  },
-                },
+                label: { connect: { name: technicalLabel } },
               }),
             ),
           },
@@ -278,22 +203,10 @@ export class ProjectRepository {
             },
           },
           domainLabels: {
-            include: {
-              label: {
-                select: {
-                  name: true,
-                },
-              },
-            },
+            include: { label: { select: { name: true } } },
           },
           technicalLabels: {
-            include: {
-              label: {
-                select: {
-                  name: true,
-                },
-              },
-            },
+            include: { label: { select: { name: true } } },
           },
           like: true,
           involvement: true,
@@ -329,11 +242,6 @@ export class ProjectRepository {
     }
   }
 
-  /**
-   * Search projects by query
-   * @param searchProjectDto - The data transfer object containing project query details
-   * @returns A promise resolving to the searched Project objects
-   */
   async searchProjects(
     searchProjectDto: SearchProjectDto,
     sortByArr: Array<object>,
@@ -399,70 +307,56 @@ export class ProjectRepository {
         ],
       };
 
+      const include = {
+        language: true,
+        users: {
+          omit: {
+            password: true,
+            passwordSalt: true,
+            passwordChangedAt: true,
+          },
+        },
+        founder: {
+          omit: {
+            password: true,
+            passwordSalt: true,
+            passwordChangedAt: true,
+          },
+        },
+        domainLabels: { include: { label: { select: { name: true } } } },
+        technicalLabels: { include: { label: { select: { name: true } } } },
+        like: true,
+        involvement: true,
+        joinRequest: {
+          include: {
+            user: {
+              omit: {
+                password: true,
+                passwordSalt: true,
+                passwordChangedAt: true,
+              },
+            },
+          },
+        },
+        savedByUsers: {
+          include: {
+            user: {
+              omit: {
+                password: true,
+                passwordSalt: true,
+                passwordChangedAt: true,
+              },
+            },
+          },
+        },
+      };
+
       const [projects, totalItems] = await this.prisma.$transaction([
         this.prisma.project.findMany({
           skip: (searchProjectDto.page - 1) * searchProjectDto.limit,
           take: searchProjectDto.limit,
           where: whereClause,
-          include: {
-            language: true,
-            users: {
-              omit: {
-                password: true,
-                passwordSalt: true,
-                passwordChangedAt: true,
-              },
-            },
-            founder: {
-              omit: {
-                password: true,
-                passwordSalt: true,
-                passwordChangedAt: true,
-              },
-            },
-            domainLabels: {
-              include: {
-                label: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
-            technicalLabels: {
-              include: {
-                label: {
-                  select: {
-                    name: true,
-                  },
-                },
-              },
-            },
-            like: true,
-            involvement: true,
-            joinRequest: {
-              include: {
-                user: {
-                  omit: {
-                    password: true,
-                    passwordSalt: true,
-                    passwordChangedAt: true,
-                  },
-                },
-              },
-            },
-            savedByUsers: {
-              include: {
-                user: {
-                  omit: {
-                    password: true,
-                    passwordSalt: true,
-                    passwordChangedAt: true,
-                  },
-                },
-              },
-            },
-          },
+          include,
           orderBy: sortByArr,
         }),
         this.prisma.project.count({ where: whereClause }),
@@ -476,17 +370,11 @@ export class ProjectRepository {
       );
     }
   }
-  /**
-   * Deletes a Project by id
-   * @param id - The id of the Project to delete
-   * @returns A promise resolving to a Project object or null
-   */
+
   async deleteProjectById(id: number): Promise<PrismaProjectWithRelations> {
     try {
       return await this.prisma.project.delete({
-        where: {
-          id: id,
-        },
+        where: { id },
         include: {
           language: true,
           users: {
@@ -503,24 +391,8 @@ export class ProjectRepository {
               passwordChangedAt: true,
             },
           },
-          domainLabels: {
-            include: {
-              label: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-          technicalLabels: {
-            include: {
-              label: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
+          domainLabels: { include: { label: { select: { name: true } } } },
+          technicalLabels: { include: { label: { select: { name: true } } } },
           like: true,
           involvement: true,
           joinRequest: {
@@ -555,12 +427,6 @@ export class ProjectRepository {
     }
   }
 
-  /**
-   * Save a Project by userId
-   * @param projectId - The id of the Project to save
-   * @param saveProjectDto - The data transfer object containing saved users Id
-   * @returns A promise resolving to a Project object or null
-   */
   async saveProject(
     projectId: number,
     saveProjectDto: SaveProjectRequestDto,
@@ -568,9 +434,7 @@ export class ProjectRepository {
     const { saved_by_users } = saveProjectDto;
     try {
       return await this.prisma.project.update({
-        where: {
-          id: projectId,
-        },
+        where: { id: projectId },
         data: {
           savedByUsers: {
             deleteMany: {},
@@ -595,24 +459,8 @@ export class ProjectRepository {
               passwordChangedAt: true,
             },
           },
-          domainLabels: {
-            include: {
-              label: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-          technicalLabels: {
-            include: {
-              label: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
+          domainLabels: { include: { label: { select: { name: true } } } },
+          technicalLabels: { include: { label: { select: { name: true } } } },
           like: true,
           involvement: true,
           joinRequest: {
@@ -647,12 +495,6 @@ export class ProjectRepository {
     }
   }
 
-  /**
-   * Unsave a Project by userId
-   * @param projectId - The id of the Project to unsave
-   * @param unsaveProjectDto - The data transfer object containing unsaved users Id
-   * @returns A promise resolving to a Project object or null
-   */
   async unsaveProject(
     projectId: number,
     unsaveProjectDto: SaveProjectRequestDto,
@@ -660,16 +502,10 @@ export class ProjectRepository {
     const { saved_by_users } = unsaveProjectDto;
     try {
       return await this.prisma.project.update({
-        where: {
-          id: projectId,
-        },
+        where: { id: projectId },
         data: {
           savedByUsers: {
-            deleteMany: {
-              userId: {
-                in: saved_by_users,
-              },
-            },
+            deleteMany: { userId: { in: saved_by_users } },
           },
         },
         include: {
@@ -688,24 +524,8 @@ export class ProjectRepository {
               passwordChangedAt: true,
             },
           },
-          domainLabels: {
-            include: {
-              label: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
-          technicalLabels: {
-            include: {
-              label: {
-                select: {
-                  name: true,
-                },
-              },
-            },
-          },
+          domainLabels: { include: { label: { select: { name: true } } } },
+          technicalLabels: { include: { label: { select: { name: true } } } },
           like: true,
           involvement: true,
           joinRequest: {
@@ -740,14 +560,6 @@ export class ProjectRepository {
     }
   }
 
-  /**
-   * Creates a join request for a project
-   * @param userId - The ID of the user making the join request
-   * @param projectId - The ID of the project to join
-   * @param roleName - The role name for the join request
-   * @param message - Optional message for the join request
-   * @returns A promise resolving to the created JoinRequest object
-   */
   async createJoinRequest(
     userId: number,
     projectId: number,
@@ -756,16 +568,84 @@ export class ProjectRepository {
   ): Promise<JoinRequest> {
     try {
       return await this.prisma.joinRequest.create({
-        data: {
-          userId: userId,
-          projectId: projectId,
-          roleName: roleName,
-          message: message,
-        },
+        data: { userId, projectId, roleName, message },
       });
     } catch (error) {
       throw ServiceException.ErrorException(
         errorMessages.ERROR_CREATING_JOIN_REQUEST,
+        error,
+      );
+    }
+  }
+
+  async findJoinRequest(
+    userId: number,
+    projectId: number,
+  ): Promise<JoinRequest | null> {
+    return this.prisma.joinRequest.findUnique({
+      where: { userId_projectId: { userId, projectId } },
+    });
+  }
+
+  async updateJoinRequestStatus(
+    userId: number,
+    projectId: number,
+    status: string,
+  ): Promise<JoinRequest> {
+    try {
+      return await this.prisma.joinRequest.update({
+        where: { userId_projectId: { userId, projectId } },
+        data: { status },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_UPDATING_JOIN_REQUEST,
+        error,
+      );
+    }
+  }
+
+  async createInvolvement(
+    userId: number,
+    projectId: number,
+    roleName: string,
+  ): Promise<void> {
+    await this.prisma.project.update({
+      where: { id: projectId },
+      data: {
+        involvement: { create: { userId, roleName } },
+        users: { connect: { id: userId } },
+      },
+    });
+  }
+
+  async findLike(userId: number, projectId: number): Promise<Like | null> {
+    return this.prisma.like.findUnique({
+      where: { userId_projectId: { userId, projectId } },
+    });
+  }
+
+  async likeProject(userId: number, projectId: number): Promise<Like> {
+    try {
+      return await this.prisma.like.create({
+        data: { userId, projectId },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_LIKING_PROJECT,
+        error,
+      );
+    }
+  }
+
+  async unlikeProject(userId: number, projectId: number): Promise<Like> {
+    try {
+      return await this.prisma.like.delete({
+        where: { userId_projectId: { userId, projectId } },
+      });
+    } catch (error) {
+      throw ServiceException.ErrorException(
+        errorMessages.ERROR_UNLIKING_PROJECT,
         error,
       );
     }
