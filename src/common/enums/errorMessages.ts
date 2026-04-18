@@ -63,4 +63,13 @@ export const errorMessages = {
   ERROR_CREATING_JOIN_REQUEST: 'An error occurred while creating join request.',
   USER_ALREADY_JOINED_REQUEST:
     'You have already sent a join request to this project.',
+  USER_ALREADY_LIKED_PROJECT: 'User has already liked this project.',
+  USER_NOT_LIKED_PROJECT: 'User has not liked this project.',
+  ERROR_LIKING_PROJECT: 'An error occurred while liking the project.',
+  ERROR_UNLIKING_PROJECT: 'An error occurred while unliking the project.',
+  JOIN_REQUEST_NOT_FOUND: 'Join request was not found.',
+  JOIN_REQUEST_ALREADY_PROCESSED:
+    'This join request has already been accepted or rejected.',
+  ERROR_UPDATING_JOIN_REQUEST:
+    'An error occurred while updating the join request.',
 };
