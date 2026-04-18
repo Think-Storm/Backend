@@ -426,6 +426,15 @@ export class ProjectService {
       );
     }
 
+    if (!project.founder) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND(
+          'Project Founder',
+          project.founderId.toString(),
+        ),
+      );
+    }
+
     const joinRequest = await this.projectRepository.findJoinRequest(
       requestId,
       projectId,
@@ -451,15 +460,6 @@ export class ProjectService {
         projectId,
         joinRequest.roleName,
       );
-
-      if (!project.founder) {
-        throw ServiceException.EntityNotFoundException(
-          errorMessages.ENTITY_NOT_FOUND(
-            'Project Founder',
-            project.founderId.toString(),
-          ),
-        );
-      }
 
       await this.mailService.sendMail({
         to: user.email,
