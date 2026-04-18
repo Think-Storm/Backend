@@ -16,10 +16,6 @@ import { JoinRequestMapper } from './dtos/joinRequest.mapper';
 import { NotificationMapper } from '../notification/dtos/notification.mapper';
 import { MailService } from '../mail/mail.service';
 
-/**
- * The ProjectModule is responsible for managing the project-related components
- * and services including controllers, services, repositories, and mappers.
- */
 @Module({
   imports: [
     UserModule,
