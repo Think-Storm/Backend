@@ -335,6 +335,12 @@ export class ProjectService {
         project.title,
         projectId,
       );
+    } else if (status === JoinRequestStatus.Rejected) {
+      await this.notificationService.createRejectJoinRequestNotification(
+        requestUserId,
+        project.title,
+        projectId,
+      );
     }
   }
 
@@ -359,6 +365,11 @@ export class ProjectService {
     }
     await this.projectRepository.likeProject(userId, projectId);
     const updated = await this.projectRepository.findProjectById(projectId);
+    if (!updated) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    }
     return this.projectMapper.projectToProjectResponseDto(updated);
   }
 
@@ -383,6 +394,11 @@ export class ProjectService {
     }
     await this.projectRepository.unlikeProject(userId, projectId);
     const updated = await this.projectRepository.findProjectById(projectId);
+    if (!updated) {
+      throw ServiceException.EntityNotFoundException(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    }
     return this.projectMapper.projectToProjectResponseDto(updated);
   }
 }

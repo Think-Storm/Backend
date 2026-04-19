@@ -62,6 +62,24 @@ export class NotificationService {
     );
   }
 
+  async createRejectJoinRequestNotification(
+    userId: number,
+    projectTitle: string,
+    projectId: number,
+  ) {
+    const description = notificationMessages.REJECT_JOIN_REQUEST(projectTitle);
+    const link = `/projects/${projectId}`;
+    const notification = await this.notificationRepository.create(
+      userId,
+      NotificationType.RejectJoinRequest,
+      description,
+      link,
+    );
+    return this.notificationMapper.notificationToNotificationResponseDto(
+      notification,
+    );
+  }
+
   async createInviteToProjectNotification(
     userId: number,
     projectTitle: string,
