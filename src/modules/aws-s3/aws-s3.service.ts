@@ -23,8 +23,9 @@ export class AwsS3Service {
     folder: string,
     filename: string,
     mimetype: string,
+    userId: number,
   ) {
-    const key = `${folder}/${filename}`;
+    const key = `${folder}/${userId}/${filename}`;
 
     const command = new PutObjectCommand({
       Bucket: this.bucket,
