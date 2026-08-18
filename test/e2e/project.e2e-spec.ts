@@ -84,41 +84,116 @@ describe('/projects', () => {
   });
 
   describe('/ POST (Create Project)', () => {
+    // The founder is derived from the JWT, so the request body never carries it.
+    const buildCreateProjectBody = () => {
+      /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
+      const { founderId, ...body } = defaultCreateProjectRequestDto;
+      return {
+        ...body,
+        languageName: stringToEnum(body.languageName, LanguageName),
+      };
+    };
+
+    /** Registers a user and returns its id together with a valid bearer token. */
+    const registerAndLogin = async (email: string, username: string) => {
+      await request(app.getHttpServer())
+        .post('/register')
+        .send({ ...defaultCreateUserDto, email, username })
+        .expect(201);
+
+      const loginResponse = await request(app.getHttpServer())
+        .post('/login')
+        .send({ email, password: defaultCreateUserDto.password })
+        .expect(200);
+
+      const registeredUser = await prismaService.user.findUnique({
+        where: { email },
+      });
+
+      return {
+        id: registeredUser.id,
+        token: loginResponse.headers.authorization,
+      };
+    };
+
     it('should return a 201 if everything is fine', async () => {
-      // First create a user
+      const founder = await registerAndLogin(
+        defaultCreateUserDto.email,
+        defaultCreateUserDto.username,
+      );
+
+      // Create languages for DB
+      await createLanguagesInDB(prismaService);
+
+      return await request(app.getHttpServer())
+        .post('/')
+        .set('Authorization', founder.token)
+        .send(buildCreateProjectBody())
+        .expect(201);
+    });
+
+    it('should return a 401 if no access token is provided', async () => {
       await request(app.getHttpServer())
         .post('/register')
         .send(defaultCreateUserDto)
         .expect(201);
 
-      // Create languages for DB
       await createLanguagesInDB(prismaService);
 
-      // Create project with the founder user
-      const createdProject = await createProject(
-        prismaService,
-        defaultCreateProjectRequestDto,
-      );
-
-      const createProjectRequest = defaultCreateProjectRequestDto;
-      createProjectRequest.founderId = createdProject.founderId;
-      createProjectRequest.languageName = stringToEnum(
-        createdProject.languageName,
-        LanguageName,
-      );
-
-      return await request(app.getHttpServer())
+      await request(app.getHttpServer())
         .post('/')
-        .send(createProjectRequest)
-        .expect(201);
+        .send(buildCreateProjectBody())
+        .expect(401);
+
+      // Nothing must have been persisted by the anonymous request
+      const projectCount = await prismaService.project.count();
+      expect(projectCount).toBe(0);
     });
 
-    it('should return a 404 if user is not found', async () => {
-      // No previous creation of User, so the project should be refused
-      return await request(app.getHttpServer())
+    it('should set founderId from the authenticated user', async () => {
+      const founder = await registerAndLogin(
+        defaultCreateUserDto.email,
+        defaultCreateUserDto.username,
+      );
+
+      await createLanguagesInDB(prismaService);
+
+      const { body: createdProject } = await request(app.getHttpServer())
         .post('/')
-        .send(defaultCreateProjectRequestDto)
-        .expect(404);
+        .set('Authorization', founder.token)
+        .send(buildCreateProjectBody())
+        .expect(201);
+
+      expect(createdProject.founder.id).toBe(founder.id);
+
+      const persistedProject = await prismaService.project.findUnique({
+        where: { id: createdProject.id },
+      });
+      expect(persistedProject.founderId).toBe(founder.id);
+    });
+
+    it('should reject a body that tries to attribute the project to another user', async () => {
+      const victim = await registerAndLogin(
+        defaultCreateUserDto.email,
+        defaultCreateUserDto.username,
+      );
+      const attacker = await registerAndLogin('attacker@email.com', 'attacker');
+
+      await createLanguagesInDB(prismaService);
+
+      // founderId is no longer part of the contract, so the global
+      // ValidationPipe (whitelist + forbidNonWhitelisted) rejects it outright.
+      await request(app.getHttpServer())
+        .post('/')
+        .set('Authorization', attacker.token)
+        .send({ ...buildCreateProjectBody(), founderId: victim.id })
+        .expect(400);
+
+      // No project may end up attributed to the victim
+      const victimProjectCount = await prismaService.project.count({
+        where: { founderId: victim.id },
+      });
+      expect(victimProjectCount).toBe(0);
     });
   });
 

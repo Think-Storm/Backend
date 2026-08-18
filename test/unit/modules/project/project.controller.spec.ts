@@ -155,11 +155,29 @@ describe('ProjectController', () => {
 
       const response = await projectController.createProject(
         defaultCreateProjectDto,
+        { id: 1 },
       );
 
       expect(serviceSpy).toHaveBeenCalledTimes(1);
-      expect(serviceSpy).toHaveBeenCalledWith(defaultCreateProjectDto);
+      expect(serviceSpy).toHaveBeenCalledWith(defaultCreateProjectDto, 1);
       expect(response).toBe(defaultProjectResponseDto);
+    });
+
+    it('should take the founderId from the authenticated user, not the body', async () => {
+      const serviceSpy = jest
+        .spyOn(projectService, 'createProject')
+        .mockResolvedValue(defaultProjectResponseDto);
+
+      // The body carries a foreign founderId; the controller must ignore it
+      const spoofedBody = { ...defaultCreateProjectDto, founderId: 999 };
+      const authenticatedUser = { id: 42 };
+
+      await projectController.createProject(spoofedBody, authenticatedUser);
+
+      expect(serviceSpy).toHaveBeenCalledWith(
+        spoofedBody,
+        authenticatedUser.id,
+      );
     });
   });
 

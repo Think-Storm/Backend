@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
-import { JoinRequest, Like } from '@think-storm/contracts';
-import { CreateProjectRequestDto } from './dtos/createProjectRequest.dto';
+import { CreateProject, JoinRequest, Like } from '@think-storm/contracts';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from '../../common/exception-filter/serviceException';
 import { UpdateProjectRequestDto } from './dtos/updateProjectRequest.dto';
@@ -77,7 +76,7 @@ export class ProjectRepository {
   }
 
   async createProject(
-    createProjectRequestDto: CreateProjectRequestDto,
+    createProjectRequestDto: CreateProject,
   ): Promise<PrismaProjectWithRelations> {
     try {
       return await this.prisma.project.create({

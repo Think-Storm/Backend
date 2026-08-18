@@ -48,10 +48,13 @@ export class ProjectService {
 
   async createProject(
     createProjectDto: CreateProjectRequestDto,
+    founderId: number,
   ): Promise<ProjectResponseDto> {
-    await this.userService.getUserById(createProjectDto.founderId);
-    const createdProject =
-      await this.projectRepository.createProject(createProjectDto);
+    await this.userService.getUserById(founderId);
+    const createdProject = await this.projectRepository.createProject({
+      ...createProjectDto,
+      founderId,
+    });
     await this.redisService.flushDb();
     return this.projectMapper.projectToProjectResponseDto(createdProject);
   }
