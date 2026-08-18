@@ -67,6 +67,11 @@ export class ProjectController {
   @ApiBody({ type: CreateProjectRequestDto })
   @ApiResponse({ status: 201, description: 'Create project success', type: ProjectResponseDto })
   @ApiResponse({
+    status: 400,
+    description:
+      'Invalid request body. founderId is derived from the access token and must not be sent',
+  })
+  @ApiResponse({
     status: 401,
     description: 'Unauthorized. A valid access token is required',
   })
