@@ -30,7 +30,11 @@ import { PrismaModule } from '../../../../src/prisma/prisma.module';
 import { UserRepository } from '../../../../src/modules/user/user.repository';
 import { UserMapper } from '../../../../src/modules/user/dtos/user.mapper';
 import { PasswordEncryption } from '../../../../src/common/encryption/passwordEncryption';
-import { LanguageCode, LanguageName } from '@think-storm/contracts';
+import {
+  JoinRequestStatus,
+  LanguageCode,
+  LanguageName,
+} from '@think-storm/contracts';
 import { ProjectResponseDto } from '../../../../src/modules/project/dtos/projectResponse.dto';
 import { RedisService } from '../../../../src/common/caching/redisCaching.service';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -767,6 +771,298 @@ describe('ProjectService', () => {
       );
       expect(mapperSpy).toHaveBeenCalledWith(defaultJoinRequest);
       expect(result).toEqual(defaultJoinRequestResponseDto);
+    });
+  });
+  describe('handleJoinRequest', () => {
+    const authUserId = defaultProject.founderId;
+    const { projectId, userId: requestUserId } = defaultJoinRequest;
+
+    it('should throw a 404 exception if the project is not found', async () => {
+      jest.spyOn(projectRepository, 'findProjectById').mockResolvedValue(null);
+
+      await expect(
+        projectService.handleJoinRequest(
+          authUserId,
+          projectId,
+          requestUserId,
+          JoinRequestStatus.Accepted,
+        ),
+      ).rejects.toThrow(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    });
+
+    it('should throw a 403 exception if the caller is not the project owner', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultProject);
+      const findJoinRequestSpy = jest.spyOn(
+        projectRepository,
+        'findJoinRequest',
+      );
+
+      const foreignUserId = defaultProject.founderId + 1;
+
+      await expect(
+        projectService.handleJoinRequest(
+          foreignUserId,
+          projectId,
+          requestUserId,
+          JoinRequestStatus.Accepted,
+        ),
+      ).rejects.toBeInstanceOf(ServiceException);
+
+      // Ownership must be rejected before the join request is even looked up
+      expect(findJoinRequestSpy).not.toHaveBeenCalled();
+    });
+
+    it('should throw a 404 exception if the join request is not found', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultProject);
+      jest.spyOn(projectRepository, 'findJoinRequest').mockResolvedValue(null);
+
+      await expect(
+        projectService.handleJoinRequest(
+          authUserId,
+          projectId,
+          requestUserId,
+          JoinRequestStatus.Accepted,
+        ),
+      ).rejects.toThrow(
+        errorMessages.ENTITY_NOT_FOUND(
+          'Join Request',
+          requestUserId.toString(),
+        ),
+      );
+    });
+
+    it('should throw a 400 exception if the join request was already processed', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultProject);
+      jest.spyOn(projectRepository, 'findJoinRequest').mockResolvedValue({
+        ...defaultJoinRequest,
+        status: JoinRequestStatus.Accepted,
+      });
+
+      await expect(
+        projectService.handleJoinRequest(
+          authUserId,
+          projectId,
+          requestUserId,
+          JoinRequestStatus.Accepted,
+        ),
+      ).rejects.toThrow(errorMessages.JOIN_REQUEST_ALREADY_PROCESSED);
+    });
+
+    it('should create an involvement and notify the user when accepted', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultProject);
+      jest
+        .spyOn(projectRepository, 'findJoinRequest')
+        .mockResolvedValue(defaultJoinRequest);
+      const updateStatusSpy = jest
+        .spyOn(projectRepository, 'updateJoinRequestStatus')
+        .mockResolvedValue(undefined);
+      const createInvolvementSpy = jest
+        .spyOn(projectRepository, 'createInvolvement')
+        .mockResolvedValue(undefined);
+      const acceptNotificationSpy = jest
+        .spyOn(notificationService, 'createAcceptJoinRequestNotification')
+        .mockResolvedValue(undefined);
+      const rejectNotificationSpy = jest
+        .spyOn(notificationService, 'createRejectJoinRequestNotification')
+        .mockResolvedValue(undefined);
+
+      await projectService.handleJoinRequest(
+        authUserId,
+        projectId,
+        requestUserId,
+        JoinRequestStatus.Accepted,
+      );
+
+      expect(updateStatusSpy).toHaveBeenCalledWith(
+        requestUserId,
+        projectId,
+        JoinRequestStatus.Accepted,
+      );
+      expect(createInvolvementSpy).toHaveBeenCalledWith(
+        requestUserId,
+        projectId,
+        defaultJoinRequest.roleName,
+      );
+      expect(acceptNotificationSpy).toHaveBeenCalledWith(
+        requestUserId,
+        defaultProject.title,
+        projectId,
+      );
+      expect(rejectNotificationSpy).not.toHaveBeenCalled();
+    });
+
+    it('should notify the user without creating an involvement when rejected', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultProject);
+      jest
+        .spyOn(projectRepository, 'findJoinRequest')
+        .mockResolvedValue(defaultJoinRequest);
+      jest
+        .spyOn(projectRepository, 'updateJoinRequestStatus')
+        .mockResolvedValue(undefined);
+      const createInvolvementSpy = jest
+        .spyOn(projectRepository, 'createInvolvement')
+        .mockResolvedValue(undefined);
+      const rejectNotificationSpy = jest
+        .spyOn(notificationService, 'createRejectJoinRequestNotification')
+        .mockResolvedValue(undefined);
+
+      await projectService.handleJoinRequest(
+        authUserId,
+        projectId,
+        requestUserId,
+        JoinRequestStatus.Rejected,
+      );
+
+      expect(createInvolvementSpy).not.toHaveBeenCalled();
+      expect(rejectNotificationSpy).toHaveBeenCalledWith(
+        requestUserId,
+        defaultProject.title,
+        projectId,
+      );
+    });
+  });
+
+  describe('likeProject', () => {
+    const userId = defaultUser.id;
+    const projectId = defaultProject.id;
+
+    it('should throw a 404 exception if the project is not found', async () => {
+      jest.spyOn(projectRepository, 'findProjectById').mockResolvedValue(null);
+
+      await expect(
+        projectService.likeProject(userId, projectId),
+      ).rejects.toThrow(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    });
+
+    it('should throw a 400 exception if the user already liked the project', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultProject);
+      jest
+        .spyOn(projectRepository, 'findLike')
+        .mockResolvedValue({ userId, projectId });
+      const likeSpy = jest.spyOn(projectRepository, 'likeProject');
+
+      await expect(
+        projectService.likeProject(userId, projectId),
+      ).rejects.toThrow(errorMessages.USER_ALREADY_LIKED_PROJECT);
+
+      expect(likeSpy).not.toHaveBeenCalled();
+    });
+
+    it('should throw a 404 exception if the project disappears after liking', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValueOnce(defaultProject)
+        .mockResolvedValueOnce(null);
+      jest.spyOn(projectRepository, 'findLike').mockResolvedValue(null);
+      jest.spyOn(projectRepository, 'likeProject').mockResolvedValue(undefined);
+
+      await expect(
+        projectService.likeProject(userId, projectId),
+      ).rejects.toThrow(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    });
+
+    it('should like the project and map the refreshed result', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultProject);
+      jest.spyOn(projectRepository, 'findLike').mockResolvedValue(null);
+      const likeSpy = jest
+        .spyOn(projectRepository, 'likeProject')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn(projectMapper, 'projectToProjectResponseDto')
+        .mockReturnValue(defaultProjectResponseDto);
+
+      const result = await projectService.likeProject(userId, projectId);
+
+      expect(likeSpy).toHaveBeenCalledWith(userId, projectId);
+      expect(result).toEqual(defaultProjectResponseDto);
+    });
+  });
+
+  describe('unlikeProject', () => {
+    const userId = defaultUser.id;
+    const projectId = defaultProject.id;
+
+    it('should throw a 404 exception if the project is not found', async () => {
+      jest.spyOn(projectRepository, 'findProjectById').mockResolvedValue(null);
+
+      await expect(
+        projectService.unlikeProject(userId, projectId),
+      ).rejects.toThrow(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    });
+
+    it('should throw a 400 exception if the user has not liked the project', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultProject);
+      jest.spyOn(projectRepository, 'findLike').mockResolvedValue(null);
+      const unlikeSpy = jest.spyOn(projectRepository, 'unlikeProject');
+
+      await expect(
+        projectService.unlikeProject(userId, projectId),
+      ).rejects.toThrow(errorMessages.USER_NOT_LIKED_PROJECT);
+
+      expect(unlikeSpy).not.toHaveBeenCalled();
+    });
+
+    it('should throw a 404 exception if the project disappears after unliking', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValueOnce(defaultProject)
+        .mockResolvedValueOnce(null);
+      jest
+        .spyOn(projectRepository, 'findLike')
+        .mockResolvedValue({ userId, projectId });
+      jest
+        .spyOn(projectRepository, 'unlikeProject')
+        .mockResolvedValue(undefined);
+
+      await expect(
+        projectService.unlikeProject(userId, projectId),
+      ).rejects.toThrow(
+        errorMessages.ENTITY_NOT_FOUND('Project', projectId.toString()),
+      );
+    });
+
+    it('should unlike the project and map the refreshed result', async () => {
+      jest
+        .spyOn(projectRepository, 'findProjectById')
+        .mockResolvedValue(defaultProject);
+      jest
+        .spyOn(projectRepository, 'findLike')
+        .mockResolvedValue({ userId, projectId });
+      const unlikeSpy = jest
+        .spyOn(projectRepository, 'unlikeProject')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn(projectMapper, 'projectToProjectResponseDto')
+        .mockReturnValue(defaultProjectResponseDto);
+
+      const result = await projectService.unlikeProject(userId, projectId);
+
+      expect(unlikeSpy).toHaveBeenCalledWith(userId, projectId);
+      expect(result).toEqual(defaultProjectResponseDto);
     });
   });
 });
