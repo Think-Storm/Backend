@@ -66,9 +66,17 @@ export class ProjectController {
   @ApiOperation({ summary: 'Create a new project' })
   @ApiBody({ type: CreateProjectRequestDto })
   @ApiResponse({ status: 201, description: 'Create project success', type: ProjectResponseDto })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized. A valid access token is required',
+  })
   @ApiResponse({ status: 404, description: 'Founder of the project not found' })
-  async createProject(@Body() body: CreateProjectRequestDto) {
-    return await this.projectService.createProject(body);
+  @UseGuards(JwtAuthGuard)
+  async createProject(
+    @Body() body: CreateProjectRequestDto,
+    @GetUser() user: any,
+  ): Promise<ProjectResponseDto> {
+    return await this.projectService.createProject(body, user.id);
   }
 
   @HttpCode(200)

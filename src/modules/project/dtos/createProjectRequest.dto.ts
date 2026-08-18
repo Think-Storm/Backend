@@ -9,19 +9,15 @@ import {
   IsString,
   IsOptional,
   IsNotEmpty,
-  IsInt,
   IsArray,
   IsEnum,
   IsDate,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateProjectRequestDto implements CreateProject {
-  @ApiProperty({ description: 'The ID of the founder' })
-  @IsInt()
-  @IsNotEmpty()
-  founderId: number;
-
+export class CreateProjectRequestDto
+  implements Omit<CreateProject, 'founderId'>
+{
   @ApiProperty({ description: 'The title of the project' })
   @IsString()
   @IsNotEmpty()

@@ -5,10 +5,10 @@ import {
   ProjectStatus,
   JoinRequestStatus,
   CreateJoinRequest,
+  CreateProject,
   Project,
 } from '@think-storm/contracts';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { CreateProjectRequestDto } from '../../src/modules/project/dtos/createProjectRequest.dto';
 import { ProjectResponseDto } from '../../src/modules/project/dtos/projectResponse.dto';
 import { ProjectRepository } from '../../src/modules/project/project.repository';
 import { defaultUser } from './user.utils';
@@ -26,7 +26,7 @@ import { JoinRequestResponseDto } from '../../src/modules/project/dtos/joinReque
  */
 export const createProjectInDB = async (
   prismaService: PrismaService,
-  defaultCreateProjectDto: CreateProjectRequestDto,
+  defaultCreateProjectDto: CreateProject,
 ): Promise<Project> => {
   const projectRepository = new ProjectRepository(prismaService);
   // Create a Project in DB and return it
@@ -179,7 +179,7 @@ export const secondProjectResponseDto: ProjectResponseDto = {
   founder: defaultUser,
 };
 
-export const defaultCreateProjectRequestDto: CreateProjectRequestDto = {
+export const defaultCreateProjectRequestDto: CreateProject = {
   founderId: 1,
   title: 'title',
   description: 'description',
@@ -191,7 +191,7 @@ export const defaultCreateProjectRequestDto: CreateProjectRequestDto = {
   domainLabels: ['Cooking', 'Design', 'Geography'],
 };
 
-export const secondCreateProjectRequestDto: CreateProjectRequestDto = {
+export const secondCreateProjectRequestDto: CreateProject = {
   founderId: 1,
   title: 'second title',
   description: 'second description',
@@ -302,7 +302,7 @@ export const defaultUpdatedProject = {
   lastUpdatedAt: new Date('2000-01-01'),
 };
 
-export const defaultCreateProjectDto: CreateProjectRequestDto = {
+export const defaultCreateProjectDto: CreateProject = {
   founderId: 1,
   title: 'title',
   description: 'description',

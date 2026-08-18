@@ -257,6 +257,7 @@ describe('ProjectService', () => {
 
       const result = await projectService.createProject(
         defaultCreateProjectDto,
+        defaultUser.id,
       );
 
       expect(result).toEqual({
@@ -276,6 +277,27 @@ describe('ProjectService', () => {
         lastUpdatedAt: defaultProject.lastUpdatedAt,
         milestone: defaultProject.milestone,
       });
+    });
+
+    it('should persist the authenticated user as founder, ignoring the body founderId', async () => {
+      jest.spyOn(userService, 'getUserById').mockResolvedValue(defaultUser);
+
+      const repositorySpy = jest
+        .spyOn(projectRepository, 'createProject')
+        .mockResolvedValue(defaultProject);
+
+      const authenticatedUserId = defaultUser.id;
+      // The body carries a foreign founderId; it must never reach the repository
+      const spoofedDto = { ...defaultCreateProjectDto, founderId: 999 };
+
+      await projectService.createProject(spoofedDto, authenticatedUserId);
+
+      expect(repositorySpy).toHaveBeenCalledWith(
+        expect.objectContaining({ founderId: authenticatedUserId }),
+      );
+      expect(repositorySpy).not.toHaveBeenCalledWith(
+        expect.objectContaining({ founderId: 999 }),
+      );
     });
   });
 
