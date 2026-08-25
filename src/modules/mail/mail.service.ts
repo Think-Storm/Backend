@@ -1,83 +1,122 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Enveloop } from 'enveloop';
+import { Resend } from 'resend';
+import { ServiceException } from '../../common/exception-filter/serviceException';
+import { errorMessages } from '../../common/enums/errorMessages';
+import {
+  forgotPasswordEmail,
+  joinRequestAcceptedEmail,
+  joinRequestDeclinedEmail,
+  welcomeEmail,
+} from './mail.templates';
+
+export const MAIL_TIMEOUT_MS = 10000;
 
 interface SendMailOptions {
   to: string;
   from?: string;
   subject: string;
-  template: string;
-  templateVariables?: Record<string, any>;
+  html: string;
 }
 
 @Injectable()
 export class MailService {
-  private enveloopClient: any;
+  private readonly logger = new Logger(MailService.name);
+  private readonly resend: Resend;
+  private readonly defaultFrom: string;
 
   constructor(private configService: ConfigService) {
-    this.enveloopClient = new Enveloop({
-      apiKey: this.configService.get<string>('ENVELOOP_API_KEY'),
-    });
+    this.resend = new Resend(this.configService.get<string>('RESEND_API_KEY'));
+    this.defaultFrom = this.configService.get<string>('MAIL_FROM');
   }
 
-  async sendMail({ to, from, subject, template, templateVariables }: SendMailOptions): Promise<any> {
+  async sendMail({ to, from, subject, html }: SendMailOptions): Promise<any> {
+    // The Resend SDK exposes no timeout option, so cap how long we are willing
+    // to wait. This stops the caller hanging; it does not abort the request.
+    let timer: NodeJS.Timeout;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error(`Resend request timed out after ${MAIL_TIMEOUT_MS}ms`)),
+        MAIL_TIMEOUT_MS,
+      );
+    });
+
     try {
-      const response = await fetch('https://api.enveloop.com/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${this.enveloopClient.apiKey}`,
-        },
-        body: JSON.stringify({ to, template, subject, from, templateVariables }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Enveloop error:', errorData);
+      const result = await Promise.race([
+        this.resend.emails.send({
+          from: from ?? this.defaultFrom,
+          to,
+          subject,
+          html,
+        }),
+        timeout,
+      ]);
+
+      // Resend reports delivery failures in the body rather than by throwing.
+      // These used to be logged and swallowed, which made every failed send
+      // invisible — surface them instead.
+      if (result?.error) {
+        this.logger.error(
+          `Resend rejected message to ${to}: ${result.error.name} - ${result.error.message}`,
+        );
+        throw new ServiceException(
+          errorMessages.EMAIL_SEND_FAILED,
+          502,
+          result.error,
+        );
       }
-      return response;
+
+      return result?.data;
     } catch (error) {
-      console.error('Failed to send email:', error);
-      throw error;
+      if (error instanceof ServiceException) throw error;
+      this.logger.error(`Failed to send email to ${to}: ${error.message}`);
+      throw new ServiceException(errorMessages.EMAIL_SEND_FAILED, 502, error);
+    } finally {
+      clearTimeout(timer);
     }
   }
 
   async sendWelcomeEmail(userEmail: string, userName: string): Promise<void> {
     await this.sendMail({
       to: userEmail,
-      from: 'info@thinkstorm.app',
-      template: 'user-welcome',
       subject: 'Welcome to Our Platform!',
-      templateVariables: { name: userName },
+      html: welcomeEmail(userName),
     });
   }
 
-  async forgotPassword(userEmail: string, userName: string, passwordResetUrl: string): Promise<void> {
+  async forgotPassword(
+    userEmail: string,
+    userName: string,
+    passwordResetUrl: string,
+  ): Promise<void> {
     await this.sendMail({
       to: userEmail,
-      from: 'info@thinkstorm.app',
-      template: 'forgot-password',
       subject: 'Password Reset Requested',
-      templateVariables: { name: userName, reset_url: passwordResetUrl },
+      html: forgotPasswordEmail(userName, passwordResetUrl),
     });
   }
 
-  async sendJoinRequestAcceptedEmail(userEmail: string, projectName: string, projectOwner: string): Promise<void> {
+  async sendJoinRequestAcceptedEmail(
+    userEmail: string,
+    projectName: string,
+    projectOwner: string,
+  ): Promise<void> {
     await this.sendMail({
       to: userEmail,
-      from: 'info@thinkstorm.app',
-      template: 'join-request-accepted',
       subject: `Your request to join ${projectName} has been accepted`,
-      templateVariables: { projectName, projectOwner },
+      html: joinRequestAcceptedEmail(projectName, projectOwner),
     });
   }
 
-  async sendJoinRequestDeclinedEmail(userEmail: string, projectName: string, projectOwner: string): Promise<void> {
+  async sendJoinRequestDeclinedEmail(
+    userEmail: string,
+    projectName: string,
+    projectOwner: string,
+  ): Promise<void> {
     await this.sendMail({
       to: userEmail,
-      from: 'info@thinkstorm.app',
-      template: 'join-request-declined',
       subject: `Your request to join ${projectName} has been declined`,
-      templateVariables: { projectName, projectOwner },
+      html: joinRequestDeclinedEmail(projectName, projectOwner),
     });
   }
 }

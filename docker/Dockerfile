@@ -1,7 +1,7 @@
 # syntax = docker/dockerfile:1
 
 # Adjust NODE_VERSION as desired
-ARG NODE_VERSION=21.6.2
+ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-slim as base
 
 LABEL fly_launch_runtime="NestJS/Prisma"
@@ -40,6 +40,7 @@ COPY --link . .
 
 # Dummy URL to allow the build to complete
 ENV DATABASE_URL='postgresql://user:password@host:5432/ts-db'
+ENV DIRECT_URL='postgresql://user:password@host:5432/ts-db'
 # Build application
 RUN npm run build
 

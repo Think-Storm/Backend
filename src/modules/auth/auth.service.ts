@@ -3,6 +3,7 @@ import { Response } from 'express';
 import { errorMessages } from '../../common/enums/errorMessages';
 import { ServiceException } from './../../common/exception-filter/serviceException';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { UserResponseDto } from '../user/dtos/userResponse.dto';
 import { DAY_TO_MILISECONDS_RATIO } from '../../common/consts';
 import { CreateUserDto } from '../user/dtos/createUser.dto';
@@ -28,6 +29,7 @@ export class AuthService {
     private mailService: MailService,
     private userRepository: UserRepository,
     private jwtHelperService: JwtHelperService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -181,7 +183,10 @@ export class AuthService {
     const payload = { id: foundUser.id };
     const resetToken = this.jwtService.sign(payload, { expiresIn: '15m' });
 
-    const passwordResetUrl = `https://thinkstorm.app/reset-password?token=${resetToken}`;
+    // Was hardcoded to the apex domain, which made reset links untestable
+    // against any other origin (preview deploys, local, the new host).
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    const passwordResetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
 
     await this.mailService.forgotPassword(
       foundUser.email,
