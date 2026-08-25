@@ -1,0 +1,52 @@
+services:
+  - type: web
+    name: ts-backend
+    runtime: docker
+    plan: free
+    # Closest Render region to the cdg (Paris) deployment this replaces.
+    region: frankfurt
+    dockerfilePath: ./docker/Dockerfile
+    dockerContext: .
+    # Already implemented in src/app.controller.ts.
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Entrypoint dispatch. Migrations are NOT run at boot — CI applies them
+      # once per deploy against DIRECT_URL before triggering this service.
+      - key: TYPE
+        value: production
+      # Needed at image build time to pull @think-storm/contracts.
+      - key: CONTRACT_ACCESS_TOKEN
+        sync: false
+      # Pooled Supavisor connection (transaction mode, 6543).
+      - key: DATABASE_URL
+        sync: false
+      # Session-mode connection (5432). Declared so Prisma can resolve the
+      # datasource; the running server itself only uses DATABASE_URL.
+      - key: DIRECT_URL
+        sync: false
+      - key: REDIS_THROTTLER_URL
+        sync: false
+      - key: REDIS_CACHING_URL
+        sync: false
+      - key: REDIS_CACHING_TTL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        sync: false
+      - key: JWT_COOKIE_EXPIRES_IN
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        sync: false

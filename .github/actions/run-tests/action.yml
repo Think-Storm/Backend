@@ -80,10 +80,8 @@ runs:
         ENV_VARIABLES: ${{ inputs.env-variables }}
       run: |
         # Use the --build flag only if build-image is true
-        echo "${{ inputs.env-variables }}" > .env
-        echo "----- Loaded .env -----"
-        cat .env
-        echo "------------------------"
+        printf '%s\n' "$ENV_VARIABLES" > .env
+        chmod 600 .env
 
         chmod +x ${{ inputs.redis-enttrypoint-script }}
 

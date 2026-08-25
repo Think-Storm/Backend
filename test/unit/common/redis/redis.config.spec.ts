@@ -32,7 +32,6 @@ describe('redis.config', () => {
         url: 'redis://:pass@localhost:6379/1',
         maxRetriesPerRequest: null,
         enableReadyCheck: true,
-        family: 6,
       });
       expect(mockConfigService.get).toHaveBeenCalledWith('REDIS_THROTTLER_URL');
     });
@@ -48,7 +47,6 @@ describe('redis.config', () => {
         retryStrategy: expect.any(Function),
         maxRetriesPerRequest: null,
         enableReadyCheck: true,
-        family: 6,
       });
 
       expect(mockConfigService.get).toHaveBeenCalledWith('REDIS_CACHING_URL');

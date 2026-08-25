@@ -21,7 +21,7 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
         with:
-          node-version: '20'
+          node-version: '22'
           cache-key-suffix: '-v1'
           contract-access-token: ${{ secrets.NPM_TOKEN }}
 
@@ -43,12 +43,15 @@ jobs:
             JWT_SECRET=${{ secrets.JWT_SECRET }}
             JWT_EXPIRES_IN=${{ secrets.JWT_EXPIRES_IN }}
             JWT_COOKIE_EXPIRES_IN=${{ secrets.JWT_COOKIE_EXPIRES_IN }}
-            ENVELOOP_API_KEY=${{ secrets.ENVELOOP_API_KEY }}
+            RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+            MAIL_FROM=${{ secrets.MAIL_FROM }}
+            SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+            SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+            SUPABASE_STORAGE_BUCKET=${{ secrets.SUPABASE_STORAGE_BUCKET }}
             FRONTEND_URL=${{ secrets.FRONTEND_URL }}
             REDIS_CACHING_TTL=${{ secrets.REDIS_CACHING_TTL }}
             REDIS_THROTTLER_URL=${{ secrets.REDIS_THROTTLER_URL }}
             REDIS_CACHING_URL=${{ secrets.REDIS_CACHING_URL }}
-            DATABASE_URL=${{ secrets.DATABASE_URL }}
             DATABASE_UNIT_TEST_URL=${{ secrets.DATABASE_UNIT_TEST_URL }}
             DATABASE_E2E_TEST_URL=${{ secrets.DATABASE_E2E_TEST_URL }}
             DATABASE_COVERAGE_TEST_URL=${{ secrets.DATABASE_COVERAGE_TEST_URL }}
@@ -59,10 +62,26 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Set up Flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@master
-      - name: Deploy to Fly.io
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          node-version: '22'
+          cache-key-suffix: '-v1'
+          contract-access-token: ${{ secrets.NPM_TOKEN }}
+
+      # Migrations used to run from the container entrypoint on every cold
+      # start. They run once per deploy here instead, against the direct
+      # (session-mode) connection — Prisma CLI cannot migrate over the pooler.
+      - name: Apply database migrations
         env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          DATABASE_URL: ${{ secrets.DIRECT_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
         run: |
-          flyctl deploy --build-arg CONTRACT_ACCESS_TOKEN=${{ secrets.NPM_TOKEN }}
+          npx prisma migrate deploy
+          npm run db:seed
+
+      - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: curl -fsS --retry 3 "$RENDER_DEPLOY_HOOK_URL"

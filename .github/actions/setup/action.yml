@@ -59,10 +59,6 @@ runs:
         # Set proper permissions
         chmod 600 .npmrc
         chmod 600 ~/.npmrc
-        # Debug: Check if .npmrc files exist and have correct permissions
-        ls -la .npmrc ~/.npmrc
-        cat .npmrc
-        cat ~/.npmrc
 
     - name: Install dependencies
       if: steps.cache-modules.outputs.cache-hit != 'true'
