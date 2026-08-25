@@ -40,9 +40,19 @@ export class ProjectController {
   @HttpCode(200)
   @Get('search')
   @ApiOperation({ summary: 'Get projects filtered by query string' })
-  @ApiResponse({ status: 200, description: 'Get projects filtered by query success', type: ProjectResponseDto })
-  @ApiResponse({ status: 400, description: 'An error occurred due to the format of your queries' })
-  @ApiResponse({ status: 500, description: 'An error occurred while searching projects for your queries' })
+  @ApiResponse({
+    status: 200,
+    description: 'Get projects filtered by query success',
+    type: ProjectResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'An error occurred due to the format of your queries',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'An error occurred while searching projects for your queries',
+  })
   async searchProjects(
     @Query() searchProjectDto: SearchProjectDto,
   ): Promise<SearchProjectResponseDto> {
@@ -53,7 +63,11 @@ export class ProjectController {
   @Get(':id')
   @ApiOperation({ summary: 'Get project by ID' })
   @ApiParam({ name: 'id', required: true, description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Get project success', type: ProjectResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Get project success',
+    type: ProjectResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Project not found' })
   async getProjectById(
     @Param() param: GetProjectRequestDto,
@@ -65,7 +79,11 @@ export class ProjectController {
   @Post()
   @ApiOperation({ summary: 'Create a new project' })
   @ApiBody({ type: CreateProjectRequestDto })
-  @ApiResponse({ status: 201, description: 'Create project success', type: ProjectResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Create project success',
+    type: ProjectResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Founder of the project not found' })
   async createProject(@Body() body: CreateProjectRequestDto) {
     return await this.projectService.createProject(body);
@@ -75,8 +93,15 @@ export class ProjectController {
   @Put()
   @ApiOperation({ summary: 'Update project details' })
   @ApiBody({ type: UpdateProjectRequestDto })
-  @ApiResponse({ status: 200, description: 'Update project success', type: ProjectResponseDto })
-  @ApiResponse({ status: 403, description: 'Forbidden. Only the project owner can update the project' })
+  @ApiResponse({
+    status: 200,
+    description: 'Update project success',
+    type: ProjectResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Only the project owner can update the project',
+  })
   @ApiResponse({ status: 404, description: 'Project not found' })
   @UseGuards(JwtAuthGuard)
   async updateProject(
@@ -90,9 +115,19 @@ export class ProjectController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete project by ID' })
   @ApiParam({ name: 'id', required: true, description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Delete project success', type: ProjectResponseDto })
-  @ApiResponse({ status: 403, description: 'Forbidden. Only the project owner can delete the project' })
-  @ApiResponse({ status: 404, description: 'Target project for deletion was not found' })
+  @ApiResponse({
+    status: 200,
+    description: 'Delete project success',
+    type: ProjectResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Only the project owner can delete the project',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Target project for deletion was not found',
+  })
   @UseGuards(JwtAuthGuard)
   async deleteProject(
     @Param() deleteProjectDto: GetProjectRequestDto,
@@ -106,8 +141,15 @@ export class ProjectController {
   @ApiOperation({ summary: 'Save a project' })
   @ApiParam({ name: 'id', required: true, description: 'Project ID' })
   @ApiBody({ type: SaveProjectRequestDto })
-  @ApiResponse({ status: 201, description: 'Save project success', type: ProjectResponseDto })
-  @ApiResponse({ status: 403, description: 'Forbidden. User can save the project only once.' })
+  @ApiResponse({
+    status: 201,
+    description: 'Save project success',
+    type: ProjectResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. User can save the project only once.',
+  })
   @ApiResponse({ status: 404, description: 'Project or User not found' })
   @UseGuards(JwtAuthGuard)
   async saveProject(
@@ -115,7 +157,11 @@ export class ProjectController {
     @Body() saveProjectDto: SaveProjectRequestDto,
     @GetUser() user: any,
   ): Promise<ProjectResponseDto> {
-    return await this.projectService.saveProject(+projectId, saveProjectDto, user.id);
+    return await this.projectService.saveProject(
+      +projectId,
+      saveProjectDto,
+      user.id,
+    );
   }
 
   @HttpCode(200)
@@ -123,8 +169,15 @@ export class ProjectController {
   @ApiOperation({ summary: 'Unsave a project' })
   @ApiParam({ name: 'id', required: true, description: 'Project ID' })
   @ApiBody({ type: SaveProjectRequestDto })
-  @ApiResponse({ status: 200, description: 'Unsave project success', type: ProjectResponseDto })
-  @ApiResponse({ status: 403, description: 'Forbidden. User can unsave the project only once.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Unsave project success',
+    type: ProjectResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. User can unsave the project only once.',
+  })
   @ApiResponse({ status: 404, description: 'Project or User not found' })
   @UseGuards(JwtAuthGuard)
   async unsaveProject(
@@ -132,14 +185,22 @@ export class ProjectController {
     @Body() unsaveProjectDto: SaveProjectRequestDto,
     @GetUser() user: any,
   ): Promise<ProjectResponseDto> {
-    return await this.projectService.unsaveProject(+projectId, unsaveProjectDto, user.id);
+    return await this.projectService.unsaveProject(
+      +projectId,
+      unsaveProjectDto,
+      user.id,
+    );
   }
 
   @HttpCode(201)
   @Post(':id/join-requests')
   @ApiOperation({ summary: 'Create a new join request for a project' })
   @ApiBody({ type: CreateJoinRequestBodyDto })
-  @ApiResponse({ status: 201, description: 'Join request created successfully', type: JoinRequestResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Join request created successfully',
+    type: JoinRequestResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Join request already sent before' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   @UseGuards(JwtAuthGuard)
@@ -148,19 +209,39 @@ export class ProjectController {
     @Body() joinRequestDto: CreateJoinRequestBodyDto,
     @GetUser() user: any,
   ): Promise<JoinRequestResponseDto> {
-    return await this.projectService.createJoinRequest(user.id, +projectId, joinRequestDto);
+    return await this.projectService.createJoinRequest(
+      user.id,
+      +projectId,
+      joinRequestDto,
+    );
   }
 
   @HttpCode(200)
   @Put(':projectId/join-requests/:requestUserId')
   @ApiOperation({ summary: 'Accept or reject a join request' })
   @ApiParam({ name: 'projectId', required: true, description: 'Project ID' })
-  @ApiParam({ name: 'requestUserId', required: true, description: 'ID of the user who sent the join request' })
+  @ApiParam({
+    name: 'requestUserId',
+    required: true,
+    description: 'ID of the user who sent the join request',
+  })
   @ApiBody({ type: UpdateJoinRequestDto })
-  @ApiResponse({ status: 200, description: 'Join request updated successfully' })
-  @ApiResponse({ status: 400, description: 'Join request has already been processed' })
-  @ApiResponse({ status: 403, description: 'Forbidden. Only the project owner can manage join requests' })
-  @ApiResponse({ status: 404, description: 'Project or join request not found' })
+  @ApiResponse({
+    status: 200,
+    description: 'Join request updated successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Join request has already been processed',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden. Only the project owner can manage join requests',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Project or join request not found',
+  })
   @UseGuards(JwtAuthGuard)
   async handleJoinRequest(
     @Param('projectId') projectId: number,
@@ -180,8 +261,15 @@ export class ProjectController {
   @Post(':id/like')
   @ApiOperation({ summary: 'Like a project' })
   @ApiParam({ name: 'id', required: true, description: 'Project ID' })
-  @ApiResponse({ status: 201, description: 'Like project success', type: ProjectResponseDto })
-  @ApiResponse({ status: 400, description: 'User has already liked this project' })
+  @ApiResponse({
+    status: 201,
+    description: 'Like project success',
+    type: ProjectResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'User has already liked this project',
+  })
   @ApiResponse({ status: 404, description: 'Project not found' })
   @UseGuards(JwtAuthGuard)
   async likeProject(
@@ -195,7 +283,11 @@ export class ProjectController {
   @Delete(':id/like')
   @ApiOperation({ summary: 'Unlike a project' })
   @ApiParam({ name: 'id', required: true, description: 'Project ID' })
-  @ApiResponse({ status: 200, description: 'Unlike project success', type: ProjectResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Unlike project success',
+    type: ProjectResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'User has not liked this project' })
   @ApiResponse({ status: 404, description: 'Project not found' })
   @UseGuards(JwtAuthGuard)

@@ -102,7 +102,8 @@ describe('MailService', () => {
         subject: 's',
         html: '<p>h</p>',
       });
-      const assertion = expect(pending).rejects.toBeInstanceOf(ServiceException);
+      const assertion =
+        expect(pending).rejects.toBeInstanceOf(ServiceException);
 
       jest.advanceTimersByTime(MAIL_TIMEOUT_MS);
       await assertion;

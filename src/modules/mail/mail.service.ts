@@ -36,7 +36,10 @@ export class MailService {
     let timer: NodeJS.Timeout;
     const timeout = new Promise<never>((_, reject) => {
       timer = setTimeout(
-        () => reject(new Error(`Resend request timed out after ${MAIL_TIMEOUT_MS}ms`)),
+        () =>
+          reject(
+            new Error(`Resend request timed out after ${MAIL_TIMEOUT_MS}ms`),
+          ),
         MAIL_TIMEOUT_MS,
       );
     });

@@ -75,5 +75,6 @@ export const errorMessages = {
   ERROR_UPDATING_JOIN_REQUEST:
     'An error occurred while updating the join request.',
   EMAIL_SEND_FAILED: 'The email could not be sent. Please try again later.',
-  UPLOAD_URL_FAILED: 'The upload URL could not be created. Please try again later.',
+  UPLOAD_URL_FAILED:
+    'The upload URL could not be created. Please try again later.',
 };

@@ -93,7 +93,10 @@ export class ProjectService {
     } else {
       const sortByArr = this.parseSortConditions(searchProjectDto.sort);
       const { projects: searchedProjects, totalItems: itemsCount } =
-        await this.projectRepository.searchProjects(searchProjectDto, sortByArr);
+        await this.projectRepository.searchProjects(
+          searchProjectDto,
+          sortByArr,
+        );
       projects = searchedProjects;
       totalItems = itemsCount;
       const cachePayload = { projects, totalItems };

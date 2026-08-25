@@ -45,7 +45,10 @@ describe('StorageService', () => {
 
   it('returns the upload URL, key and public URL for a signed upload', async () => {
     mockCreateSignedUploadUrl.mockResolvedValue({
-      data: { signedUrl: 'https://project.supabase.co/upload/signed', token: 't' },
+      data: {
+        signedUrl: 'https://project.supabase.co/upload/signed',
+        token: 't',
+      },
       error: null,
     });
     mockGetPublicUrl.mockReturnValue({

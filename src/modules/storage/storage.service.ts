@@ -36,9 +36,7 @@ export class StorageService {
       .createSignedUploadUrl(key);
 
     if (error) {
-      this.logger.error(
-        `Could not sign upload for ${key}: ${error.message}`,
-      );
+      this.logger.error(`Could not sign upload for ${key}: ${error.message}`);
       throw new ServiceException(errorMessages.UPLOAD_URL_FAILED, 502, error);
     }
 

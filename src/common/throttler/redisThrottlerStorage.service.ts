@@ -33,7 +33,10 @@ export class RedisThrottlerStorageService extends ThrottlerStorageService {
     // Redis owns the countdown via the key's TTL, so report what is actually
     // left rather than a decremented copy. pttl is -1 (no expiry) or -2 (gone).
     const remaining = pttl > 0 ? pttl : 0;
-    return { ...JSON.parse(data), blockDuration: remaining } as ThrottlerOptions;
+    return {
+      ...JSON.parse(data),
+      blockDuration: remaining,
+    } as ThrottlerOptions;
   }
 
   async set(key: string): Promise<void> {
