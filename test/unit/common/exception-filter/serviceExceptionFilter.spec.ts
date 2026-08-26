@@ -15,6 +15,7 @@ import {
   RATE_LIMITING_TTL,
 } from '../../../../src/common/consts';
 import { mockThrottlerOptions } from '../../../utils/throttler.utils';
+import { ThrottlerException } from '@nestjs/throttler';
 
 describe('ServiceExceptionToHttpExceptionFilter', () => {
   let filter: ServiceExceptionToHttpExceptionFilter;
@@ -306,7 +307,6 @@ describe('ServiceExceptionToHttpExceptionFilter', () => {
   describe('ThrottlerException handling', () => {
     it('should handle ThrottlerException and set retry-after header with blockedIpData', async () => {
       process.env.NODE_ENV = 'development';
-      const { ThrottlerException } = require('@nestjs/throttler');
       const exception = new ThrottlerException();
 
       // Mock throttlerGuardService.get to return block info
@@ -330,7 +330,6 @@ describe('ServiceExceptionToHttpExceptionFilter', () => {
 
     it('should handle ThrottlerException and set retry-after header with default block time', async () => {
       process.env.NODE_ENV = 'development';
-      const { ThrottlerException } = require('@nestjs/throttler');
       const exception = new ThrottlerException();
 
       // Mock throttlerGuardService.get to return null
@@ -351,7 +350,6 @@ describe('ServiceExceptionToHttpExceptionFilter', () => {
 
     it('should not fail if setHeader is missing', async () => {
       process.env.NODE_ENV = 'development';
-      const { ThrottlerException } = require('@nestjs/throttler');
       const exception = new ThrottlerException();
 
       // Remove setHeader

@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const httpMocks = require('node-mocks-http');
+import * as httpMocks from 'node-mocks-http';
 
 import { UserController } from '../../../../src/modules/user/user.controller';
 import { UserService } from '../../../../src/modules/user/user.service';

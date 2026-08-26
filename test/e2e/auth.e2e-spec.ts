@@ -28,6 +28,7 @@ import { PasswordEncryption } from '../../src/common/encryption/passwordEncrypti
 import { JwtHelperService } from '../../src/modules/auth/jwt/jwt-helper.service';
 import { UserRepository } from '../../src/modules/user/user.repository';
 import { MailService } from '../../src/modules/mail/mail.service';
+import * as jwt from 'jsonwebtoken';
 
 describe('/', () => {
   let app: INestApplication;
@@ -411,7 +412,6 @@ describe('/', () => {
         const user = await userRepository.getUserByEmail(
           defaultCreateUserDto.email,
         );
-        const jwt = require('jsonwebtoken');
         resetToken = jwt.sign(
           { id: user.id, iat: Math.floor(Date.now() / 1000) },
           process.env.JWT_SECRET,
@@ -450,7 +450,6 @@ describe('/', () => {
       });
 
       it('should return 401 if token is expired', async () => {
-        const jwt = require('jsonwebtoken');
         const expiredToken = jwt.sign(
           { id: userId, iat: Math.floor(Date.now() / 1000) - 3600 },
           process.env.JWT_SECRET,
@@ -469,7 +468,6 @@ describe('/', () => {
       });
 
       it('should return 404 if user does not exist for password reset', async () => {
-        const jwt = require('jsonwebtoken');
         const fakeToken = jwt.sign(
           { id: 99999, iat: Math.floor(Date.now() / 1000) },
           process.env.JWT_SECRET,

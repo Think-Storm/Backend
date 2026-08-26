@@ -21,7 +21,7 @@ export class RedisService {
     try {
       const response = await this.redis.call('PING');
       return response;
-    } catch (error) {
+    } catch {
       throw new ServiceException(
         errorMessages.REDIS_CONNECTION_ISSUE('Error pinging Redis'),
         500,

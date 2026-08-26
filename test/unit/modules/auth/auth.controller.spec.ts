@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Test, TestingModule } from '@nestjs/testing';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const httpMocks = require('node-mocks-http');
+import * as httpMocks from 'node-mocks-http';
 import { JwtModule } from '@nestjs/jwt';
 import {
   defaultCreateUserDto,

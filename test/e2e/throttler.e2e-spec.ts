@@ -296,7 +296,7 @@ describe('/', () => {
           expect(Number(retryResponse.headers['retry-after'])).toBeGreaterThan(
             0,
           );
-        } catch (error) {
+        } catch {
           console.log('Retry request also failed, skipping header check');
           // If this also fails, we'll consider the test passed because the throttling
           // behavior is working (connections are being reset because of throttling)

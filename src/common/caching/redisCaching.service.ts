@@ -27,7 +27,7 @@ export class RedisService {
     try {
       const response = await this.redis.call('PING');
       return response;
-    } catch (error) {
+    } catch {
       throw new ServiceException(
         errorMessages.REDIS_CONNECTION_ISSUE('Error pinging Redis'),
         500,
@@ -46,7 +46,7 @@ export class RedisService {
       }
       // Set data with TTL (expires in seconds)
       await this.redis.set(key, JSON.stringify(value), 'EX', ttlNum);
-    } catch (error) {
+    } catch {
       throw new ServiceException(
         errorMessages.REDIS_CONNECTION_ISSUE('Error setting data in Redis'),
         500,
@@ -57,7 +57,7 @@ export class RedisService {
   async get(key: string): Promise<any> {
     try {
       return await this.redis.get(key);
-    } catch (error) {
+    } catch {
       throw new ServiceException(
         errorMessages.REDIS_CONNECTION_ISSUE('Error getting data from Redis'),
         500,
@@ -68,7 +68,7 @@ export class RedisService {
   async delete(key: string) {
     try {
       await this.redis.del(key);
-    } catch (error) {
+    } catch {
       throw new ServiceException(
         errorMessages.REDIS_CONNECTION_ISSUE('Error deleting data from Redis'),
         500,
@@ -79,7 +79,7 @@ export class RedisService {
   async flushDb() {
     try {
       await this.redis.flushdb();
-    } catch (error) {
+    } catch {
       throw new ServiceException(
         errorMessages.REDIS_CONNECTION_ISSUE('Error flushing Redis DB'),
         500,
